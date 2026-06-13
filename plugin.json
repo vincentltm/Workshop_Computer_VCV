@@ -1,0 +1,25 @@
+{
+  "slug": "MTMWorkshopComputer",
+  "name": "MTM Workshop Computer",
+  "version": "2.0.0",
+  "license": "MIT",
+  "brand": "Music Thing Modular",
+  "author": "Vincent Maurer",
+  "authorUrl": "https://vcvrack.com",
+  "pluginUrl": "",
+  "manualUrl": "",
+  "sourceUrl": "",
+  "donateUrl": "",
+  "modules": [
+    {
+      "slug": "WorkshopComputer",
+      "name": "Workshop Computer",
+      "description": "Multi-card host for Music Thing Modular Workshop Computer programs",
+      "tags": [
+        "Host",
+        "Utility",
+        "Dual-Core"
+      ]
+    }
+  ]
+}

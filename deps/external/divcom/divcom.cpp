@@ -1,0 +1,220 @@
+#include "ComputerCard.h"
+#include <cmath>
+
+/// DivCom
+
+uint32_t xorshift32() {
+    static uint32_t state = 2463534242;
+    state ^= state << 13;
+    state ^= state >> 17;
+    state ^= state << 5;
+    return state;
+}
+
+int16_t noise12() {
+  return (int16_t)((int32_t)(xorshift32() >> 20) - 2048);
+}
+
+// calculate n as 1..31 from knob value 0..4095
+uint8_t calc_n(int32_t knob) {
+  return (uint8_t)(1 + (knob * 30 / 4095));
+}
+
+
+const uint16_t sh_period_1hz_12khz_48k[257] = {
+  48000, 46270, 44603, 42996, 41447, 39953, 38513, 37126,
+  35788, 34498, 33255, 32057, 30902, 29788, 28715, 27680,
+  26683, 25721, 24794, 23901, 23040, 22210, 21409, 20638,
+  19894, 19177, 18486, 17820, 17178, 16559, 15962, 15387,
+  14833, 14298, 13783, 13286, 12808, 12346, 11901, 11472,
+  11059, 10660, 10276, 9906, 9549, 9205, 8873, 8554,
+  8245, 7948, 7662, 7386, 7120, 6863, 6616, 6377,
+  6148, 5926, 5712, 5507, 5308, 5117, 4933, 4755,
+  4583, 4418, 4259, 4106, 3958, 3815, 3678, 3545,
+  3417, 3294, 3176, 3061, 2951, 2844, 2742, 2643,
+  2548, 2456, 2368, 2282, 2200, 2121, 2044, 1971,
+  1900, 1831, 1765, 1702, 1640, 1581, 1524, 1469,
+  1416, 1365, 1316, 1269, 1223, 1179, 1136, 1095,
+  1056, 1018, 981, 946, 912, 879, 847, 817,
+  787, 759, 732, 705, 680, 655, 632, 609,
+  587, 566, 545, 526, 507, 489, 471, 454,
+  438, 422, 407, 392, 378, 364, 351, 339,
+  326, 315, 303, 292, 282, 272, 262, 252,
+  243, 235, 226, 218, 210, 203, 195, 188,
+  181, 175, 169, 162, 157, 151, 146, 140,
+  135, 130, 126, 121, 117, 113, 109, 105,
+  101, 97, 94, 90, 87, 84, 81, 78,
+  75, 72, 70, 67, 65, 63, 60, 58,
+  56, 54, 52, 50, 48, 47, 45, 43,
+  42, 40, 39, 37, 36, 35, 34, 32,
+  31, 30, 29, 28, 27, 26, 25, 24,
+  23, 22, 22, 21, 20, 19, 19, 18,
+  17, 17, 16, 16, 15, 14, 14, 13,
+  13, 12, 12, 12, 11, 11, 10, 10,
+  10, 9, 9, 9, 8, 8, 8, 7,
+  7, 7, 7, 6, 6, 6, 6, 6,
+  5, 5, 5, 5, 5, 4, 4, 4,
+  4
+};
+
+uint16_t ExpSampleHoldPeriod_1Hz12kHz_48k(int32_t in)
+{
+  if (in < 0) in = 0;
+  if (in > 4095) in = 4095;
+
+  // 0..255
+  uint32_t idx = (uint32_t)in >> 4;
+
+  // 0..15
+  uint32_t frac = (uint32_t)in & 15;
+
+  uint32_t a = sh_period_1hz_12khz_48k[idx];
+  uint32_t b = sh_period_1hz_12khz_48k[idx + 1];
+
+  // Table is descending, so avoid signed negative shifts.
+  return (uint16_t)(a - (((a - b) * frac) >> 4));
+}
+
+
+class DivCom : public ComputerCard {
+
+  bool compHigh;
+  bool dividerHigh;
+  uint8_t counter;
+  uint8_t n;
+  int8_t hysteresis;
+  bool reset;
+  bool flipFlop;
+
+  uint16_t shCounter = 0;
+  int16_t shValue = 0;
+
+  int16_t sampleHoldNoise(int32_t control) {
+    uint16_t period = ExpSampleHoldPeriod_1Hz12kHz_48k(control);
+
+    if (shCounter == 0 || shCounter >= period) {
+      shValue = noise12();
+      shCounter = 0;
+    }
+
+    shCounter++;
+
+    return shValue;
+  }
+
+public:
+  DivCom() : compHigh(false), dividerHigh(false), counter(0), n(0), hysteresis(10), reset(false), flipFlop(false), shCounter(0), shValue(0) {
+  }
+  virtual void ProcessSample() {
+
+    // compHigh is true if sig > ref.
+
+    // If both audio ins are _not_ connected, sig is a random S&H value,
+    // updated from 1hz-12kHz, controlled via X.
+    // Otherwise sig is Audio1.
+    // ref is AudioIn2 * scale (from knob X) + static offset (from knob Y)
+    int16_t sig = 0;
+    if (!Connected(Audio1) && !Connected(Audio2)) {
+      sig = sampleHoldNoise(KnobVal(X));
+    } else {
+      sig = AudioIn1();
+    }
+
+    // offset and scale are limited to avoid dead-zones.
+    int32_t scale = ((KnobVal(X) - 2048) * 220) / 256;
+    int32_t offset = ((KnobVal(Y) - 2048) * 220) / 256;
+    
+    int16_t ref = offset;
+    if (Connected(Audio2)) {
+      ref += (((int32_t)AudioIn2() * scale) >> 11);
+    }
+
+    bool changed = false; // true if comparator changed
+    if (!compHigh && sig > ref + hysteresis) {
+      compHigh = true;
+      changed = true;
+    } else if (compHigh && sig < ref - hysteresis) {
+      compHigh = false;
+      changed = true;
+    }
+
+    // n is 1..31, defined by main knob
+    n = calc_n(KnobVal(Main));
+    // ... and then scaled by CV1
+    if (Connected(CV1)) {
+      int32_t cvin = CVIn1();
+      if (cvin < 0) { cvin = 0; }
+      n = 1 + ((n * cvin) >> 11);
+    }
+
+    if (PulseIn2RisingEdge()) {
+      reset = true;
+    }
+
+    // increment counter for each time comparator goes high
+    // or from Pulse1 rising edges when Pulse1 is connected.
+    bool increment = false;
+    if (Connected(Pulse1)) {
+      changed = PulseIn1FallingEdge() || PulseIn1RisingEdge();
+      increment = PulseIn1RisingEdge();
+    } else if (changed && compHigh) {
+      increment = true;
+    }
+
+    if (increment) {
+      counter += 1;
+      if (counter >= n) {
+        reset = true;
+      }
+    }
+
+    if (reset) {
+      reset = false;
+      // reset counter and set clock divider high
+      dividerHigh = true;
+      counter = 0;
+
+      // update flipFlop output (high/low for one full cycle)
+      flipFlop = !flipFlop;
+      PulseOut1(flipFlop);
+      LedOn(4, flipFlop);
+    } else if (changed) {
+      dividerHigh = false;
+    }
+    
+    AudioOut1(compHigh ? 2047 : -2048);
+    LedOn(0, compHigh);
+
+    AudioOut2(dividerHigh ? 2047 : -2048);
+    LedOn(1, dividerHigh);
+
+    // same as comparator, but not during clock divider
+    bool pulse2 = compHigh && !dividerHigh;
+    PulseOut2(pulse2);
+    LedOn(5, pulse2);
+
+    // CV1 outputs whole tone steps for the counter. 
+    // direction (up/down) depends on the switch, CVIn2 inverts the direction
+    if ((SwitchVal() == Up) != (CVIn2() > 1024)) {
+      LedOn(3, true);
+      LedBrightness(2, counter<<7);
+      CVOut1MIDINote(60 + counter*2); // whole tones, up from 0V
+    } else {
+      LedOn(3, false);
+      LedBrightness(2, (n-counter)<<7);
+      CVOut1MIDINote(60 + 2*n - counter*2); // whole tones down
+    }
+
+    // CV2 outputs whole tones steps depending on the
+    // current n value (depending on main knob and CV1)
+    CVOut2MIDINote(60 + 2*(n-1));
+
+  }
+};
+
+
+int main() {
+  DivCom dc;
+  dc.EnableNormalisationProbe();
+  dc.Run();
+}

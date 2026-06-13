@@ -1,0 +1,1678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Workshop System — Hardware Characterization Tool</title>
+  <meta name="description" content="Hardware characterization and calibration tool for the MTM Workshop System eurorack module.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <style>
+    :root {
+      --bg-dark: #080c14;
+      --bg-glass: rgba(14, 22, 40, 0.72);
+      --border-glass: rgba(255,255,255,0.07);
+      --glow-purple: #9d4edd;
+      --glow-blue: #00b4d8;
+      --glow-cyan: #52b788;
+      --glow-red: #f72585;
+      --glow-amber: #f9a826;
+      --text-main: #dde8ff;
+      --text-muted: #7e8fa8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: radial-gradient(ellipse at 50% -10%, #1c1230 0%, var(--bg-dark) 60%);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 1.5rem 2rem;
+    }
+    .container {
+      max-width: 1440px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 1.25rem;
+    }
+    .panel {
+      background: var(--bg-glass);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border-glass);
+      border-radius: 20px;
+      padding: 1.5rem;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+    }
+
+    /* ── HEADER ── */
+    header {
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    header h1 {
+      font-size: 1.9rem;
+      font-weight: 800;
+      background: linear-gradient(100deg, #c77dff, var(--glow-purple), var(--glow-blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.3px;
+    }
+    .hdr-meta { text-align: right; }
+    .hdr-meta-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .hdr-meta-val { font-size: 0.9rem; font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--glow-cyan); }
+
+    /* ── SETUP BAR ── */
+    .setup-bar {
+      grid-column: 1 / -1;
+      display: flex;
+      gap: 1rem;
+      align-items: flex-end;
+      flex-wrap: wrap;
+    }
+    .setup-group { display: flex; flex-direction: column; gap: 0.25rem; flex: 1; min-width: 180px; }
+    .setup-group label { font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px; }
+
+    /* ── INPUTS / BUTTONS ── */
+    select, .btn {
+      background: #111827;
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--text-main);
+      padding: 0.65rem 1rem;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 0.88rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    select:hover { border-color: rgba(255,255,255,0.2); }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; font-weight: 600; }
+    .btn:hover { filter: brightness(1.15); transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+    .btn-primary {
+      background: linear-gradient(135deg, #7b2ff7, #9d4edd);
+      border: none; color: #fff;
+      box-shadow: 0 3px 15px rgba(157,78,221,0.35);
+    }
+    .btn-blue {
+      background: linear-gradient(135deg, #0077b6, #00b4d8);
+      border: none; color: #fff;
+      box-shadow: 0 3px 15px rgba(0,180,216,0.3);
+    }
+    .btn-record {
+      background: linear-gradient(135deg, #c9184a, #f72585);
+      border: none; color: #fff;
+      box-shadow: 0 3px 15px rgba(247,37,133,0.35);
+      width: 100%; padding: 0.8rem; border-radius: 12px; margin-top: 0.5rem;
+    }
+    .btn-record.recording { animation: pulse-rec 1.1s ease-in-out infinite; }
+    @keyframes pulse-rec {
+      0%,100% { box-shadow: 0 0 0 0 rgba(247,37,133,0.7); }
+      50% { box-shadow: 0 0 0 10px rgba(247,37,133,0); }
+    }
+    .btn-sm {
+      font-size: 0.75rem;
+      padding: 0.35rem 0.8rem;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: var(--text-muted);
+    }
+    .btn-sm:hover { background: rgba(82,183,136,0.15); border-color: var(--glow-cyan); color: #fff; }
+
+    /* ── CALIBRATION PANEL ── */
+    #calibration-panel { grid-column: 1 / -1; display: none; }
+    #calibration-panel.visible { display: block; }
+    .cal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .cal-section h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.4rem; }
+    .cal-section p { font-size: 0.8rem; color: var(--text-muted); line-height: 1.55; margin-bottom: 0.75rem; }
+    .cal-divider { border-left: 1px solid var(--border-glass); padding-left: 1.5rem; }
+    .cal-badge { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: var(--text-muted); line-height: 1.6; }
+
+    /* ── SIDEBAR ── */
+    .sidebar { display: flex; flex-direction: column; gap: 0.6rem; }
+    .sidebar-title {
+      font-size: 0.68rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1.8px;
+      color: var(--text-muted);
+      padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-glass);
+    }
+    .steps-list { display: flex; flex-direction: column; gap: 0.3rem; }
+    .step-item {
+      padding: 0.7rem 0.9rem;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex; align-items: center; gap: 0.65rem;
+    }
+    .step-item:hover { background: rgba(255,255,255,0.04); }
+    .step-item.active { background: rgba(157,78,221,0.1); border-color: rgba(157,78,221,0.28); }
+    .step-item.has-data { border-color: rgba(82,183,136,0.18); }
+    .step-num {
+      width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+      background: rgba(255,255,255,0.07);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; font-weight: 700;
+    }
+    .step-item.active .step-num { background: var(--glow-purple); color: #fff; box-shadow: 0 0 8px var(--glow-purple); }
+    .step-item.has-data .step-num { background: rgba(82,183,136,0.25); color: var(--glow-cyan); }
+    .step-label { font-size: 0.8rem; font-weight: 600; line-height: 1.25; }
+    .step-sub { font-size: 0.68rem; color: var(--text-muted); margin-top: 0.1rem; }
+
+    /* ── MAIN WORKSPACE ── */
+    .main-workspace { display: flex; flex-direction: column; gap: 1.25rem; min-width: 0; }
+
+    /* Instruction */
+    .instruction-card { display: flex; gap: 1rem; align-items: flex-start; }
+    .instr-icon { font-size: 1.8rem; flex-shrink: 0; }
+    .instr-text h3 { font-size: 1rem; margin-bottom: 0.25rem; }
+    .instr-text p { font-size: 0.82rem; color: var(--text-muted); line-height: 1.55; }
+
+    /* Control grid */
+    .control-grid { display: grid; grid-template-columns: 230px 1fr; gap: 1.25rem; min-width: 0; }
+
+    /* Dial */
+    .dial-workspace {
+      display: flex; flex-direction: column; align-items: center; gap: 0.75rem;
+      border: 1px solid var(--border-glass); border-radius: 18px; padding: 1.25rem;
+      background: rgba(255,255,255,0.01);
+    }
+    .dial-label { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px; }
+    .knob-wrap { width: 160px; height: 160px; }
+    svg.dial-svg { width: 100%; height: 100%; }
+    .dial-bg { fill: #0d1421; stroke: rgba(255,255,255,0.06); stroke-width: 2; }
+    .dial-ring { fill: none; stroke: rgba(157,78,221,0.12); stroke-width: 6; }
+    .dial-rotator { transform-origin: 80px 80px; transition: transform 0.35s cubic-bezier(.25,.8,.25,1); }
+    .dial-cap { fill: #1a2740; stroke: rgba(255,255,255,0.1); stroke-width: 1.5; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6)); }
+    .dial-pointer { stroke: #fff; stroke-width: 2.5; stroke-linecap: round; filter: drop-shadow(0 0 3px rgba(255,255,255,0.9)); }
+    .dial-deg { font-size: 1.6rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; text-align: center; }
+    .notch-list { display: flex; flex-wrap: wrap; gap: 0.35rem; justify-content: center; }
+    .notch-btn {
+      padding: 0.25rem 0.55rem; font-size: 0.7rem; border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.07);
+      cursor: pointer; transition: all 0.15s;
+    }
+    .notch-btn:hover { background: rgba(255,255,255,0.08); }
+    .notch-btn.active { background: rgba(157,78,221,0.2); border-color: rgba(157,78,221,0.5); color: #fff; }
+    .notch-btn.done { background: rgba(82,183,136,0.13); border-color: rgba(82,183,136,0.35); color: var(--glow-cyan); }
+
+    /* Visualizers */
+    .visualizers-col { display: flex; flex-direction: column; gap: 0.9rem; min-width: 0; }
+    .plot-wrap {
+      background: rgba(0,0,0,0.3); border-radius: 14px;
+      border: 1px solid var(--border-glass); padding: 0.75rem 0.75rem 0.5rem;
+    }
+    .plot-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.4rem; }
+    .canvas-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    .canvas-wrap {
+      position: relative; border-radius: 10px; overflow: hidden;
+      border: 1px solid var(--border-glass); background: #06090f;
+    }
+    .canvas-wrap canvas { display: block; width: 100%; height: 110px; }
+    .canvas-tag {
+      position: absolute; top: 7px; left: 10px;
+      font-size: 0.6rem; font-family: 'JetBrains Mono', monospace;
+      text-transform: uppercase; color: rgba(255,255,255,0.3);
+      pointer-events: none; letter-spacing: 0.5px;
+    }
+
+    /* Diagnostics */
+    .diag-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.7rem; }
+    .diag-header h2 { font-size: 0.95rem; font-weight: 600; }
+    .diag-controls { display: flex; align-items: center; gap: 0.6rem; }
+    .progress-pill {
+      font-size: 0.68rem; font-family: 'JetBrains Mono', monospace;
+      background: rgba(82,183,136,0.12); border: 1px solid rgba(82,183,136,0.25);
+      color: var(--glow-cyan); padding: 0.2rem 0.6rem; border-radius: 100px;
+    }
+    table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; }
+    th {
+      color: var(--text-muted); font-size: 0.68rem; text-transform: uppercase;
+      padding: 0.45rem 0.7rem; text-align: left;
+      border-bottom: 1px solid var(--border-glass); letter-spacing: 0.4px;
+    }
+    td { padding: 0.55rem 0.7rem; border-bottom: 1px solid rgba(255,255,255,0.02); }
+    tr.row-active td { background: rgba(255,255,255,0.03); }
+    tr:hover td { background: rgba(255,255,255,0.015); }
+
+    /* Review */
+    .review-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; }
+    .review-card { background: rgba(255,255,255,0.02); border: 1px solid var(--border-glass); border-radius: 14px; padding: 1.1rem; }
+    .review-card-title { font-size: 0.7rem; font-weight: 700; color: var(--glow-blue); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 0.5rem; }
+    .review-val { font-size: 1.3rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; margin-bottom: 0.2rem; }
+    .review-sub { font-size: 0.75rem; color: var(--text-muted); line-height: 1.45; }
+    .review-actions { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; margin-top: 1.25rem; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- ── HEADER ─────────────────────────────────────────── -->
+  <header class="panel">
+    <div>
+      <h1>Workshop System</h1>
+      <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.1rem;">Hardware Characterization &amp; Calibration</div>
+    </div>
+    <div class="hdr-meta">
+      <div class="hdr-meta-label">Voltage Scale</div>
+      <div class="hdr-meta-val" id="hdr-vscale">Uncalibrated</div>
+    </div>
+  </header>
+
+  <!-- ── SETUP BAR ────────────────────────────────────────── -->
+  <div class="setup-bar panel">
+    <div class="setup-group">
+      <label for="input-select">Audio Input</label>
+      <select id="input-select"><option value="">Select input device…</option></select>
+    </div>
+    <div class="setup-group">
+      <label for="output-select">Audio Output</label>
+      <select id="output-select"><option value="">Select output device…</option></select>
+    </div>
+    <button class="btn btn-primary" id="btn-audio-init" style="align-self:flex-end; padding:0.65rem 1.5rem;">
+      Initialize Audio
+    </button>
+  </div>
+
+  <!-- ── CALIBRATION PANEL ─────────────────────────────────── -->
+  <div id="calibration-panel" class="panel">
+    <div class="cal-grid">
+      <div class="cal-section">
+        <h3 style="color:var(--glow-blue);">⚡ Step 1 — Set Output Level (20 Vpp Reference)</h3>
+        <p>Connect PC headphone out → Workshop <strong>STEREO IN</strong>. Patch <strong>STEREO IN OUT</strong> to your oscilloscope. Click <em>Start Cal Tone</em> and adjust your PC volume + STEREO IN gain trim until the scope reads exactly <strong>20 V peak-to-peak</strong> (−10 V to +10 V). This sets 0 dBFS = 10 V peak across all measurements.</p>
+        <button class="btn btn-blue" id="btn-toggle-cal" style="width:100%;">Start Cal Tone (1 kHz)</button>
+      </div>
+      <div class="cal-section cal-divider">
+        <h3 style="color:var(--glow-purple);">🎛 Step 2 — Measure Interface Input Level</h3>
+        <p>Route <strong>STEREO IN OUT</strong> into your interface input (reduce interface gain to avoid clipping). Click <em>Measure</em>. The tool records noise floor silently, then plays the cal tone and captures its peak — computing a voltage scale factor so all results are in real Volts.</p>
+        <div style="display:flex; gap:0.7rem; align-items:center;">
+          <button class="btn btn-primary" id="btn-measure-cal" disabled style="flex:1;">Measure Input Reference</button>
+          <div class="cal-badge" id="cal-badge">Uncalibrated</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SIDEBAR ───────────────────────────────────────────── -->
+  <div class="sidebar panel">
+    <div class="sidebar-title">Calibration Steps</div>
+    <div class="steps-list" id="steps-list"></div>
+  </div>
+
+  <!-- ── MAIN WORKSPACE ─────────────────────────────────────── -->
+  <main class="main-workspace">
+
+    <!-- Instruction -->
+    <div class="instruction-card panel">
+      <div class="instr-icon" id="instr-icon">📋</div>
+      <div class="instr-text">
+        <h3 id="instr-title">Select a step from the sidebar</h3>
+        <p id="instr-desc">Initialize audio and complete calibration first. Then select a module test from the left sidebar.</p>
+      </div>
+    </div>
+
+    <!-- Control Grid -->
+    <div class="control-grid">
+
+      <!-- Dial workspace -->
+      <div class="dial-workspace">
+        <div class="dial-label" id="dial-label">Knob Position</div>
+        <div class="knob-wrap">
+          <svg class="dial-svg" viewBox="0 0 160 160">
+            <circle class="dial-bg" cx="80" cy="80" r="72"/>
+            <circle class="dial-ring" cx="80" cy="80" r="68"/>
+            <g class="dial-rotator" id="dial-rotator">
+              <circle class="dial-cap" cx="80" cy="80" r="54"/>
+              <line class="dial-pointer" x1="80" y1="80" x2="80" y2="32"/>
+            </g>
+          </svg>
+        </div>
+        <div>
+          <div class="dial-deg" id="dial-deg-text">0°</div>
+          <div style="font-size:0.68rem; color:var(--text-muted); text-align:center; margin-top:0.1rem;">Notch Position</div>
+        </div>
+        <div class="notch-list" id="notch-list"></div>
+        <button class="btn btn-record" id="btn-record" disabled>⏺ Record 1.5 s</button>
+      </div>
+
+      <!-- Visualizers -->
+      <div class="visualizers-col">
+        <div class="plot-wrap">
+          <div class="plot-label" id="plot-label">Calibration Curve</div>
+          <svg id="plot-svg" width="100%" height="200" style="overflow:visible; display:block;"></svg>
+        </div>
+        <div class="canvas-row">
+          <div class="canvas-wrap">
+            <canvas id="scope-canvas"></canvas>
+            <div class="canvas-tag">Oscilloscope</div>
+          </div>
+          <div class="canvas-wrap">
+            <canvas id="fft-canvas"></canvas>
+            <div class="canvas-tag">FFT Spectrum</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Diagnostics -->
+    <div class="panel">
+      <div class="diag-header">
+        <h2>Acquired Data</h2>
+        <div class="diag-controls">
+          <span class="progress-pill" id="progress-pill">0 / 0</span>
+          <button class="btn btn-sm" id="btn-export-step" onclick="exportCurrentStep()">⬇ Export This Step</button>
+        </div>
+      </div>
+      <div id="diag-table-wrap">
+        <table>
+          <thead><tr id="tbl-head"></tr></thead>
+          <tbody id="tbl-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════════
+// STEP CONFIGURATION
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const NOTCH_POSITIONS = [-150, -135, -90, -45, 0, 45, 90, 135, 150];
+
+const stepNotches = [
+  [...NOTCH_POSITIONS], // 0 Amp Mic
+  [...NOTCH_POSITIONS], // 1 Amp LoFi
+  [...NOTCH_POSITIONS], // 2 Filter LP
+  [...NOTCH_POSITIONS], // 3 Filter HP/BP
+  [...NOTCH_POSITIONS], // 4 Filter Resonance
+  [...NOTCH_POSITIONS], // 5 Oscillator
+  [...NOTCH_POSITIONS], // 6 Stompbox Blend
+  [...NOTCH_POSITIONS], // 7 Stompbox Feedback
+  [],                   // 8 Review
+];
+
+const stepConfigs = [
+  {
+    title:     'Amp — Mic Mode Gain Taper',
+    icon:      '🔊',
+    desc:      'Mode switch → Mic (right). Route STEREO IN OUT → AMP IN. Connect AMP OUT → interface input. Set Feedback to off. Sweep the Gain knob notch by notch from −150° to +150°. A quiet 1 kHz tone (−30 dBFS) is generated automatically.',
+    dialLabel: 'Gain Knob',
+    colA:      'Output Level',   unitA: 'V',
+    colB:      'Sine THD',       unitB: '%',
+    plotTitle: 'Output Level (V) vs Gain Knob',
+    logY: false, yMin: 0, yMax: 22,
+    yTicks: [0, 5, 10, 15, 20],
+  },
+  {
+    title:     'Amp — LoFi Saturation',
+    icon:      '🎸',
+    desc:      'Mode switch → LoFi (left). Route STEREO IN OUT → AMP IN. Connect AMP OUT → interface input. Sweep the Gain knob. Line-level 1 kHz tone (−12 dBFS) is generated automatically.',
+    dialLabel: 'Gain Knob',
+    colA:      'Sine THD',       unitA: '%',
+    colB:      'Output Level',   unitB: 'V',
+    plotTitle: 'THD (%) vs Gain Knob',
+    logY: false, yMin: 0, yMax: 100,
+    yTicks: [0, 25, 50, 75, 100],
+  },
+  {
+    title:     'Filter — LP Cutoff',
+    icon:      '📉',
+    desc:      'Route STEREO IN OUT → FILTER IN. Connect LP OUT → interface input. Resonance to minimum. Sweep the Cutoff knob notch by notch. White noise is generated automatically.',
+    dialLabel: 'Cutoff Knob',
+    colA:      'LP Cutoff',      unitA: 'Hz',
+    colB:      'Spectral Peak',  unitB: 'Hz',
+    plotTitle: 'LP Cutoff Frequency (Hz) vs Cutoff Knob',
+    logY: true, yMin: 20, yMax: 20000,
+    yTicks: [20, 100, 500, 2000, 10000, 20000],
+  },
+  {
+    title:     'Filter — HP & BP',
+    icon:      '📈',
+    desc:      'Route STEREO IN OUT → FILTER IN. Connect HP OUT or BP OUT → interface input. Resonance to minimum. Sweep the Cutoff knob. White noise generated automatically. Tool auto-detects HP vs BP from the spectral centroid.',
+    dialLabel: 'Cutoff Knob',
+    colA:      'Frequency',      unitA: 'Hz',
+    colB:      'Filter Type',    unitB: '',
+    plotTitle: 'HP/BP Frequency (Hz) vs Cutoff Knob',
+    logY: true, yMin: 20, yMax: 20000,
+    yTicks: [20, 100, 500, 2000, 10000, 20000],
+  },
+  {
+    title:     'Filter — Resonance & Self-Osc',
+    icon:      '〰️',
+    desc:      'Route STEREO IN OUT → FILTER IN. Connect LP OUT → interface. Set Cutoff to Center (0°). Sweep the Resonance knob. White noise plays for 1 s then mutes — the tool checks whether the filter continues to self-oscillate during silence.',
+    dialLabel: 'Resonance Knob',
+    colA:      'Peak Boost',     unitA: 'dB',
+    colB:      'Self-Osc',       unitB: 'Hz',
+    plotTitle: 'Resonance Peak Boost (dB) vs Resonance Knob',
+    logY: false, yMin: 0, yMax: 40,
+    yTicks: [0, 10, 20, 30, 40],
+  },
+  {
+    title:     'Oscillator — Tuning & Sine Shape',
+    icon:      '〜',
+    desc:      'No input signal needed — the oscillator runs freely. Connect OSC SIN OUT → interface input. Sweep the Frequency knob from −150° to +150°. Tool measures pitch and the purity of the sine waveform (THD %).',
+    dialLabel: 'Frequency Knob',
+    colA:      'Frequency',      unitA: 'Hz',
+    colB:      'Sine THD',       unitB: '%',
+    plotTitle: 'Oscillator Frequency (Hz) vs Frequency Knob',
+    logY: true, yMin: 10, yMax: 8000,
+    yTicks: [20, 50, 100, 500, 1000, 5000],
+  },
+  {
+    title:     'Stompbox — Blend Law',
+    icon:      '🎚️',
+    desc:      'Route STEREO IN OUT → STOMPBOX IN. Patch STOMPBOX SEND → STOMPBOX RETURN (loopback cable). Connect STOMPBOX OUT → interface. Set Feedback to minimum. Sweep the Blend knob notch by notch. Line-level 1 kHz tone generated automatically.',
+    dialLabel: 'Blend Knob',
+    colA:      'Output Level',   unitA: 'V',
+    colB:      'Wet/Dry Ratio',  unitB: '',
+    plotTitle: 'Output Level (V) vs Blend Knob',
+    logY: false, yMin: 0, yMax: 15,
+    yTicks: [0, 3, 6, 9, 12, 15],
+  },
+  {
+    title:     'Stompbox — Feedback',
+    icon:      '🔁',
+    desc:      'Keep SEND→RETURN loopback. Set Blend to maximum (fully wet). Sweep Feedback knob notch by notch. Tool measures output level change — increasing feedback raises the level and may cause self-oscillation. Record −150° first (feedback off = baseline).',
+    dialLabel: 'Feedback Knob',
+    colA:      'Output Level',   unitA: 'V',
+    colB:      'ΔLevel vs Ref',  unitB: 'dB',
+    plotTitle: 'Output Level (V) vs Feedback Knob',
+    logY: false, yMin: 0, yMax: 15,
+    yTicks: [0, 3, 6, 9, 12, 15],
+  },
+  {
+    title:     'Review & Export',
+    icon:      '✅',
+    desc:      'Summary of all measured parameters across modules.',
+    dialLabel: '',
+    colA: '-', unitA: '-', colB: '-', unitB: '-',
+    plotTitle: '',
+    logY: false, yMin: 0, yMax: 1, yTicks: [],
+  },
+];
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+let currentStep    = 0;
+let currentNotch   = 4;   // default: center (index 4 in NOTCH_POSITIONS)
+let isRecording    = false;
+let animFrame      = null;
+
+// Audio context + nodes
+let audioCtx  = null;
+let stream    = null;
+let inputNode = null;
+let analyzer  = null;
+let sampleRate = 48000;
+
+// Calibration tone nodes
+let calOsc = null, calGain = null, calActive = false;
+
+// Calibration results
+let voltageScale  = 10.0;    // digital 1.0 → 10 V peak
+let noiseFloorRms = 0.0001;
+
+// Data store: stepsData[stepIdx][notchIdx] = { rms, val, metric, audioBuffer }
+const stepsData = Array.from({ length: 9 }, () => ({}));
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// DOM REFS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const dialRotator = document.getElementById('dial-rotator');
+const dialDegText = document.getElementById('dial-deg-text');
+const notchList   = document.getElementById('notch-list');
+const btnRecord   = document.getElementById('btn-record');
+const tblHead     = document.getElementById('tbl-head');
+const tblBody     = document.getElementById('tbl-body');
+const plotSvg     = document.getElementById('plot-svg');
+const scopeCanvas = document.getElementById('scope-canvas');
+const fftCanvas   = document.getElementById('fft-canvas');
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// DEVICE ENUMERATION
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// Device enumeration — called once on load (labels blank) then again after permission granted
+function populateDevices(activeInputId) {
+  navigator.mediaDevices.enumerateDevices().then(devices => {
+    const inSel  = document.getElementById('input-select');
+    const outSel = document.getElementById('output-select');
+    // Preserve current selections
+    const prevIn  = inSel.value;
+    const prevOut = outSel.value;
+    inSel.innerHTML  = '<option value="">Default Input</option>';
+    outSel.innerHTML = '<option value="">Default Output</option>';
+    devices.forEach(d => {
+      const label = d.label || (d.kind === 'audioinput' ? `Mic #${inSel.length}` : `Speaker #${outSel.length}`);
+      const o = new Option(label, d.deviceId);
+      if (d.kind === 'audioinput')  { inSel.appendChild(o);  }
+      if (d.kind === 'audiooutput') { outSel.appendChild(o); }
+    });
+    // Restore or auto-select active device
+    if (activeInputId) inSel.value = activeInputId;
+    else if (prevIn)   inSel.value = prevIn;
+    if (prevOut)       outSel.value = prevOut;
+  }).catch(() => {});
+}
+// Request permissions on load to immediately get device names
+if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+  navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(s => {
+      s.getTracks().forEach(t => t.stop());
+      populateDevices();
+    })
+    .catch(() => {
+      populateDevices();
+    });
+} else {
+  populateDevices();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CALIBRATION TONE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function toggleCalTone() {
+  if (!audioCtx) return;
+  const btn = document.getElementById('btn-toggle-cal');
+  if (!calActive) {
+    calOsc  = audioCtx.createOscillator();
+    calGain = audioCtx.createGain();
+    calOsc.frequency.value = 1000;
+    calGain.gain.value = 1.0;
+    calOsc.connect(calGain);
+    calGain.connect(audioCtx.destination);
+    calOsc.start();
+    calActive = true;
+    btn.textContent = '⏹ Stop Cal Tone';
+    btn.style.background = 'linear-gradient(135deg,#c9184a,#f72585)';
+    document.getElementById('cal-badge').innerHTML =
+      '<span style="color:var(--glow-red)">● 1 kHz outputting…</span>';
+  } else {
+    try { calOsc.stop(); } catch(e) {}
+    calOsc.disconnect();
+    calGain.disconnect();
+    calOsc = null; calGain = null; calActive = false;
+    btn.textContent = 'Start Cal Tone (1 kHz)';
+    btn.style.background = '';
+    document.getElementById('cal-badge').innerHTML = 'Tone off';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// INPUT REFERENCE MEASUREMENT (two-phase)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+async function measureInputReference() {
+  if (!audioCtx) return;
+  const btn   = document.getElementById('btn-measure-cal');
+  const badge = document.getElementById('cal-badge');
+  btn.disabled = true;
+
+  // Phase 1 — noise floor (tone OFF)
+  if (calActive) toggleCalTone();
+  badge.innerHTML = '🔇 Measuring noise floor…';
+  await sleep(150);
+  const nSamples = Math.floor(sampleRate * 0.6);
+  const nBuf = new Float32Array(nSamples);
+  await recordSamples(nBuf, nSamples);
+  let nsum = 0;
+  for (let i = 0; i < nSamples; i++) nsum += nBuf[i] * nBuf[i];
+  noiseFloorRms = Math.sqrt(nsum / nSamples);
+
+  // Phase 2 — cal tone peak
+  badge.innerHTML = '🔊 Generating cal tone…';
+  toggleCalTone();
+  await sleep(300);
+  const tBuf = new Float32Array(nSamples);
+  await recordSamples(tBuf, nSamples);
+  if (calActive) toggleCalTone();
+
+  let peakVal = 0;
+  for (let i = 0; i < nSamples; i++) if (Math.abs(tBuf[i]) > peakVal) peakVal = Math.abs(tBuf[i]);
+
+  btn.disabled = false;
+  if (peakVal < 0.003) {
+    badge.innerHTML = '<span style="color:var(--glow-red)">❌ No signal detected — check routing</span>';
+    return;
+  }
+
+  voltageScale = 10.0 / peakVal;
+  const noiseDb = 20 * Math.log10(noiseFloorRms + 1e-12);
+  const noiseMv = noiseFloorRms * voltageScale * 1000;
+  const calDbfs  = 20 * Math.log10(peakVal);
+  document.getElementById('hdr-vscale').textContent =
+    `1.000 digital = ${voltageScale.toFixed(2)} V`;
+
+  // Sanity check — if interface input was too quiet the scale is meaningless
+  if (voltageScale > 300) {
+    badge.innerHTML =
+      `<span style="color:var(--glow-amber)">⚠️ Scale ${voltageScale.toFixed(0)} V/dig — cal tone too quiet (${calDbfs.toFixed(1)} dBFS).</span><br>` +
+      `<strong>Increase interface input gain, then re-measure.</strong>`;
+  } else {
+    badge.innerHTML =
+      `<span style="color:var(--glow-cyan)">✅ ${voltageScale.toFixed(2)} V/digital</span> (cal at ${calDbfs.toFixed(1)} dBFS)<br>` +
+      `Noise: ${noiseDb.toFixed(1)} dBFS / ${noiseMv.toFixed(2)} mV`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// AUDIO INIT
+// ═══════════════════════════════════════════════════════════════════════════════
+
+document.getElementById('btn-audio-init').addEventListener('click', async () => {
+  const inSel = document.getElementById('input-select');
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        deviceId: inSel.value ? { exact: inSel.value } : undefined,
+        echoCancellation: false,
+        noiseSuppression: false,
+        autoGainControl: false,
+      }
+    });
+    // Re-enumerate now that we have permission — labels will be populated
+    const activeTrack = stream.getAudioTracks()[0];
+    const activeId    = activeTrack?.getSettings?.()?.deviceId;
+    populateDevices(activeId);
+    audioCtx  = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 48000 });
+    sampleRate = audioCtx.sampleRate;
+    inputNode = audioCtx.createMediaStreamSource(stream);
+    analyzer  = audioCtx.createAnalyser();
+    analyzer.fftSize = 2048;
+    inputNode.connect(analyzer);
+
+    const outSel = document.getElementById('output-select');
+    if (outSel.value && typeof audioCtx.setSinkId === 'function') {
+      try {
+        await audioCtx.setSinkId(outSel.value);
+        console.log("Initial output sink set to:", outSel.value);
+      } catch (err) {
+        console.error("Failed to set initial output sink:", err);
+      }
+    }
+
+    btnRecord.disabled = false;
+    const initBtn = document.getElementById('btn-audio-init');
+    initBtn.textContent = '✓ Audio Active';
+    initBtn.style.background = 'linear-gradient(135deg,#1b4332,var(--glow-cyan))';
+    initBtn.style.color = '#fff';
+
+    document.getElementById('calibration-panel').classList.add('visible');
+    document.getElementById('btn-toggle-cal').onclick  = toggleCalTone;
+    const btnM = document.getElementById('btn-measure-cal');
+    btnM.disabled = false;
+    btnM.onclick  = measureInputReference;
+
+    startVisualizers();
+    renderAll();
+  } catch (err) {
+    alert('Could not open audio device: ' + err.message);
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// STEP SELECTION
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function selectStep(idx) {
+  currentStep  = idx;
+  currentNotch = 4;
+
+  const cfg = stepConfigs[idx];
+  document.getElementById('instr-icon').textContent  = cfg.icon;
+  document.getElementById('instr-title').textContent = cfg.title;
+  document.getElementById('instr-desc').textContent  = cfg.desc;
+  document.getElementById('dial-label').textContent  = cfg.dialLabel;
+  document.getElementById('plot-label').textContent  = cfg.plotTitle;
+
+  const notches = stepNotches[idx];
+  if (notches.length) rotateDial(notches[currentNotch]);
+
+  renderSidebar();
+  if (idx === 8) renderReview();
+  else           renderAll();
+}
+
+function rotateDial(deg) {
+  dialRotator.style.transform = `rotate(${deg}deg)`;
+  dialDegText.textContent = deg === 0 ? '0° (Center)' : `${deg}°`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SIDEBAR
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function renderSidebar() {
+  const list = document.getElementById('steps-list');
+  list.innerHTML = '';
+  stepConfigs.forEach((cfg, idx) => {
+    const notches = stepNotches[idx];
+    const done    = notches.filter((_, i) => stepsData[idx][i]).length;
+    const isRev   = idx === 8;
+    const div = document.createElement('div');
+    div.className = [
+      'step-item',
+      idx === currentStep ? 'active' : '',
+      done > 0 ? 'has-data' : '',
+    ].filter(Boolean).join(' ');
+    div.onclick = () => selectStep(idx);
+    div.innerHTML = `
+      <div class="step-num">${isRev ? '★' : idx + 1}</div>
+      <div>
+        <div class="step-label">${cfg.icon} ${cfg.title}</div>
+        <div class="step-sub">${isRev ? 'Summary' : done + '/' + notches.length + ' notches'}</div>
+      </div>`;
+    list.appendChild(div);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// NOTCH BUTTONS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function renderNotchButtons() {
+  notchList.innerHTML = '';
+  const notches = stepNotches[currentStep];
+  notches.forEach((deg, idx) => {
+    const btn = document.createElement('button');
+    btn.className = [
+      'notch-btn',
+      idx === currentNotch ? 'active' : '',
+      stepsData[currentStep][idx] ? 'done' : '',
+    ].filter(Boolean).join(' ');
+    btn.textContent = deg === 0 ? 'Ctr' : `${deg}°`;
+    btn.onclick = () => {
+      currentNotch = idx;
+      rotateDial(deg);
+      renderNotchButtons();
+      renderTable();
+    };
+    notchList.appendChild(btn);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TABLE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function renderTable() {
+  const cfg     = stepConfigs[currentStep];
+  const notches = stepNotches[currentStep];
+  const done    = notches.filter((_, i) => stepsData[currentStep][i]).length;
+  document.getElementById('progress-pill').textContent = `${done} / ${notches.length}`;
+
+  tblHead.innerHTML = `
+    <th>Notch</th><th>Status</th><th>RMS (V)</th>
+    <th>${cfg.colA}${cfg.unitA ? ' (' + cfg.unitA + ')' : ''}</th>
+    <th>${cfg.colB}${cfg.unitB ? ' (' + cfg.unitB + ')' : ''}</th>`;
+
+  tblBody.innerHTML = '';
+  notches.forEach((deg, idx) => {
+    const d  = stepsData[currentStep][idx];
+    const tr = document.createElement('tr');
+    if (idx === currentNotch) tr.className = 'row-active';
+    const rmsStr = d ? (d.rms).toFixed(4) : '—';
+    const valStr = d ? fmtVal(d.val,    currentStep, 'val') : '—';
+    const metStr = d ? fmtVal(d.metric, currentStep, 'met') : '—';
+    tr.innerHTML = `
+      <td><strong>${deg === 0 ? 'Center' : deg + '°'}</strong></td>
+      <td style="color:${d ? 'var(--glow-cyan)' : 'var(--text-muted)'}">${d ? '✅' : '○'}</td>
+      <td>${rmsStr}</td>
+      <td>${valStr}</td>
+      <td>${metStr}</td>`;
+    tblBody.appendChild(tr);
+  });
+}
+
+function fmtVal(v, step, field) {
+  if (v === undefined || v === null || isNaN(v)) return '—';
+  if (step === 0) return field === 'val' ? v.toFixed(3) + ' V'  : v.toFixed(2) + '%';
+  if (step === 1) return field === 'val' ? v.toFixed(2) + '%'   : v.toFixed(3) + ' V';
+  if (step === 2) return field === 'val' ? Math.round(v) + ' Hz': Math.round(v) + ' Hz';
+  if (step === 3) {
+    if (field === 'val') return Math.round(v) + ' Hz';
+    return v === 1 ? 'HP' : 'BP';
+  }
+  if (step === 4) return field === 'val' ? v.toFixed(1) + ' dB' : (v > 0 ? Math.round(v) + ' Hz' : 'No self-osc');
+  if (step === 5) {
+    if (field === 'val') {
+      if (v === -1) return '< 20 Hz (AC cut)';
+      return v >= 1000 ? (v/1000).toFixed(2) + ' kHz' : Math.round(v) + ' Hz';
+    }
+    return v.toFixed(2) + '%';
+  }
+  if (step === 6) return field === 'val' ? v.toFixed(3) + ' V'  : v.toFixed(3);
+  if (step === 7) {
+    if (field === 'val') return v.toFixed(3) + ' V';
+    return (v >= 0 ? '+' : '') + v.toFixed(2) + ' dB';
+  }
+  return v.toFixed(3);
+}
+
+function renderAll() {
+  renderNotchButtons();
+  renderTable();
+  drawPlot();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// VISUALIZERS (oscilloscope + FFT)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function startVisualizers() {
+  if (!analyzer) return;
+
+  const dpr      = window.devicePixelRatio || 1;
+  const scopeCtx = scopeCanvas.getContext('2d');
+  const fftCtx   = fftCanvas.getContext('2d');
+  const timeBuf  = new Uint8Array(analyzer.frequencyBinCount);
+  const freqBuf  = new Uint8Array(analyzer.frequencyBinCount);
+
+  let scopeW = 0, scopeH = 0, fftW = 0, fftH = 0;
+
+  function setupCanvas(canvas) {
+    const r = canvas.getBoundingClientRect();
+    if (r.width < 10 || r.height < 10) return false;
+    canvas.width  = Math.round(r.width  * dpr);
+    canvas.height = Math.round(r.height * dpr);
+    return true;
+  }
+
+  function draw() {
+    animFrame = requestAnimationFrame(draw);
+    analyzer.getByteTimeDomainData(timeBuf);
+    analyzer.getByteFrequencyData(freqBuf);
+
+    // Re-setup canvases if dimensions changed
+    const sw = scopeCanvas.offsetWidth, sh = scopeCanvas.offsetHeight;
+    const fw = fftCanvas.offsetWidth,   fh = fftCanvas.offsetHeight;
+    if (scopeCanvas.width !== Math.round(sw * dpr)) { setupCanvas(scopeCanvas); scopeCtx.scale(dpr, dpr); }
+    if (fftCanvas.width   !== Math.round(fw * dpr)) { setupCanvas(fftCanvas);   fftCtx.scale(dpr, dpr); }
+    scopeW = sw; scopeH = sh; fftW = fw; fftH = fh;
+
+    // ── Oscilloscope ─────────────────────────────────────────────────
+    scopeCtx.fillStyle = '#060b12';
+    scopeCtx.fillRect(0, 0, scopeW, scopeH);
+
+    // Grid lines
+    scopeCtx.strokeStyle = 'rgba(255,255,255,0.06)';
+    scopeCtx.lineWidth = 0.75;
+    [0.25, 0.5, 0.75].forEach(f => {
+      scopeCtx.beginPath();
+      scopeCtx.moveTo(0, scopeH * f);
+      scopeCtx.lineTo(scopeW, scopeH * f);
+      scopeCtx.stroke();
+    });
+
+    // Waveform
+    scopeCtx.shadowBlur   = 6;
+    scopeCtx.shadowColor  = '#00e5ff';
+    scopeCtx.strokeStyle  = '#00e5ff';
+    scopeCtx.lineWidth    = 2.2;
+    scopeCtx.beginPath();
+    const sw2 = scopeW / timeBuf.length;
+    for (let i = 0; i < timeBuf.length; i++) {
+      const y = ((timeBuf[i] / 128.0) * scopeH) / 2;
+      i === 0 ? scopeCtx.moveTo(0, y) : scopeCtx.lineTo(i * sw2, y);
+    }
+    scopeCtx.stroke();
+    scopeCtx.shadowBlur = 0;
+
+    // ── FFT Spectrum ─────────────────────────────────────────────────
+    fftCtx.fillStyle = '#060b12';
+    fftCtx.fillRect(0, 0, fftW, fftH);
+
+    const bw = Math.max(1, (fftW / freqBuf.length) * 2.2);
+    for (let i = 0; i < freqBuf.length; i++) {
+      const bh  = (freqBuf[i] / 255) * fftH;
+      const hue = 190 + (i / freqBuf.length) * 80;
+      fftCtx.fillStyle = `hsl(${hue},85%,62%)`;
+      fftCtx.fillRect(i * bw, fftH - bh, bw - 0.5, bh);
+    }
+  }
+
+  requestAnimationFrame(() => {
+    setupCanvas(scopeCanvas); scopeCtx.scale(dpr, dpr);
+    setupCanvas(fftCanvas);   fftCtx.scale(dpr, dpr);
+    draw();
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SIGNAL GENERATOR
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function startPlayback() {
+  if (!audioCtx) return null;
+  const t = audioCtx.currentTime;
+
+  function makeOsc(amp) {
+    const osc  = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.frequency.value = 1000;
+    gain.gain.value = amp;
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    return { stop() { try { osc.stop(); } catch(e){} osc.disconnect(); gain.disconnect(); } };
+  }
+
+  function makeNoise(amp) {
+    const sz  = 2 * sampleRate;
+    const buf = audioCtx.createBuffer(1, sz, sampleRate);
+    const d   = buf.getChannelData(0);
+    for (let i = 0; i < sz; i++) d[i] = Math.random() * 2 - 1;
+    const src  = audioCtx.createBufferSource();
+    const gain = audioCtx.createGain();
+    src.buffer = buf; src.loop = true;
+    gain.gain.value = amp;
+    src.connect(gain); gain.connect(audioCtx.destination);
+    src.start();
+    return { stop() { try { src.stop(); } catch(e){} src.disconnect(); gain.disconnect(); } };
+  }
+
+  switch (currentStep) {
+    case 0: return makeOsc(0.032);    // −30 dBFS ≈ quiet mic-level
+    case 1: return makeOsc(0.25);     // −12 dBFS ≈ line level
+    case 2: return makeNoise(0.5);    // Filter LP: white noise
+    case 3: return makeNoise(0.5);    // Filter HP/BP: white noise
+    case 4: {                          // Resonance: noise 1 s then mute
+      const sz  = 2 * sampleRate;
+      const buf = audioCtx.createBuffer(1, sz, sampleRate);
+      const d   = buf.getChannelData(0);
+      for (let i = 0; i < sz; i++) d[i] = Math.random() * 2 - 1;
+      const src  = audioCtx.createBufferSource();
+      const gain = audioCtx.createGain();
+      src.buffer = buf; src.loop = true;
+      gain.gain.setValueAtTime(0.5, t);
+      gain.gain.setValueAtTime(0.5, t + 1.0);
+      gain.gain.linearRampToValueAtTime(0.0, t + 1.06);
+      src.connect(gain); gain.connect(audioCtx.destination);
+      src.start();
+      return { stop() { try { src.stop(); } catch(e){} src.disconnect(); gain.disconnect(); } };
+    }
+    case 5: return null;               // Oscillator: no output (self-running)
+    case 6: return makeOsc(0.25);     // Stompbox Blend: −12 dBFS
+    case 7: return makeOsc(0.25);     // Stompbox Feedback: −12 dBFS
+    default: return null;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// RECORDING
+// ═══════════════════════════════════════════════════════════════════════════════
+
+btnRecord.addEventListener('click', async () => {
+  if (!audioCtx || isRecording) return;
+  if (calActive) toggleCalTone();
+
+  isRecording = true;
+  btnRecord.textContent = '⏺ Recording…';
+  btnRecord.classList.add('recording');
+
+  const pb        = startPlayback();
+  const recLen    = Math.floor(sampleRate * 1.5);
+  const recBuf    = audioCtx.createBuffer(1, recLen, sampleRate);
+  const recData   = recBuf.getChannelData(0);
+
+  await recordSamples(recData, recLen);
+  if (pb) pb.stop();
+
+  const result = await analyzeBuffer(recBuf);
+  stepsData[currentStep][currentNotch] = result;
+
+  isRecording = false;
+  btnRecord.textContent = '⏺ Record 1.5 s';
+  btnRecord.classList.remove('recording');
+
+  renderSidebar();
+  renderAll();
+});
+
+// ── Promise-based sample capture ────────────────────────────────────────────
+function recordSamples(outArray, numSamples) {
+  return new Promise(resolve => {
+    let idx = 0, done = false;
+    const proc = audioCtx.createScriptProcessor(2048, 1, 1);
+    const mute = audioCtx.createGain();
+    mute.gain.value = 0;
+    inputNode.connect(proc);
+    proc.connect(mute);
+    mute.connect(audioCtx.destination);
+
+    const cleanup = () => {
+      if (done) return; done = true;
+      proc.onaudioprocess = null;
+      try { proc.disconnect(); } catch(e) {}
+      try { mute.disconnect(); } catch(e) {}
+      try { inputNode.disconnect(proc); } catch(e) {}
+      resolve();
+    };
+
+    proc.onaudioprocess = e => {
+      const ch = e.inputBuffer.getChannelData(0);
+      for (let i = 0; i < ch.length; i++) {
+        if (idx < numSamples) outArray[idx++] = ch[i];
+      }
+      if (idx >= numSamples) cleanup();
+    };
+
+    setTimeout(cleanup, (numSamples / sampleRate) * 1000 + 600);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// DSP HELPERS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// Cooley-Tukey FFT (in-place, power-of-2)
+function fft(re, im) {
+  const n = re.length;
+  for (let i = 0, j = 0; i < n; i++) {
+    if (i < j) {
+      [re[i], re[j]] = [re[j], re[i]];
+      [im[i], im[j]] = [im[j], im[i]];
+    }
+    let bit = n >> 1;
+    for (; j & bit; bit >>= 1) j ^= bit;
+    j ^= bit;
+  }
+  for (let len = 2; len <= n; len <<= 1) {
+    const ang = -2 * Math.PI / len;
+    for (let i = 0; i < n; i += len) {
+      for (let k = 0; k < len >> 1; k++) {
+        const p  = i + k, q = i + k + (len >> 1);
+        const cr = Math.cos(ang * k), ci = Math.sin(ang * k);
+        const tr = re[q] * cr - im[q] * ci;
+        const ti = re[q] * ci + im[q] * cr;
+        re[q] = re[p] - tr; im[q] = im[p] - ti;
+        re[p] += tr;        im[p] += ti;
+      }
+    }
+  }
+}
+
+// Compute FFT magnitude spectrum (half) from a window of channelData
+function getSpectrum(data, fftSize) {
+  const re = new Float32Array(fftSize);
+  const im = new Float32Array(fftSize);
+  const start = Math.max(0, Math.floor((data.length - fftSize) / 2));
+  for (let i = 0; i < fftSize; i++) {
+    const w = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / (fftSize - 1)); // Hann
+    re[i] = (data[start + i] ?? 0) * w;
+  }
+  fft(re, im);
+  const mag = new Float32Array(fftSize >> 1);
+  for (let i = 0; i < mag.length; i++) mag[i] = Math.sqrt(re[i]*re[i] + im[i]*im[i]);
+  return mag;
+}
+
+// Pitch detection via autocorrelation + parabolic interpolation (used for amp THD)
+function detectPitch(data, sr) {
+  const N = Math.min(4096, data.length);
+  const H = N >> 1;
+  const ac = new Float32Array(H);
+  for (let lag = 0; lag < H; lag++) {
+    let s = 0;
+    for (let i = 0; i < H; i++) s += (data[i] ?? 0) * (data[i + lag] ?? 0);
+    ac[lag] = s;
+  }
+  let s = 1;
+  while (s < H - 1 && ac[s] > ac[s + 1]) s++;
+  let maxAc = -1, bestLag = -1;
+  for (let i = s; i < H - 1; i++) {
+    if (ac[i] > maxAc) { maxAc = ac[i]; bestLag = i; }
+  }
+  if (bestLag < 1 || bestLag >= H - 1) return 0;
+  const a = ac[bestLag - 1], b = ac[bestLag], c = ac[bestLag + 1];
+  const refined = bestLag - 0.5 * (c - a) / (2 * b - a - c + 1e-10);
+  return sr / refined;
+}
+
+// FFT-based pitch for oscillator — reliable across full 20 Hz–20 kHz range.
+// Autocorrelation picks up subharmonics at high freq; FFT peak is direct.
+function detectPitchFFT(data, sr) {
+  const FFT_SZ = 8192;
+  const mag    = getSpectrum(data, FFT_SZ);
+  const minBin = Math.ceil(15 * FFT_SZ / sr);   // ignore below 15 Hz
+  const maxBin = Math.floor(20000 * FFT_SZ / sr);
+  let peakMag = 0, peakBin = -1;
+  for (let i = minBin; i <= maxBin; i++) {
+    if (mag[i] > peakMag) { peakMag = mag[i]; peakBin = i; }
+  }
+  if (peakBin < 1 || peakBin >= mag.length - 1) return 0;
+  // Parabolic interpolation for sub-bin accuracy
+  const a = mag[peakBin-1], b = mag[peakBin], c = mag[peakBin+1];
+  const refined = peakBin + 0.5 * (a - c) / (a - 2*b + c + 1e-12);
+  return refined * sr / FFT_SZ;
+}
+
+// DFT magnitude at a single frequency (for THD harmonics)
+function dftMag(data, freq, sr) {
+  const N = data.length;
+  let cr = 0, ci = 0;
+  for (let n = 0; n < N; n++) {
+    const a = 2 * Math.PI * n * freq / sr;
+    cr += data[n] * Math.cos(a);
+    ci += data[n] * Math.sin(a);
+  }
+  return Math.sqrt(cr * cr + ci * ci) / N;
+}
+
+// LP cutoff: find peak bin, walk toward Nyquist to first -3 dB crossing
+function findLPCutoff(mag, fftSize, sr) {
+  const bins = fftSize >> 1;
+  let peakMag = 0, peakBin = 1;
+  for (let i = 1; i < bins; i++) if (mag[i] > peakMag) { peakMag = mag[i]; peakBin = i; }
+  const thr = peakMag * 0.707;
+  for (let i = peakBin; i < bins - 1; i++) {
+    if (mag[i + 1] <= thr) {
+      const f1 = i * sr / fftSize, f2 = (i + 1) * sr / fftSize;
+      const t  = (thr - mag[i]) / (mag[i + 1] - mag[i] + 1e-12);
+      return Math.max(20, f1 + t * (f2 - f1));
+    }
+  }
+  return (bins - 1) * sr / fftSize;
+}
+
+// HP cutoff: find peak bin, walk toward DC to first -3 dB crossing
+function findHPCutoff(mag, fftSize, sr) {
+  const bins = fftSize >> 1;
+  let peakMag = 0, peakBin = 1;
+  for (let i = 1; i < bins; i++) if (mag[i] > peakMag) { peakMag = mag[i]; peakBin = i; }
+  const thr = peakMag * 0.707;
+  for (let i = peakBin; i > 0; i--) {
+    if (mag[i - 1] <= thr) {
+      const f1 = i * sr / fftSize, f2 = (i - 1) * sr / fftSize;
+      const t  = (thr - mag[i]) / (mag[i - 1] - mag[i] + 1e-12);
+      return Math.max(20, f1 + t * (f2 - f1));
+    }
+  }
+  return sr / fftSize;
+}
+
+// THD from a data window at known fundamental f0
+function computeTHD(win, f0, sr) {
+  const H1 = dftMag(win, f0, sr);
+  if (H1 < 1e-10) return 0;
+  let hsum = 0;
+  for (let h = 2; h <= 8; h++) {
+    if (f0 * h < sr / 2) {
+      const Hh = dftMag(win, f0 * h, sr);
+      hsum += Hh * Hh;
+    }
+  }
+  return Math.sqrt(hsum) / H1 * 100;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ANALYSIS ENGINE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+async function analyzeBuffer(buffer) {
+  const ch  = buffer.getChannelData(0);
+  const len = ch.length;
+
+  // Global RMS & peak
+  let sumSq = 0, peakRaw = 0;
+  for (let i = 0; i < len; i++) {
+    sumSq += ch[i] * ch[i];
+    if (Math.abs(ch[i]) > peakRaw) peakRaw = Math.abs(ch[i]);
+  }
+  const rms  = Math.sqrt(sumSq / len) * voltageScale;
+  const peakV = peakRaw * voltageScale;
+
+  // Centre window (4096 samples) for THD / pitch
+  const mid   = Math.floor((len - 4096) / 2);
+  const win4k = ch.slice(mid, mid + 4096);
+
+  let val = 0, metric = 0;
+  const FFT_SIZE = 8192; // ≈ 5.9 Hz/bin at 48 kHz
+
+  // ── 0: Amp Mic ──────────────────────────────────────────────────────────
+  if (currentStep === 0) {
+    const f0 = detectPitch(win4k, sampleRate);
+    const f1 = (f0 > 300 && f0 < 3000) ? f0 : 1000;
+    val    = peakV;
+    metric = computeTHD(win4k, f1, sampleRate);
+  }
+
+  // ── 1: Amp LoFi ─────────────────────────────────────────────────────────
+  else if (currentStep === 1) {
+    val    = computeTHD(win4k, 1000, sampleRate);
+    metric = peakV;
+  }
+
+  // ── 2: Filter LP ────────────────────────────────────────────────────────
+  else if (currentStep === 2) {
+    const mag  = getSpectrum(ch, FFT_SIZE);
+    val    = findLPCutoff(mag, FFT_SIZE, sampleRate);
+    // Peak frequency (for reference)
+    let pm = 0, pb = 1;
+    for (let i = 1; i < FFT_SIZE >> 1; i++) if (mag[i] > pm) { pm = mag[i]; pb = i; }
+    metric = pb * sampleRate / FFT_SIZE;
+  }
+
+  // ── 3: Filter HP/BP ─────────────────────────────────────────────────────
+  else if (currentStep === 3) {
+    const mag  = getSpectrum(ch, FFT_SIZE);
+    const bins = FFT_SIZE >> 1;
+    // Spectral centroid
+    let eSum = 0, wSum = 0;
+    for (let i = 1; i < bins; i++) {
+      const e = mag[i] * mag[i];
+      eSum += e;
+      wSum += e * (i * sampleRate / FFT_SIZE);
+    }
+    const centroid = wSum / (eSum + 1e-12);
+    if (centroid > 3500) {
+      val    = findHPCutoff(mag, FFT_SIZE, sampleRate);
+      metric = 1; // HP
+    } else {
+      // BP: peak frequency
+      let pm = 0, pb = 1;
+      for (let i = 1; i < bins; i++) if (mag[i] > pm) { pm = mag[i]; pb = i; }
+      val    = pb * sampleRate / FFT_SIZE;
+      metric = 0; // BP
+    }
+  }
+
+  // ── 4: Filter Resonance ─────────────────────────────────────────────────
+  else if (currentStep === 4) {
+    // Active window 0.2–0.8 s
+    const aS  = Math.floor(0.2 * sampleRate);
+    const aE  = Math.floor(0.8 * sampleRate);
+    const act = ch.slice(aS, aE);
+    const mag = getSpectrum(act, Math.min(FFT_SIZE, act.length));
+    let peakM = 0, avgM = 0;
+    for (let i = 0; i < mag.length; i++) { if (mag[i] > peakM) peakM = mag[i]; avgM += mag[i]; }
+    avgM /= mag.length;
+    val = 20 * Math.log10(peakM / (avgM + 1e-12));
+
+    // Muted window 1.1–1.5 s (check self-oscillation)
+    const mS = Math.floor(1.1 * sampleRate);
+    const mE = Math.min(len, Math.floor(1.5 * sampleRate));
+    if (mE > mS) {
+      const mut = ch.slice(mS, mE);
+      let mSumSq = 0;
+      for (let i = 0; i < mut.length; i++) mSumSq += mut[i] * mut[i];
+      const mRms = Math.sqrt(mSumSq / mut.length);
+      if (mRms > 0.003) {
+        const f0 = detectPitch(mut, sampleRate);
+        metric = (f0 > 20 && f0 < 20000) ? f0 : -1;
+      }
+    }
+  }
+
+  // ── 5: Oscillator ────────────────────────────────────────────────────────
+  else if (currentStep === 5) {
+    // Below ~20 Hz the AC-coupled interface cuts the signal — report as sub-audio
+    if (rms < noiseFloorRms * voltageScale * 8) {
+      return { rms, val: -1, metric: 0, audioBuffer: buffer }; // val=-1 = sub-AC flag
+    }
+    // Use FFT peak detection — autocorrelation fails at high frequencies (>3 kHz)
+    const f0 = detectPitchFFT(ch, sampleRate);
+    if (f0 < 10 || f0 > 22000) return { rms, val: 0, metric: 0, audioBuffer: buffer };
+    val    = f0;
+    // For THD: use a 4k window centred on the recording
+    metric = computeTHD(win4k, f0, sampleRate);
+  }
+
+  // ── 6: Stompbox Blend ────────────────────────────────────────────────────
+  else if (currentStep === 6) {
+    val    = peakV;
+    const inputPeak = 0.25 * 10.0; // 0.25 digital amplitude = 2.5 V peak physical reference
+    metric = peakV / (inputPeak + 1e-10);
+  }
+
+  // ── 7: Stompbox Feedback ─────────────────────────────────────────────────
+  else if (currentStep === 7) {
+    val = peakV;
+    const refData = stepsData[7][0]; // notch index 0 = -150° = feedback off
+    const refV    = refData ? refData.val : peakV;
+    metric = 20 * Math.log10(peakV / (refV + 1e-10));
+  }
+
+  return { rms, val, metric, audioBuffer: buffer };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CURVE PLOTTER
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function drawPlot() {
+  plotSvg.innerHTML = '';
+  if (currentStep === 8) return;
+
+  const cfg     = stepConfigs[currentStep];
+  const notches = stepNotches[currentStep];
+  const pts     = [];
+
+  notches.forEach((deg, idx) => {
+    const d = stepsData[currentStep][idx];
+    if (d && d.val > 0) pts.push({ x: deg, y: d.val });
+  });
+
+  const svgW = plotSvg.clientWidth || 480;
+  const svgH = 200;
+  const pL = 52, pR = 14, pT = 14, pB = 32;
+  const pw = svgW - pL - pR, ph = svgH - pT - pB;
+
+  const xS = d  => pL + ((d + 150) / 300) * pw;
+  const yS = v  => {
+    if (cfg.logY) {
+      const lo = Math.log10(cfg.yMin), hi = Math.log10(cfg.yMax);
+      return svgH - pB - ((Math.log10(Math.max(cfg.yMin, v)) - lo) / (hi - lo)) * ph;
+    }
+    return svgH - pB - ((v - cfg.yMin) / (cfg.yMax - cfg.yMin)) * ph;
+  };
+
+  const mkEl = (tag, attrs) => {
+    const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v));
+    return el;
+  };
+
+  // Grid + axes
+  plotSvg.appendChild(mkEl('line', { x1: pL, y1: pT, x2: pL, y2: svgH - pB, stroke: 'rgba(255,255,255,0.12)', 'stroke-width': 1 }));
+  plotSvg.appendChild(mkEl('line', { x1: pL, y1: svgH - pB, x2: svgW - pR, y2: svgH - pB, stroke: 'rgba(255,255,255,0.12)', 'stroke-width': 1 }));
+
+  cfg.yTicks.forEach(v => {
+    const y = yS(v);
+    plotSvg.appendChild(mkEl('line', { x1: pL - 4, y1: y, x2: svgW - pR, y2: y, stroke: 'rgba(255,255,255,0.04)', 'stroke-width': 1 }));
+    const t = mkEl('text', { x: pL - 7, y: y + 4, 'text-anchor': 'end', 'font-size': 9, fill: 'var(--text-muted)' });
+    t.textContent = v >= 1000 ? (v / 1000) + 'k' : v;
+    plotSvg.appendChild(t);
+  });
+
+  [-150, -90, 0, 90, 150].forEach(deg => {
+    const x = xS(deg);
+    plotSvg.appendChild(mkEl('line', { x1: x, y1: svgH - pB, x2: x, y2: svgH - pB + 4, stroke: 'rgba(255,255,255,0.15)', 'stroke-width': 1 }));
+    const t = mkEl('text', { x, y: svgH - pB + 15, 'text-anchor': 'middle', 'font-size': 9, fill: 'var(--text-muted)' });
+    t.textContent = deg === 0 ? 'Ctr' : deg + '°';
+    plotSvg.appendChild(t);
+  });
+
+  if (pts.length === 0) return;
+
+  pts.sort((a, b) => a.x - b.x);
+
+  if (pts.length >= 2) {
+    let d = `M ${xS(pts[0].x)} ${yS(pts[0].y)}`;
+    for (let i = 1; i < pts.length; i++) d += ` L ${xS(pts[i].x)} ${yS(pts[i].y)}`;
+    plotSvg.appendChild(mkEl('path', {
+      d, fill: 'none',
+      stroke: 'var(--glow-purple)', 'stroke-width': 2.5,
+      'stroke-linecap': 'round', 'stroke-linejoin': 'round',
+      filter: 'drop-shadow(0 0 4px #9d4edd)',
+    }));
+  }
+
+  pts.forEach(p => {
+    plotSvg.appendChild(mkEl('circle', {
+      cx: xS(p.x), cy: yS(p.y), r: 5,
+      fill: 'var(--glow-blue)', stroke: '#fff', 'stroke-width': 1.5,
+      filter: 'drop-shadow(0 0 5px var(--glow-blue))',
+    }));
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// REVIEW PAGE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function renderReview() {
+  const ws = document.querySelector('.main-workspace');
+
+  const peak = (step, field) => {
+    const vals = Object.values(stepsData[step]).map(d => d?.[field] ?? 0).filter(v => v > 0);
+    return vals.length ? Math.max(...vals) : null;
+  };
+  const minV = (step, field) => {
+    const vals = Object.values(stepsData[step]).map(d => d?.[field] ?? 0).filter(v => v > 0);
+    return vals.length ? Math.min(...vals) : null;
+  };
+
+  const fmt = (v, unit) => v !== null ? `${v >= 1000 ? (v / 1000).toFixed(1) + 'k' : Math.round(v)} ${unit}` : '—';
+  const fmtV = v => v !== null ? v.toFixed(2) + ' V' : '—';
+
+  const lpMin = minV(2, 'val'), lpMax = peak(2, 'val');
+  const hpMin = minV(3, 'val'), hpMax = peak(3, 'val');
+  const oscMin = minV(5, 'val'), oscMax = peak(5, 'val');
+  const resPk  = peak(4, 'val');
+  const selfOscEntries = Object.entries(stepsData[4])
+    .filter(([, d]) => d?.metric > 0)
+    .map(([i, d]) => `${stepNotches[4][i]}° @ ${Math.round(d.metric)} Hz`);
+  const noiseDb = 20 * Math.log10(noiseFloorRms + 1e-12);
+
+  ws.innerHTML = `
+    <div class="instruction-card panel">
+      <div class="instr-icon">✅</div>
+      <div class="instr-text">
+        <h3>Calibration Review</h3>
+        <p>Summary of all measured parameters. Export individual steps or download the full calibration package.</p>
+      </div>
+    </div>
+    <div class="review-grid">
+      <div class="review-card">
+        <div class="review-card-title">Preamplifier — Mic Mode</div>
+        <div class="review-val">${fmtV(peak(0,'val'))}</div>
+        <div class="review-sub">Max output level across Gain sweep<br>Max THD: ${peak(0,'metric') !== null ? peak(0,'metric').toFixed(2)+'%' : '—'}</div>
+      </div>
+      <div class="review-card">
+        <div class="review-card-title">Preamplifier — LoFi</div>
+        <div class="review-val">${peak(1,'val') !== null ? peak(1,'val').toFixed(1)+'%' : '—'} THD</div>
+        <div class="review-sub">Max distortion at full gain<br>Max output: ${fmtV(peak(1,'metric'))}</div>
+      </div>
+      <div class="review-card">
+        <div class="review-card-title">Filter LP Cutoff Range</div>
+        <div class="review-val" style="font-size:1.1rem">${lpMin && lpMax ? fmt(lpMin,'Hz') + ' – ' + fmt(lpMax,'Hz') : '—'}</div>
+        <div class="review-sub">Full Cutoff knob sweep (−150° → +150°)</div>
+      </div>
+      <div class="review-card">
+        <div class="review-card-title">Filter HP / BP Range</div>
+        <div class="review-val" style="font-size:1.1rem">${hpMin && hpMax ? fmt(hpMin,'Hz') + ' – ' + fmt(hpMax,'Hz') : '—'}</div>
+        <div class="review-sub">Full Cutoff knob sweep</div>
+      </div>
+      <div class="review-card">
+        <div class="review-card-title">Filter Resonance</div>
+        <div class="review-val">${resPk !== null ? '+'+resPk.toFixed(1)+' dB' : '—'}</div>
+        <div class="review-sub">${selfOscEntries.length ? 'Self-osc: ' + selfOscEntries.join(', ') : 'No self-oscillation detected'}</div>
+      </div>
+      <div class="review-card">
+        <div class="review-card-title">Oscillator</div>
+        <div class="review-val" style="font-size:1.1rem">${oscMin && oscMax ? fmt(oscMin,'Hz') + ' – ' + fmt(oscMax,'Hz') : '—'}</div>
+        <div class="review-sub">Max sine THD: ${peak(5,'metric') !== null ? peak(5,'metric').toFixed(2)+'%' : '—'}</div>
+      </div>
+      <div class="review-card">
+        <div class="review-card-title">System Noise Floor</div>
+        <div class="review-val">${noiseDb.toFixed(1)} dBFS</div>
+        <div class="review-sub">${(noiseFloorRms * voltageScale * 1000).toFixed(2)} mV equivalent<br>Scale: 1.000 = ${voltageScale.toFixed(2)} V</div>
+      </div>
+      <div class="review-card">
+        <div class="review-card-title">Stompbox</div>
+        <div class="review-val">${peak(6,'val') !== null ? peak(6,'val').toFixed(2)+' V' : '—'}</div>
+        <div class="review-sub">Max blend output level<br>Max feedback output: ${fmtV(peak(7,'val'))}</div>
+      </div>
+    </div>
+    <div class="review-actions">
+      <button class="btn btn-primary" onclick="exportAllZip()" style="padding:0.75rem 2rem">⬇ Download Full Calibration ZIP</button>
+      <button class="btn" onclick="location.reload()" style="padding:0.75rem 2rem; background:#182235;">↺ Restart Session</button>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// EXPORT — INDIVIDUAL STEP
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function exportCurrentStep() {
+  if (currentStep === 8) { exportAllZip(); return; }
+  const zip     = new JSZip();
+  const cfg     = stepConfigs[currentStep];
+  const notches = stepNotches[currentStep];
+  const meta    = { step: currentStep, title: cfg.title, voltage_scale: voltageScale, notches: {} };
+
+  notches.forEach((deg, idx) => {
+    const d = stepsData[currentStep][idx];
+    if (!d) return;
+    meta.notches[`notch_${deg < 0 ? 'n' + Math.abs(deg) : deg}`] =
+      { rms_v: d.rms, val: d.val, metric: d.metric };
+    if (d.audioBuffer) {
+      zip.file(`notch${deg}.wav`, audioBufferToWav(d.audioBuffer));
+    }
+  });
+
+  zip.file('step_data.json', JSON.stringify(meta, null, 2));
+  zip.generateAsync({ type: 'blob' }).then(blob => {
+    const a = Object.assign(document.createElement('a'), {
+      href: URL.createObjectURL(blob),
+      download: `ws_step${currentStep}_${cfg.title.replace(/[^a-z0-9]+/gi, '_').toLowerCase()}.zip`,
+    });
+    a.click();
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// EXPORT — FULL ZIP
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function exportAllZip() {
+  const zip  = new JSZip();
+  const meta = {
+    calibration_timestamp:       new Date().toISOString(),
+    voltage_scale:               voltageScale,
+    baseline_noise_floor_dbfs:   20 * Math.log10(noiseFloorRms + 1e-12),
+    baseline_noise_floor_mv:     noiseFloorRms * voltageScale * 1000,
+    steps: {},
+  };
+
+  for (let s = 0; s < 8; s++) {
+    const cfg  = stepConfigs[s];
+    const safe = cfg.title.replace(/\W+/g, '_');
+    meta.steps[safe] = {};
+    const folder = zip.folder(`step${s}_${safe}`);
+    stepNotches[s].forEach((deg, idx) => {
+      const d = stepsData[s][idx];
+      if (!d) return;
+      meta.steps[safe][`notch_${deg}`] = { rms_v: d.rms, val: d.val, metric: d.metric };
+      if (d.audioBuffer) folder.file(`notch${deg}.wav`, audioBufferToWav(d.audioBuffer));
+    });
+  }
+
+  zip.file('calibration_data.json', JSON.stringify(meta, null, 2));
+  zip.generateAsync({ type: 'blob' }).then(blob => {
+    Object.assign(document.createElement('a'), {
+      href: URL.createObjectURL(blob),
+      download: 'workshop_system_calibration.zip',
+    }).click();
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// WAV ENCODER
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function audioBufferToWav(buf) {
+  const numCh = buf.numberOfChannels;
+  const sr    = buf.sampleRate;
+  const dataSz = buf.length * numCh * 2;
+  const ab = new ArrayBuffer(44 + dataSz);
+  const v  = new DataView(ab);
+  const s4 = (str, off) => { for (let i = 0; i < 4; i++) v.setUint8(off + i, str.charCodeAt(i)); };
+
+  s4('RIFF', 0);  v.setUint32(4,  36 + dataSz, true);
+  s4('WAVE', 8);  s4('fmt ', 12);
+  v.setUint32(16, 16, true);
+  v.setUint16(20, 1,      true);  // PCM
+  v.setUint16(22, numCh,  true);
+  v.setUint32(24, sr,     true);
+  v.setUint32(28, sr * numCh * 2, true);
+  v.setUint16(32, numCh * 2,      true);
+  v.setUint16(34, 16,             true);
+  s4('data', 36); v.setUint32(40, dataSz, true);
+
+  let pos = 44;
+  const chs = Array.from({ length: numCh }, (_, c) => buf.getChannelData(c));
+  for (let i = 0; i < buf.length; i++) {
+    for (let c = 0; c < numCh; c++) {
+      const s = Math.max(-1, Math.min(1, chs[c][i]));
+      v.setInt16(pos, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+      pos += 2;
+    }
+  }
+  return new Blob([ab], { type: 'audio/wav' });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// UTILITY
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════════════════════
+
+window.addEventListener('DOMContentLoaded', () => {
+  renderSidebar();
+  selectStep(0);
+
+  // Register dynamic device change listeners
+  const inputSel = document.getElementById('input-select');
+  const outputSel = document.getElementById('output-select');
+
+  inputSel.addEventListener('change', async (e) => {
+    if (!audioCtx || !stream) return;
+    try {
+      stream.getTracks().forEach(track => track.stop());
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          deviceId: e.target.value ? { exact: e.target.value } : undefined,
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false,
+        }
+      });
+      if (inputNode) {
+        try { inputNode.disconnect(); } catch (err) {}
+      }
+      inputNode = audioCtx.createMediaStreamSource(stream);
+      inputNode.connect(analyzer);
+      console.log("Input device switched to:", e.target.value);
+    } catch (err) {
+      console.error("Failed to switch input device:", err);
+      alert("Could not switch input device: " + err.message);
+    }
+  });
+
+  outputSel.addEventListener('change', async (e) => {
+    if (!audioCtx) return;
+    if (typeof audioCtx.setSinkId === 'function') {
+      try {
+        await audioCtx.setSinkId(e.target.value);
+        console.log("Output device switched to:", e.target.value);
+      } catch (err) {
+        console.error("Failed to switch output device:", err);
+        alert("Could not switch output device: " + err.message);
+      }
+    } else {
+      console.warn("audioCtx.setSinkId is not supported in this browser.");
+    }
+  });
+});
+</script>
+</body>
+</html>

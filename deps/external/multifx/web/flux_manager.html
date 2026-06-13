@@ -1,0 +1,1990 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Flux Manager</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --accent: #38bdf8;
+            --text: #f1f5f9;
+            --error: #ef4444;
+            --success: #22c55e;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Outfit', 'Inter', -apple-system, sans-serif;
+            background: radial-gradient(circle at top right, #1e293b, #0f172a);
+            color: var(--text);
+            max-width: 940px;
+            margin: 40px auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            color: var(--accent);
+            margin-bottom: 8px;
+        }
+
+        .description {
+            opacity: 0.8;
+        }
+
+        .card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            padding: 35px;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 30px;
+            display: flex;
+            /* Ensure it grows */
+            flex-direction: column;
+        }
+
+        .drop-zone {
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 60px;
+            text-align: center;
+            transition: all 0.2s;
+            cursor: pointer;
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .drop-zone:hover,
+        .drop-zone.dragover {
+            border-color: var(--accent);
+            background: rgba(56, 189, 248, 0.05);
+        }
+
+        #fileList {
+            margin-top: 30px;
+            list-style: none;
+            padding: 0;
+        }
+
+        .file-item {
+            background: rgba(0, 0, 0, 0.2);
+            margin: 8px 0;
+            padding: 12px 20px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .file-name {
+            font-weight: 500;
+        }
+
+        .file-meta {
+            font-size: 0.8em;
+            opacity: 0.5;
+        }
+
+        .btn-remove {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error);
+            border: 1px solid var(--error);
+            border-radius: 4px;
+            padding: 4px 10px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .footer {
+            margin-top: 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .dl-btn {
+            background: var(--accent);
+            color: var(--bg);
+            border: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .dl-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.4);
+        }
+
+        .btn-play {
+            background: rgba(56, 189, 248, 0.1);
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            border-radius: 4px;
+            padding: 4px 12px;
+            margin-right: 10px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .bar-container {
+            flex-grow: 1;
+            background: rgba(0, 0, 0, 0.3);
+            height: 8px;
+            border-radius: 4px;
+            margin-right: 20px;
+            overflow: hidden;
+        }
+
+        #usageBar {
+            background: var(--accent);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .usage-text {
+            font-size: 0.8em;
+            opacity: 0.7;
+        }
+
+        #status {
+            color: var(--accent);
+            margin-top: 20px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        #errorLog {
+            color: var(--error);
+            margin-top: 20px;
+            font-size: 0.9em;
+        }
+
+        /* Waveform Editor */
+        #waveform-container {
+            margin-top: 30px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 10px;
+            display: none;
+        }
+
+        canvas {
+            width: 100%;
+            height: 150px;
+            background: #111;
+            border-radius: 4px;
+            cursor: crosshair;
+        }
+
+        .setting-group {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .setting-group h4 {
+            margin: 0 0 15px 0;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .controls {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+            align-items: center;
+            font-size: 0.9em;
+        }
+
+        .btn-stop {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            /* Fix lint */
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9em;
+            transition: all 0.2s;
+            margin-left: 5px;
+        }
+
+        input[type=number],
+        select {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        input[type=number] {
+            width: 80px;
+        }
+
+        /* Settings Layout */
+        .setting-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 12px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            flex-wrap: wrap;
+        }
+
+        .setting-row label {
+            width: 80px;
+            font-weight: 600;
+            color: var(--accent);
+            flex-shrink: 0;
+        }
+
+        .setting-row select {
+            flex-grow: 1;
+            min-width: 140px;
+        }
+
+        .setting-row input[type="number"] {
+            width: 70px;
+            text-align: center;
+        }
+
+        .setting-header {
+            display: none;
+            /* Removed fixed header */
+        }
+
+        .status-badge {
+            font-size: 0.75rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: #3f3f46;
+            color: #a1a1aa;
+        }
+
+        .setting-sub-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-left: 95px;
+            /* Indent to align after label */
+            font-size: 0.8em;
+            opacity: 0.8;
+            margin-bottom: 20px;
+        }
+
+        .setting-group {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            overflow: hidden;
+            /* Fix for containing floats/margins */
+        }
+
+        .setting-row {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .badgelabel {
+            color: var(--accent);
+            text-transform: uppercase;
+            font-size: 0.75em;
+            letter-spacing: 0.5px;
+            background: rgba(56, 189, 248, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .connected {
+            background: var(--success);
+            color: #000;
+        }
+
+        /* KNOB STYLES */
+        .knob-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 80px;
+            margin: 10px;
+        }
+
+        .knob-wrap {
+            width: 60px;
+            height: 60px;
+            cursor: ns-resize;
+            position: relative;
+            margin: 5px 0;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 50%;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .knob-wrap:hover .knob-ring {
+            stroke: #fff;
+        }
+
+        .knob-label {
+            font-size: 0.75em;
+            text-align: center;
+            opacity: 0.8;
+            height: 2.4em;
+            /* allowance for 2 lines */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1.1;
+        }
+
+        .knob-val {
+            font-family: monospace;
+            color: var(--accent);
+            font-size: 0.9em;
+        }
+
+        .knob-svg {
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 4px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            opacity: 0.6;
+        }
+
+        .tab-btn.active {
+            background: var(--accent);
+            color: var(--bg);
+            opacity: 1;
+        }
+    </style>
+    <script src="flux_controls.js"></script>
+</head>
+
+<body>
+    <div class="header">
+        <h1>Flux Manager</h1>
+        <div class="description">Configuration, Firmware Update & Sample Manager</div>
+    </div>
+
+    <!-- DEVICE SETTINGS CARD -->
+    <div class="card">
+        <h3
+            style="color: var(--accent); margin-bottom: 20px; display:flex; justify-content:space-between; align-items:center;">
+            Device Settings
+            <div style="display:flex; gap:10px; align-items:center;">
+                <button onclick="switchTab('settings')" id="tabSettings" class="tab-btn active">Settings</button>
+                <button onclick="switchTab('dashboard')" id="tabDashboard" class="tab-btn">Dashboard</button>
+                <span id="midiStatus" class="status-badge">Searching For Device...</span>
+                <button class="btn-play" onclick="readSettings()" id="btnRead" disabled>Read</button>
+                <button class="btn-play" onclick="saveSettings()" id="btnSave" disabled>Save</button>
+            </div>
+        </h3>
+
+        <!-- DASHBOARD TAB -->
+        <div id="viewDashboard" style="display:none;">
+            <div class="setting-group" id="dashboardControls">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+        <!-- SETTINGS TAB -->
+        <div id="viewSettings">
+
+            <div style="margin-bottom: 20px;">
+                <label style="display:flex; align-items: center; gap: 10px;">
+                    <input type="checkbox" id="voicePreview" onchange="sendSettingUpdate()">
+                    <b>Enable Output Preview</b> - <i>Mixes voice audio into main output.</i>
+                </label>
+            </div>
+
+            <!-- Audio Input Configuration -->
+            <div class="setting-group">
+                <h4>Pitch In</h4>
+                <div class="setting-row" style="display:flex; align-items:center; gap:10px;">
+                    <label>Quantization</label>
+                    <select id="audioScale" onchange="sendSettingUpdate()" style="width: 140px;">
+                        <option value="0">Unquantized (Linear)</option>
+                        <option value="1">Chromatic (Semis)</option>
+                        <option value="2">Major</option>
+                        <option value="3">Minor</option>
+                        <option value="4">Penta Major</option>
+                        <option value="5">Penta Minor</option>
+                        <option value="6">Whole Tone</option>
+                        <option value="7">Diminished</option>
+                    </select>
+
+                    <div style="flex-grow:1;"></div>
+
+                    <label style="display:flex; align-items:center; gap:5px; margin:0; cursor:pointer;">
+                        Hold
+                        <input type="checkbox" id="audioHold" onchange="sendSettingUpdate()">
+                    </label>
+                </div>
+
+                <div class="setting-row"
+                    style="display:flex; align-items:center; gap:10px; margin-top:10px; border-top:1px solid #444; padding-top:10px;">
+                    <label style="width:80px;">Knob Range</label>
+                    <select id="pitchRange" onchange="sendSettingUpdate()" style="flex-grow:1;">
+                        <option value="1">+/- 1 Semitone (Fine)</option>
+                        <option value="7">+/- 7 Semitones (Fifth)</option>
+                        <option value="12">+/- 1 Octave (12)</option>
+                        <option value="24">+/- 2 Octaves (24)</option>
+                        <option value="36" selected>+/- 3 Octaves (36)</option>
+                        <option value="48">+/- 4 Octaves (48)</option>
+                        <option value="60">+/- 5 Octaves (60)</option>
+                    </select>
+                </div>
+
+                <div class="setting-row" style="display:flex; align-items:center; gap:10px; margin-top:5px;">
+                    <label style="width:80px;">Root Note</label>
+                    <select id="rootNoteName" onchange="sendSettingUpdate()" style="width:60px;">
+                        <option value="0">C</option>
+                        <option value="1">C#</option>
+                        <option value="2">D</option>
+                        <option value="3">D#</option>
+                        <option value="4">E</option>
+                        <option value="5">F</option>
+                        <option value="6">F#</option>
+                        <option value="7">G</option>
+                        <option value="8">G#</option>
+                        <option value="9">A</option>
+                        <option value="10">A#</option>
+                        <option value="11">B</option>
+                    </select>
+                    <select id="rootNoteOctave" onchange="sendSettingUpdate()" style="width:60px;">
+                        <option value="-1">-1</option>
+                        <option value="0">0</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4" selected>4 (Mid)</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                    </select>
+                </div>
+            </div>
+
+        </div>
+        <!-- CV Section (Reordered to Second) -->
+        <div class="setting-group">
+            <h4>CV Outputs (Pitch/Vel/CC)</h4>
+            <!-- CV 1 -->
+            <div class="setting-row">
+                <label>CV 1</label>
+                <select id="c1Mode" onchange="updateUIState(); sendSettingUpdate()">
+                    <option value="0">MIDI Pitch 1V/Oct</option>
+                    <option value="1">MIDI Velocity</option>
+                    <option value="2">MIDI CC</option>
+                    <option value="3">Synth Envelope</option>
+                    <option value="4">Random S&H (Trig P1)</option>
+                    <option value="5">Step Sequencer (Trig P1)</option>
+                    <option value="6">Voice Audio</option>
+                </select>
+                <div class="input-group" id="c1RangeGroup">
+                    <select id="c1Range" onchange="sendSettingUpdate()" title="Output Range">
+                        <option value="0">+/- 6V</option>
+                        <option value="1">0-6V</option>
+                    </select>
+                </div>
+
+                <div class="input-group" id="c1ChGroup">
+                    <span class="badgelabel">Ch</span>
+                    <select id="c1Ch" onchange="sendSettingUpdate()">
+                        <option value="0">Omni</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                        <option value="10">10</option>
+                        <option value="11">11</option>
+                        <option value="12">12</option>
+                        <option value="13">13</option>
+                        <option value="14">14</option>
+                        <option value="15">15</option>
+                        <option value="16">16</option>
+                    </select>
+                </div>
+                <div class="input-group" id="c1ArgGroup">
+                    <span class="badgelabel" id="c1ArgLabel">Val</span>
+                    <input type="number" id="c1Arg" value="1" min="0" max="127" onchange="sendSettingUpdate()">
+                </div>
+            </div>
+
+            <!-- CV 2 -->
+            <div class="setting-row">
+                <label>CV 2</label>
+                <select id="c2Mode" onchange="updateUIState(); sendSettingUpdate()">
+                    <option value="0">MIDI Pitch 1V/Oct</option>
+                    <option value="1">MIDI Velocity</option>
+                    <option value="2">MIDI CC</option>
+                    <option value="3">Synth Envelope</option>
+                    <option value="4">Random S&H (Trig P1)</option>
+                    <option value="5">Step Sequencer (Trig P1)</option>
+                    <option value="6">Voice Audio</option>
+                </select>
+                <div class="input-group" id="c2RangeGroup">
+                    <select id="c2Range" onchange="sendSettingUpdate()" title="Output Range">
+                        <option value="0">+/- 6V</option>
+                        <option value="1">0-6V</option>
+                    </select>
+                </div>
+
+                <div class="input-group" id="c2ChGroup">
+                    <span class="badgelabel">Ch</span>
+                    <select id="c2Ch" onchange="sendSettingUpdate()">
+                        <option value="0">Omni</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                        <option value="10">10</option>
+                        <option value="11">11</option>
+                        <option value="12">12</option>
+                        <option value="13">13</option>
+                        <option value="14">14</option>
+                        <option value="15">15</option>
+                        <option value="16">16</option>
+                    </select>
+                </div>
+                <div class="input-group" id="c2ArgGroup">
+                    <span class="badgelabel" id="c2ArgLabel">Val</span>
+                    <input type="number" id="c2Arg" value="1" min="0" max="127" onchange="sendSettingUpdate()">
+                </div>
+            </div>
+        </div>
+
+        <!-- Sequencer UI (Hidden by Default) -->
+        <div class="setting-group" id="sequencerUI"
+            style="display:none; border-top: 1px solid rgba(255,255,255,0.1); margin-top:15px; padding-top:15px; padding-bottom: 20px;">
+            <div
+                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap: wrap; gap:10px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <h4 style="margin:0; color: var(--accent);">Step Sequencer</h4>
+                    <div class="input-group">
+                        <span class="badgelabel">Scale</span>
+                        <select id="seqScale" onchange="updateAllSeqLabels()">
+                            <option value="chromatic">Chromatic</option>
+                            <option value="major" selected>Major</option>
+                            <option value="minor">Minor</option>
+                            <option value="pentamaj">Penta Maj</option>
+                            <option value="pentamin">Penta Min</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <span class="badgelabel">Octaves</span>
+                        <select id="seqRange" onchange="updateAllSeqLabels()">
+                            <option value="127">Full (10 Oct)</option>
+                            <option value="48">4 Octaves</option>
+                            <option value="24">2 Octaves</option>
+                            <option value="12" selected>1 Octave</option>
+                        </select>
+                    </div>
+                    <!-- Sequencer Transpose / Root -->
+                    <div class="input-group">
+                        <span class="badgelabel">Root</span>
+                        <select id="seqRoot" onchange="updateAllSeqLabels()">
+                            <option value="0">C</option>
+                            <option value="1">C#</option>
+                            <option value="2">D</option>
+                            <option value="3">D#</option>
+                            <option value="4">E</option>
+                            <option value="5">F</option>
+                            <option value="6">F#</option>
+                            <option value="7">G</option>
+                            <option value="8">G#</option>
+                            <option value="9">A</option>
+                            <option value="10">A#</option>
+                            <option value="11">B</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <span class="badgelabel">Octave</span>
+                        <select id="seqOctave" onchange="updateAllSeqLabels()">
+                            <option value="-1">-1</option>
+                            <option value="0">0</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3" selected>3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <span class="badgelabel" style="color:var(--accent)">Length</span>
+                        <select id="seqLength" onchange="updateAllSeqLabels()">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                            <option value="11">11</option>
+                            <option value="12">12</option>
+                            <option value="13">13</option>
+                            <option value="14">14</option>
+                            <option value="15">15</option>
+                            <option value="16" selected>16</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn-play" onclick="randomizeSequencer(); sendSettingUpdate()"
+                    style="font-size:0.8em; padding:4px 12px;">Randomize</button>
+            </div>
+
+            <div style="display:flex; gap:2px; height:120px; align-items:flex-end;">
+                <!-- Generated by JS for cleaner HTML -->
+                <script>
+                    // Inline generation for 16 sliders
+                    for (let i = 0; i < 16; i++) {
+                        document.write(`
+                        <div id="seqContainer${i}" style="display:flex; flex-direction:column; align-items:center; flex:1; height:100%; transition: opacity 0.3s;">
+                            <input type="range" class="seq-step-v" id="seq${i}" min="0" max="1000" 
+                                onchange="sendSettingUpdate()" oninput="updateSeqLabel(${i})"
+                                style="writing-mode: vertical-lr; direction: rtl; display:block; width:16px; height:100px; margin:0 auto; cursor:ns-resize;">
+                            <span id="seqLabel${i}" style="font-size:0.6em; margin-top:5px; opacity:0.7;">-</span>
+                        </div>
+                    `);
+                    }
+                    function getMappedNote(i) {
+                        const el = document.getElementById('seq' + i);
+                        if (!el) return 0;
+
+                        let relVal = parseInt(el.value) / 1000.0; // 0.0 - 1.0
+                        const scaleMode = document.getElementById('seqScale').value;
+                        const rangeOcts = parseInt(document.getElementById('seqRange').value) / 12.0;
+                        const sRoot = parseInt(document.getElementById('seqRoot').value);
+                        const sOct = parseInt(document.getElementById('seqOctave').value);
+
+                        // Logic: Relative pattern (0-1) * (RangeOcts * 12) + (BaseOffset)
+                        const baseOffset = (sOct + 1) * 12 + sRoot;
+                        let absNote = baseOffset + Math.round(relVal * (rangeOcts * 12));
+
+                        if (absNote > 127) absNote = 127;
+                        if (absNote < 0) absNote = 0;
+
+                        // Quantize to scale relative to root
+                        if (scaleMode !== 'chromatic') {
+                            const notes = SCALES[scaleMode];
+                            let noteInOct = absNote % 12;
+                            let octave = Math.floor(absNote / 12);
+
+                            let relNote = (noteInOct - sRoot + 12) % 12;
+                            if (!notes.includes(relNote)) {
+                                // Find nearest down
+                                let best = notes[0];
+                                for (let n of notes) {
+                                    if (n > relNote) break;
+                                    best = n;
+                                }
+                                absNote = octave * 12 + ((best + sRoot) % 12);
+                            }
+                        }
+                        return absNote;
+                    }
+
+                    function updateSeqLabel(i) {
+                        const lbl = document.getElementById('seqLabel' + i);
+                        if (!lbl) return;
+                        const val = getMappedNote(i);
+                        const noteIdx = val % 12;
+                        const oct = Math.floor(val / 12) - 1;
+                        lbl.innerText = NOTE_NAMES[noteIdx] + oct;
+                    }
+
+                    function updateAllSeqLabels() {
+                        const len = parseInt(document.getElementById('seqLength').value);
+                        for (let i = 0; i < 16; i++) {
+                            updateSeqLabel(i);
+                            const container = document.getElementById('seqContainer' + i);
+                            if (container) {
+                                if (i >= len) {
+                                    container.style.opacity = "0.2";
+                                    container.style.pointerEvents = "none";
+                                } else {
+                                    container.style.opacity = "1.0";
+                                    container.style.pointerEvents = "all";
+                                }
+                            }
+                        }
+                        sendSettingUpdate();
+                    }
+
+                    // Initialize labels after generation
+                    setTimeout(() => { for (let i = 0; i < 16; i++) updateSeqLabel(i); }, 100);
+                </script>
+            </div>
+            <div style="font-size:0.75em; opacity:0.6; margin-top:10px; text-align:center;">Values are quantized to the
+                selected Scale/Root and sent as absolute MIDI notes.</div>
+        </div>
+
+
+
+        <!-- Pulse Section -->
+        <div class="setting-group">
+            <h4>Pulse Outputs (Gate/Trig/Clock)</h4>
+            <!-- Pulse 1 -->
+            <div class="setting-row">
+                <label>Pulse 1</label>
+                <select id="p1Mode" onchange="updateUIState(); sendSettingUpdate()">
+                    <option value="0">MIDI Gate (Note)</option>
+                    <option value="1">MIDI Trigger</option>
+                    <option value="2">MIDI Clock</option>
+                    <option value="3">Voice Audio (PWM)</option>
+                </select>
+
+                <div class="input-group" id="p1ChGroup">
+                    <span class="badgelabel">Ch</span>
+                    <select id="p1Ch" onchange="sendSettingUpdate()">
+                        <option value="0">Omni</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                        <option value="10">10</option>
+                        <option value="11">11</option>
+                        <option value="12">12</option>
+                        <option value="13">13</option>
+                        <option value="14">14</option>
+                        <option value="15">15</option>
+                        <option value="16">16</option>
+                    </select>
+                </div>
+                <div class="input-group" id="p1ArgGroup">
+                    <span class="badgelabel" id="p1ArgLabel">Val</span>
+                    <input type="number" id="p1Arg" value="60" min="0" max="127" onchange="sendSettingUpdate()">
+                </div>
+            </div>
+
+            <!-- Pulse 2 -->
+            <div class="setting-row">
+                <label>Pulse 2</label>
+                <select id="p2Mode" onchange="updateUIState(); sendSettingUpdate()">
+                    <option value="0">MIDI Gate (Note)</option>
+                    <option value="1">MIDI Trigger</option>
+                    <option value="2">MIDI Clock</option>
+                    <option value="3">Voice Audio (PWM)</option>
+                </select>
+
+                <div class="input-group" id="p2ChGroup">
+                    <span class="badgelabel">Ch</span>
+                    <select id="p2Ch" onchange="sendSettingUpdate()">
+                        <option value="0">Omni</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                        <option value="10">10</option>
+                        <option value="11">11</option>
+                        <option value="12">12</option>
+                        <option value="13">13</option>
+                        <option value="14">14</option>
+                        <option value="15">15</option>
+                        <option value="16">16</option>
+                    </select>
+                </div>
+                <div class="input-group" id="p2ArgGroup">
+                    <span class="badgelabel" id="p2ArgLabel">Val</span>
+                    <input type="number" id="p2Arg" value="24" min="0" max="127" onchange="sendSettingUpdate()">
+                </div>
+            </div>
+        </div>
+
+        <div
+            style="font-size:0.8em; opacity:0.6; margin-top:20px; border-top:1px solid rgba(255,255,255,0.1); padding-top:10px;">
+            <i>Settings are synced live if device is connected. Use "Generate UF2" to embed them in firmware.</i>
+        </div>
+    </div>
+
+
+    <!-- SAMPLE MANAGER CARD -->
+    <div class="card">
+        <!-- Firmware Upload Section -->
+        <div style="margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+            <h3 style="color: var(--accent); margin-bottom: 10px;">Step 1: Load Base Firmware (Optional)</h3>
+            <div class="drop-zone" id="firmwareDropZone" onclick="document.getElementById('firmwareInput').click()"
+                style="padding: 30px;">
+                <div id="firmwareStatus">Drop <b>flux.uf2</b> here or click to browse</div>
+                <div style="font-size: 0.8em; margin-top: 8px; opacity: 0.6;">Firmware will be merged with samples
+                    into
+                    one file</div>
+            </div>
+            <input type="file" id="firmwareInput" accept=".uf2" style="display: none;">
+        </div>
+
+        <!-- Sample Upload Section -->
+        <h3 style="color: var(--accent); margin-bottom: 10px;">Step 2: Add Samples</h3>
+        <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+            <svg style="width: 48px; height: 48px; fill: var(--accent); margin-bottom: 10px;" viewBox="0 0 24 24">
+                <path
+                    d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z">
+                </path>
+            </svg>
+            <div>Drop audio files here or click to browse</div>
+            <div style="font-size: 0.8em; margin-top: 10px; opacity: 0.6;">MP3, WAV, AIFF, OGG supported.
+                Auto-resampled
+                to 22.05kHz Mu-Law.</div>
+        </div>
+        <input type="file" id="fileInput" multiple style="display: none;">
+
+        <div id="status"></div>
+
+        <!-- Waveform Editor -->
+        <div id="waveform-container">
+            <h4 style="margin: 0 0 10px 0; color: var(--accent);">Waveform Editor <span id="editor-filename"
+                    style="opacity: 0.5; font-weight: normal;"></span></h4>
+            <canvas id="waveform" width="800" height="150"></canvas>
+            <div class="controls">
+                <div>
+                    <label>Start:</label>
+                    <input type="number" id="startSample" value="0" onchange="updateCropFromInputs()">
+                </div>
+                <div>
+                    <label>End:</label>
+                    <input type="number" id="endSample" value="0" onchange="updateCropFromInputs()">
+                </div>
+                <div style="border-right: 1px solid rgba(255,255,255,0.2); height: 20px; margin: 0 10px;"></div>
+                <div>
+                    <label style="color: #4ade80;">Loop In:</label>
+                    <input type="number" id="loopInSample" value="0" onchange="updateCropFromInputs()">
+                </div>
+                <div>
+                    <label style="color: #f472b6;">Loop Out:</label>
+                    <input type="number" id="loopOutSample" value="0" onchange="updateCropFromInputs()">
+                </div>
+                <div style="flex-grow: 1;"></div>
+                <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; margin-right: 10px;">
+                    <input type="checkbox" id="loopPreviewCheck" checked> Loop
+                </label>
+                <div style="display: flex; gap: 5px;">
+                    <button class="btn-play" onclick="playCurrentCrop()">Preview</button>
+                    <button class="btn-stop" onclick="stopPlayback()">Stop</button>
+                </div>
+                <div id="crop-duration" style="opacity: 0.7; margin-left: 10px;">0.00s</div>
+            </div>
+            <div style="font-size: 0.8em; opacity: 0.5; margin-top: 5px;">Drag on waveform to select range/loop.
+            </div>
+        </div>
+
+        <ul id="fileList"></ul>
+        <div id="errorLog"></div>
+
+        <div class="footer">
+            <div style="flex-grow: 1;">
+                <div class="bar-container">
+                    <div id="usageBar"></div>
+                </div>
+                <div class="usage-text" id="usageText">Used 0 B of 512 KB</div>
+            </div>
+            <button class="dl-btn" id="dlBtn" disabled onclick="generateUF2()">Generate Integrated .UF2</button>
+        </div>
+    </div>
+
+    <!-- LOGIC -->
+    <script>
+        const FLASH_MAGIC = 0x53584660; // MFXS
+        const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+        const SCALES = {
+            chromatic: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+            major: [0, 2, 4, 5, 7, 9, 11],
+            minor: [0, 2, 3, 5, 7, 8, 10],
+            pentamaj: [0, 2, 4, 7, 9],
+            pentamin: [0, 3, 5, 7, 10]
+        };
+        let currentSynthMode = 0; // Track active synth mode from device
+
+        if (!navigator.requestMIDIAccess) {
+            document.getElementById('midiStatus').innerText = "WebMIDI Not Supported (Use Chrome/Edge)";
+            document.getElementById('midiStatus').style.color = "var(--error)";
+        } else {
+            document.getElementById('midiStatus').innerText = "Requesting MIDI Access...";
+            navigator.requestMIDIAccess({ sysex: true }).then(access => {
+                const checkPorts = () => {
+                    const outputs = Array.from(access.outputs.values());
+                    const inputs = Array.from(access.inputs.values());
+                    // console.log("MIDI Ports:", outputs.map(o => o.name), inputs.map(i => i.name));
+
+                    midiOut = outputs.find(o => o.name.includes("Flux") || o.name.includes("Workshop") || o.name.includes("TinyUSB") || o.name.includes("Music Thing") || o.name.includes("MTMComputer"));
+                    midiIn = inputs.find(i => i.name.includes("Flux") || i.name.includes("Workshop") || i.name.includes("TinyUSB") || i.name.includes("Music Thing") || i.name.includes("MTMComputer"));
+
+                    const el = document.getElementById('midiStatus');
+                    const btns = [document.getElementById('btnRead'), document.getElementById('btnSave')];
+
+                    if (midiOut && midiIn) {
+                        el.innerText = "Connected: " + midiOut.name;
+                        el.classList.add('connected');
+                        btns.forEach(b => b.disabled = false);
+                        midiIn.onmidimessage = onMidiMessage;
+                        // Manual read only to avoid feedback loops
+                        // if (!hasRead) readSettings();
+                    } else {
+                        el.innerText = "Device Not Found. Detected: ";
+                        let names = [];
+                        inputs.forEach(i => names.push("IN:" + i.name));
+                        outputs.forEach(o => names.push("OUT:" + o.name));
+                        if (names.length === 0) el.innerText += "None";
+                        else el.innerText += names.join(", ");
+
+                        el.classList.remove('connected');
+                        btns.forEach(b => b.disabled = true);
+                    }
+                };
+                access.onstatechange = checkPorts;
+                checkPorts();
+            }).catch(err => {
+                console.error("MIDI Access Failed", err);
+                document.getElementById('midiStatus').innerText = "MIDI Access Denied/Error";
+                document.getElementById('midiStatus').style.color = "var(--error)";
+            });
+        }
+
+        let hasRead = false;
+        function onMidiMessage(e) {
+            const d = e.data;
+            if (d[0] === 0xF0 && d[1] === 0x7D && d[2] === 0x03) {
+                if (d.length < 24) return; // Minimum length (Old firmware might send 24)
+
+                document.getElementById('voicePreview').checked = (d[3] === 1);
+
+                setVal('p1Mode', d[4]); setVal('p1Ch', d[5]); setVal('p1Arg', d[6]);
+                setVal('p2Mode', d[7]); setVal('p2Ch', d[8]); setVal('p2Arg', d[9]);
+                setVal('c1Mode', d[10]); setVal('c1Ch', d[11]); setVal('c1Arg', d[12]);
+                setVal('c2Mode', d[13]); setVal('c2Ch', d[14]); setVal('c2Arg', d[15]);
+
+                // 16, 17, 18 are Knobs (Hidden)
+
+                setVal('c1Range', d[19]);
+                setVal('c2Range', d[20]);
+
+                setVal('audioScale', d[21]);
+                document.getElementById('audioHold').checked = (d[22] === 1);
+
+                if (d.length >= 25) setVal('pitchRange', d[23]);
+                if (d.length >= 26) {
+                    const midi = d[24];
+                    const note = midi % 12;
+                    const oct = Math.floor(midi / 12) - 1;
+                    setVal('rootNoteName', note);
+                    setVal('rootNoteOctave', oct);
+                }
+
+                // Sequencer Steps (Indices 25-40) - Only update from device if we haven't read yet
+                // to prevent relative pattern (0-1000) from being overwritten by 0-127 MIDI notes
+                if (d.length >= 42 && !hasRead) {
+                    for (let i = 0; i < 16; i++) {
+                        setVal('seq' + i, Math.min(1000, (d[25 + i] / 127.0) * 1000));
+                        if (typeof updateSeqLabel === 'function') updateSeqLabel(i);
+                    }
+                }
+
+                if (d.length >= 46) {
+                    setVal('seqLength', d[45]);
+                }
+                if (d.length >= 47) {
+                    currentSynthMode = d[46];
+                }
+
+                if (d.length >= 45) {
+                    const receivedMagic = d[41] | (d[42] << 8) | (d[43] << 16) | (d[44] << 24);
+                    if (receivedMagic !== FLASH_MAGIC) {
+                        console.warn("Midi Settings Version Mismatch. Device:", receivedMagic, "UI:", FLASH_MAGIC);
+                    }
+                }
+            }
+            // Control Change (B0..BF)
+            else if ((d[0] & 0xF0) === 0xB0) {
+                const cc = d[1];
+                const val = d[2];
+                handleIncomingCC(cc, val);
+            }
+
+            hasRead = true;
+            updateUIState();
+        }
+
+        function setVal(id, val) { const el = document.getElementById(id); if (el) el.value = val; }
+        function getVal(id) { const el = document.getElementById(id); return el ? parseInt(el.value) : 0; }
+
+        function updateUIState() {
+            // Updates validation/labels based on modes
+            const updateRow = (pfx, isCV) => {
+                const mode = getVal(pfx + 'Mode');
+                const argLabel = document.getElementById(pfx + 'ArgLabel');
+                const argGroup = document.getElementById(pfx + 'ArgGroup');
+                const chGroup = document.getElementById(pfx + 'ChGroup');
+                const rangeGroup = document.getElementById(pfx + 'RangeGroup');
+
+                if (isCV) {
+                    // CV: 0=Pitch, 1=Vel, 2=CC, 3=Env, 4=S&H, 5=Seq, 6=Voice
+                    if (mode == 6 || mode == 3) { // Voice/Env
+                        if (chGroup) chGroup.style.display = 'none';
+                        if (argGroup) argGroup.style.display = 'none';
+                    } else if (mode == 4) { // S&H
+                        if (chGroup) chGroup.style.display = 'none';
+                        if (argGroup) argGroup.style.display = 'flex';
+                        argLabel.innerText = "Range";
+                        const argInput = document.getElementById(pfx + 'Arg');
+                        if (argInput) argInput.title = "0=1V, 1=2V, 2=5V, 3=Full";
+                    } else if (mode == 5) { // Sequencer
+                        if (chGroup) chGroup.style.display = 'none';
+                        if (argGroup) argGroup.style.display = 'none'; // Steps are separate
+                    } else if (mode == 2) { // CC
+                        if (chGroup) chGroup.style.display = 'flex';
+                        if (argGroup) argGroup.style.display = 'flex';
+                        argLabel.innerText = "CC #";
+                    } else { // Pitch/Vel
+                        if (chGroup) chGroup.style.display = 'flex';
+                        if (argGroup) argGroup.style.display = 'none';
+                    }
+                } else {
+                    // Pulse: 0=Gate, 1=Trig, 2=Clock, 3=Voice
+                    if (mode == 2) { // Clock
+                        if (chGroup) chGroup.style.display = 'none'; // Clock is global
+                        if (argGroup) argGroup.style.display = 'flex';
+                        argLabel.innerText = "Div";
+                    } else if (mode == 3) { // Voice
+                        if (chGroup) chGroup.style.display = 'none';
+                        if (argGroup) argGroup.style.display = 'none';
+                    } else { // Gate/Trig
+                        if (chGroup) chGroup.style.display = 'flex';
+                        if (argGroup) argGroup.style.display = 'none'; // Note from MIDI
+                    }
+                }
+            };
+            updateRow('c1', true);
+            updateRow('c2', true);
+            updateRow('p1', false);
+            updateRow('p2', false);
+
+            // Check Sequencer Visibility
+            const c1M = getVal('c1Mode');
+            const c2M = getVal('c2Mode');
+            const seqUI = document.getElementById('sequencerUI');
+            if (c1M == 5 || c2M == 5) seqUI.style.display = 'block';
+            else seqUI.style.display = 'none';
+        }
+
+        function randomizeSequencer() {
+            for (let i = 0; i < 16; i++) {
+                setVal('seq' + i, Math.floor(Math.random() * 1001));
+                updateSeqLabel(i);
+            }
+        }
+
+
+        function readSettings() { if (midiOut) midiOut.send([0xF0, 0x7D, 0x03, 0xF7]); }
+        function sendSettingUpdate() {
+            // 19: Audio Scale
+            // 20: Audio Hold
+            // 21: Pitch Range
+            const sysex = [0xF0, 0x7D, 0x01,
+                document.getElementById('voicePreview').checked ? 1 : 0,
+
+                getVal('p1Mode'), getVal('p1Ch'), getVal('p1Arg'),
+                getVal('p2Mode'), getVal('p2Ch'), getVal('p2Arg'),
+
+                getVal('c1Mode'), getVal('c1Ch'), getVal('c1Arg'),
+                getVal('c2Mode'), getVal('c2Ch'), getVal('c2Arg'),
+
+                1, 2, 3, // Knobs (Placeholder)
+
+                getVal('c1Range'), getVal('c2Range'),
+
+                getVal('audioScale'),
+                document.getElementById('audioHold').checked ? 1 : 0,
+                getVal('pitchRange'),
+                (getVal('rootNoteName') + (getVal('rootNoteOctave') + 1) * 12),
+
+                // Sequencer Steps (16 bytes)
+                getMappedNote(0), getMappedNote(1), getMappedNote(2), getMappedNote(3),
+                getMappedNote(4), getMappedNote(5), getMappedNote(6), getMappedNote(7),
+                getMappedNote(8), getMappedNote(9), getMappedNote(10), getMappedNote(11),
+                getMappedNote(12), getMappedNote(13), getMappedNote(14), getMappedNote(15),
+
+                // Version Magic (4 bytes)
+                FLASH_MAGIC & 0x7F,
+                (FLASH_MAGIC >> 8) & 0x7F,
+                (FLASH_MAGIC >> 16) & 0x7F,
+                (FLASH_MAGIC >> 24) & 0x7F,
+
+                getVal('seqLength'),
+
+                getVal('seqLength'),
+                currentSynthMode, // Index 46
+
+                0xF7
+            ];
+
+            if (midiOut) midiOut.send(sysex);
+        }
+        function saveSettings() {
+            if (!midiOut) return;
+            sendSettingUpdate();
+            setTimeout(() => midiOut.send([0xF0, 0x7D, 0x02, 0xF7]), 50);
+        }
+        // --- SETTINGS / WEBMIDI END ---
+
+
+        // --- SAMPLE MANAGER (RESTORED logic) ---
+        const MAX_FLASH_SIZE = 512 * 1024;
+        const TARGET_SAMPLE_RATE = 22050;
+
+        let sampleFiles = [];
+        let firmwareBlocks = []; // Parsed UF2 blocks from firmware file
+        let firmwareName = null;
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        // Firmware drop zone handling
+        const firmwareDropZone = document.getElementById('firmwareDropZone');
+        const firmwareInput = document.getElementById('firmwareInput');
+
+        firmwareDropZone.addEventListener('dragover', e => { e.preventDefault(); firmwareDropZone.classList.add('dragover'); });
+        firmwareDropZone.addEventListener('dragleave', () => firmwareDropZone.classList.remove('dragover'));
+        firmwareDropZone.addEventListener('drop', e => {
+            e.preventDefault();
+            firmwareDropZone.classList.remove('dragover');
+            handleFirmware(e.dataTransfer.files[0]);
+        });
+        firmwareInput.addEventListener('change', () => handleFirmware(firmwareInput.files[0]));
+
+        async function handleFirmware(file) {
+            if (!file || !file.name.endsWith('.uf2')) {
+                document.getElementById('firmwareStatus').innerHTML = '<span style="color: var(--error);">Please select a .uf2 file</span>';
+                return;
+            }
+
+            const data = await file.arrayBuffer();
+            firmwareBlocks = [];
+
+            // Parse UF2 blocks
+            const view = new DataView(data);
+            for (let i = 0; i < data.byteLength; i += 512) {
+                const magic0 = view.getUint32(i, true);
+                if (magic0 !== 0x0A324655) break;
+                firmwareBlocks.push(new Uint8Array(data.slice(i, i + 512)));
+            }
+
+            firmwareName = file.name;
+            document.getElementById('firmwareStatus').innerHTML = `<span style="color: var(--success);">✓ ${file.name}</span> (${firmwareBlocks.length} blocks)`;
+            updateUI();
+        }
+
+        // Mu-Law Helpers
+        function lin2ulaw(sample) {
+            sample = Math.max(-32768, Math.min(32767, sample));
+            let sign = (sample < 0) ? 0x80 : 0;
+            if (sample < 0) sample = -sample;
+            sample = sample >> 2;
+            if (sample > 8159) sample = 8159;
+            sample += 33;
+            let exponent = 7;
+            for (let i = 7; i >= 0; --i) {
+                if ((sample & (1 << (i + 5))) !== 0) {
+                    exponent = i;
+                    break;
+                }
+            }
+            let mantissa = (sample >> (exponent + 1)) & 0x0F;
+            return (~(sign | (exponent << 4) | mantissa)) & 0xFF;
+        }
+
+        function ulaw2lin(ulaw) {
+            ulaw = ~ulaw;
+            let sign = ulaw & 0x80;
+            let exponent = (ulaw >> 4) & 0x07;
+            let mantissa = ulaw & 0x0F;
+            let sample = ((mantissa << 3) + 0x84) << exponent;
+            sample -= 0x84;
+            return (sign !== 0) ? -sample : sample;
+        }
+
+        function encodeMuLaw(samples) {
+            let out_bytes = new Uint8Array(samples.length);
+            for (let i = 0; i < samples.length; i++) {
+                out_bytes[i] = lin2ulaw(samples[i]);
+            }
+            return out_bytes;
+        }
+
+        function decodeMuLaw(mulaw) {
+            let pcm = new Int16Array(mulaw.length);
+            for (let i = 0; i < mulaw.length; i++) {
+                pcm[i] = ulaw2lin(mulaw[i]);
+            }
+            return pcm;
+        }
+
+        // --- Waveform Editor Logic ---
+        let currentEditorFileIndex = -1;
+        let pcmBuffer = null;
+        const canvas = document.getElementById('waveform');
+        const ctx = canvas.getContext('2d');
+        let dragMode = null;
+        let activeSource = null;
+        let playbackStartTime = 0;
+        let playheadAnimationFrame = null;
+
+        function openEditor(index) {
+            currentEditorFileIndex = index;
+            const f = sampleFiles[index];
+            document.getElementById('waveform-container').style.display = 'block';
+            document.getElementById('editor-filename').innerText = f.name;
+
+            // Stop any current playback when switching files
+            stopPlayback();
+
+            // Decode for editor
+            const int16 = decodeMuLaw(f.data);
+            pcmBuffer = new Float32Array(int16.length);
+            for (let i = 0; i < int16.length; i++) pcmBuffer[i] = int16[i] / 32768.0;
+
+            // Set inputs
+            document.getElementById('startSample').value = f.cropStart;
+            document.getElementById('endSample').value = f.cropEnd;
+
+            if (!f.loopStart) f.loopStart = f.cropStart;
+            if (!f.loopEnd) f.loopEnd = f.cropEnd;
+
+            if (document.getElementById('loopInSample')) {
+                document.getElementById('loopInSample').value = f.loopStart;
+                document.getElementById('loopOutSample').value = f.loopEnd;
+                document.getElementById('loopInSample').max = f.numSamples;
+                document.getElementById('loopOutSample').max = f.numSamples;
+            }
+
+            document.getElementById('startSample').max = f.numSamples;
+            document.getElementById('endSample').max = f.numSamples;
+
+            drawWaveform();
+        }
+
+        function drawWaveform() {
+            if (!pcmBuffer) return;
+            const w = canvas.width;
+            const h = canvas.height;
+            const f = sampleFiles[currentEditorFileIndex];
+
+            ctx.clearRect(0, 0, w, h);
+            ctx.fillStyle = '#222';
+            ctx.fillRect(0, 0, w, h);
+
+            // Draw Waveform
+            ctx.beginPath();
+            ctx.strokeStyle = '#38bdf8'; // Accent
+            ctx.lineWidth = 1;
+
+            const step = Math.ceil(pcmBuffer.length / w);
+            const amp = h / 2;
+
+            for (let i = 0; i < w; i++) {
+                let min = 1.0;
+                let max = -1.0;
+                for (let j = 0; j < step; j++) {
+                    const idx = (i * step) + j;
+                    if (idx < pcmBuffer.length) {
+                        const val = pcmBuffer[idx];
+                        if (val < min) min = val;
+                        if (val > max) max = val;
+                    }
+                }
+                ctx.moveTo(i, amp + min * amp);
+                ctx.lineTo(i, amp + max * amp);
+            }
+            ctx.stroke();
+
+            // Draw Selection Overlay
+            const samplesPerPixel = f.numSamples / w;
+            const startX = (f.cropStart / samplesPerPixel);
+            const endX = (f.cropEnd / samplesPerPixel);
+
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            ctx.fillRect(0, 0, startX, h); // Mask Left
+            ctx.fillRect(endX, 0, w - endX, h); // Mask Right
+
+            // Utility to draw handle
+            const drawHandle = (x, color, label) => {
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(x, 0); ctx.lineTo(x, h);
+                ctx.stroke();
+
+                ctx.fillStyle = color;
+                // Draw circle at top and bottom
+                ctx.beginPath();
+                ctx.arc(x, 5, 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(x, h - 5, 4, 0, Math.PI * 2);
+                ctx.fill();
+            };
+
+            drawHandle(startX, '#ef4444'); // Red Crop Start
+            drawHandle(endX, '#ef4444');   // Red Crop End
+
+            // Draw Loop Handles
+            if (typeof f.loopStart !== 'undefined') {
+                const loopInX = (f.loopStart / f.numSamples) * w;
+                const loopOutX = (f.loopEnd / f.numSamples) * w;
+                drawHandle(loopInX, '#4ade80'); // Green Loop In
+                drawHandle(loopOutX, '#f472b6'); // Magenta Loop Out
+            }
+
+            // Draw Playhead
+            if (activeSource && playbackStartTime > 0) {
+                const elapsed = audioCtx.currentTime - playbackStartTime;
+                const totalDur = (f.cropEnd - f.cropStart) / TARGET_SAMPLE_RATE;
+                let playheadPos = elapsed % totalDur;
+
+                // If not looping and elapsed > dur, stop playhead
+                if (!activeSource.loop && elapsed > totalDur) {
+                    stopPlayback();
+                } else {
+                    const playheadX = startX + (playheadPos / totalDur) * (endX - startX);
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(playheadX, 0); ctx.lineTo(playheadX, h);
+                    ctx.stroke();
+                }
+            }
+
+            // Duration
+            const croppedLen = f.cropEnd - f.cropStart;
+            const dur = croppedLen / TARGET_SAMPLE_RATE;
+            document.getElementById('crop-duration').innerText = dur.toFixed(2) + "s";
+
+            updateUI(false);
+        }
+
+        function updatePlayhead() {
+            if (activeSource) {
+                drawWaveform();
+                playheadAnimationFrame = requestAnimationFrame(updatePlayhead);
+            }
+        }
+
+        // Canvas Interaction
+        let isDragging = false;
+        canvas.addEventListener('mousedown', e => {
+            if (!pcmBuffer) return;
+            isDragging = true;
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const w = canvas.width;
+            const f = sampleFiles[currentEditorFileIndex];
+
+            const clickSample = Math.floor((x / w) * f.numSamples);
+
+            // Determine closer handle
+            const distStart = Math.abs(clickSample - f.cropStart);
+            const distEnd = Math.abs(clickSample - f.cropEnd);
+            const distLoopIn = (typeof f.loopStart !== 'undefined') ? Math.abs(clickSample - f.loopStart) : 999999999;
+            const distLoopOut = (typeof f.loopEnd !== 'undefined') ? Math.abs(clickSample - f.loopEnd) : 999999999;
+
+            let minDist = Math.min(distStart, distEnd, distLoopIn, distLoopOut);
+
+            if (minDist === distLoopIn) {
+                f.loopStart = clickSample;
+                dragMode = 'loopIn';
+            } else if (minDist === distLoopOut) {
+                f.loopEnd = clickSample;
+                dragMode = 'loopOut';
+            } else if (minDist === distStart) {
+                f.cropStart = clickSample;
+                dragMode = 'start';
+            } else {
+                f.cropEnd = clickSample;
+                dragMode = 'end';
+            }
+            // Enforce bounds
+            if (f.cropStart < 0) f.cropStart = 0;
+            if (f.cropEnd > f.numSamples) f.cropEnd = f.numSamples;
+            drawWaveform();
+        });
+
+        canvas.addEventListener('mousemove', e => {
+            if (!isDragging || !pcmBuffer) return;
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const w = canvas.width;
+            const f = sampleFiles[currentEditorFileIndex];
+
+            let val = Math.floor((x / w) * f.numSamples);
+            if (val < 0) val = 0;
+            if (val > f.numSamples) val = f.numSamples;
+
+            if (dragMode === 'start') f.cropStart = Math.min(val, f.cropEnd - 100);
+            else if (dragMode === 'end') f.cropEnd = Math.max(val, f.cropStart + 100);
+            else if (dragMode === 'loopIn') f.loopStart = Math.max(f.cropStart, Math.min(val, f.loopEnd - 10));
+            else if (dragMode === 'loopOut') f.loopEnd = Math.min(f.cropEnd, Math.max(val, f.loopStart + 10));
+
+            // Sync UI
+            document.getElementById('startSample').value = f.cropStart;
+            document.getElementById('endSample').value = f.cropEnd;
+            if (document.getElementById('loopInSample')) {
+                document.getElementById('loopInSample').value = f.loopStart;
+                document.getElementById('loopOutSample').value = f.loopEnd;
+            }
+            drawWaveform();
+        });
+
+        window.addEventListener('mouseup', () => { isDragging = false; dragMode = null; });
+
+        function updateCropFromInputs() {
+            if (currentEditorFileIndex === -1) return;
+            const f = sampleFiles[currentEditorFileIndex];
+
+            let s = parseInt(document.getElementById('startSample').value);
+            let e = parseInt(document.getElementById('endSample').value);
+            let li = parseInt(document.getElementById('loopInSample').value);
+            let lo = parseInt(document.getElementById('loopOutSample').value);
+
+            // Validate
+            if (s < 0) s = 0;
+            if (e > f.numSamples) e = f.numSamples;
+            if (s >= e) s = e - 100;
+            if (li < s) li = s;
+            if (lo > e) lo = e;
+
+            f.cropStart = s; f.cropEnd = e; f.loopStart = li; f.loopEnd = lo;
+            drawWaveform();
+        }
+
+        function stopPlayback() {
+            if (activeSource) { activeSource.stop(); activeSource = null; }
+            playbackStartTime = 0;
+            if (playheadAnimationFrame) cancelAnimationFrame(playheadAnimationFrame);
+            drawWaveform();
+        }
+
+        async function playCurrentCrop() {
+            if (currentEditorFileIndex === -1) return;
+            const f = sampleFiles[currentEditorFileIndex];
+            stopPlayback();
+
+            const croppedPCM = pcmBuffer.slice(f.cropStart, f.cropEnd);
+            const buffer = audioCtx.createBuffer(1, croppedPCM.length, TARGET_SAMPLE_RATE);
+            buffer.copyToChannel(croppedPCM, 0);
+            const source = audioCtx.createBufferSource();
+            source.buffer = buffer;
+
+            const loopCheck = document.getElementById('loopPreviewCheck');
+            if (loopCheck && loopCheck.checked && typeof f.loopStart !== 'undefined') {
+                source.loop = true;
+                source.loopStart = (f.loopStart - f.cropStart) / TARGET_SAMPLE_RATE;
+                source.loopEnd = (f.loopEnd - f.cropStart) / TARGET_SAMPLE_RATE;
+            }
+            source.connect(audioCtx.destination);
+            source.start();
+            activeSource = source;
+            playbackStartTime = audioCtx.currentTime;
+            updatePlayhead();
+        }
+
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+        dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('dragover'); handleFiles(e.dataTransfer.files); });
+        fileInput.addEventListener('change', () => handleFiles(fileInput.files));
+
+        async function handleFiles(files) {
+            document.getElementById('errorLog').innerText = "";
+            document.getElementById('status').innerText = "Processing...";
+            for (let file of files) {
+                try {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+                    const offlineCtx = new OfflineAudioContext(1, (audioBuffer.duration * TARGET_SAMPLE_RATE), TARGET_SAMPLE_RATE);
+                    const source = offlineCtx.createBufferSource();
+                    source.buffer = audioBuffer;
+                    source.connect(offlineCtx.destination);
+                    source.start();
+                    const resampledBuffer = await offlineCtx.startRendering();
+                    const floatData = resampledBuffer.getChannelData(0);
+                    const int16Data = new Int16Array(floatData.length);
+                    for (let i = 0; i < floatData.length; i++) int16Data[i] = floatData[i] * 32767;
+                    const mulaw = encodeMuLaw(int16Data);
+                    sampleFiles.push({
+                        name: file.name,
+                        data: mulaw,
+                        numSamples: int16Data.length,
+                        duration: audioBuffer.duration,
+                        cropStart: 0,
+                        cropEnd: int16Data.length,
+                        loopStart: 0,
+                        loopEnd: int16Data.length
+                    });
+                    if (sampleFiles.length === 1) openEditor(0);
+                } catch (err) { document.getElementById('errorLog').innerText += `Error reading ${file.name}: ${err}\n`; }
+            }
+            document.getElementById('status').innerText = "";
+            updateUI();
+        }
+
+        function removeFile(index) { sampleFiles.splice(index, 1); updateUI(); }
+
+        function updateUI(rebuildList = true) {
+            if (!rebuildList) {
+                let totalBytes = 0;
+                sampleFiles.forEach(f => { totalBytes += (4 + (f.cropEnd - f.cropStart)); });
+                const percent = (totalBytes / MAX_FLASH_SIZE) * 100;
+                document.getElementById('usageBar').style.width = Math.min(100, percent) + "%";
+                document.getElementById('usageText').innerText = `Used ${(totalBytes / 1024).toFixed(1)} KB of 512 KB`;
+                return;
+            }
+            const list = document.getElementById('fileList');
+            list.innerHTML = "";
+            let totalBytes = 0;
+            sampleFiles.forEach((f, i) => {
+                const len = f.cropEnd - f.cropStart;
+                totalBytes += (4 + len);
+                const li = document.createElement('li');
+                li.className = "file-item";
+                li.innerHTML = `<div class="file-info"><span class="file-name">${f.name}</span><span class="file-meta">${f.duration.toFixed(2)}s • ${(f.data.length / 1024).toFixed(1)} KB</span></div><div><button class="btn-play" onclick="openEditor(${i})">Edit</button><button class="btn-remove" onclick="removeFile(${i})">Remove</button></div>`;
+                list.appendChild(li);
+            });
+            const percent = (totalBytes / MAX_FLASH_SIZE) * 100;
+            document.getElementById('usageBar').style.width = Math.min(100, percent) + "%";
+            document.getElementById('usageText').innerText = `Used ${(totalBytes / 1024).toFixed(1)} KB of 512 KB`;
+            document.getElementById('dlBtn').disabled = (sampleFiles.length === 0 || totalBytes > MAX_FLASH_SIZE);
+        }
+
+        function generateUF2() {
+            const UF2_MAGIC_START0 = 0x0A324655;
+            const UF2_MAGIC_START1 = 0x9E5D5157;
+            const UF2_MAGIC_END = 0x0AB16F30;
+            const RP2040_FAMILY_ID = 0xE48BFF56;
+            const TARGET_FLASH_OFFSET = 0x180000;
+            const TARGET_ADDRESS = 0x10000000 + TARGET_FLASH_OFFSET;
+
+            // Build sample content
+            let totalContentSize = 0;
+            sampleFiles.forEach(f => {
+                totalContentSize += 4 + 8 + (f.cropEnd - f.cropStart);
+                while (totalContentSize % 4 !== 0) totalContentSize++;
+            });
+
+            let content = new Uint8Array(totalContentSize);
+            let ptr = 0;
+            sampleFiles.forEach(f => {
+                const len = f.cropEnd - f.cropStart;
+                const storedLen = len + 8;
+                content[ptr++] = storedLen & 0xFF; content[ptr++] = (storedLen >> 8) & 0xFF; content[ptr++] = (storedLen >> 16) & 0xFF; content[ptr++] = (storedLen >> 24) & 0xFF;
+                const relLoopStart = f.loopStart - f.cropStart;
+                const relLoopEnd = f.loopEnd - f.cropStart;
+                content[ptr++] = relLoopStart & 0xFF; content[ptr++] = (relLoopStart >> 8) & 0xFF; content[ptr++] = (relLoopStart >> 16) & 0xFF; content[ptr++] = (relLoopStart >> 24) & 0xFF;
+                content[ptr++] = relLoopEnd & 0xFF; content[ptr++] = (relLoopEnd >> 8) & 0xFF; content[ptr++] = (relLoopEnd >> 16) & 0xFF; content[ptr++] = (relLoopEnd >> 24) & 0xFF;
+                const croppedData = f.data.subarray(f.cropStart, f.cropEnd);
+                content.set(croppedData, ptr);
+                ptr += len;
+                while (ptr % 4 !== 0) ptr++;
+            });
+
+            let sampleDataBlocks = Math.ceil(totalContentSize / 256);
+            let sampleTotalBlocks = sampleDataBlocks + 1; // +1 for metadata
+
+            let maxFirmwareAddr = 0;
+            if (firmwareBlocks.length > 0) {
+                firmwareBlocks.forEach(b => {
+                    let addr = b[12] | (b[13] << 8) | (b[14] << 16) | (b[15] << 24);
+                    if (addr > maxFirmwareAddr) maxFirmwareAddr = addr;
+                });
+            }
+            let firmwareEnd = maxFirmwareAddr + 256;
+            let targetAddr = TARGET_ADDRESS;
+            if (targetAddr <= firmwareEnd && firmwareBlocks.length > 0) targetAddr = firmwareEnd;
+
+            let gapSize = 0;
+            let gapBlocks = 0;
+            if (firmwareBlocks.length > 0) {
+                gapSize = targetAddr - firmwareEnd;
+                gapBlocks = Math.floor(gapSize / 256);
+            }
+
+            let totalBlocks = firmwareBlocks.length + gapBlocks + sampleTotalBlocks;
+            let uf2 = new ArrayBuffer(totalBlocks * 512);
+            let uf2View = new DataView(uf2);
+            let blockIdx = 0;
+
+            // Firmware
+            for (let i = 0; i < firmwareBlocks.length; i++) {
+                let offset = blockIdx * 512;
+                let src = firmwareBlocks[i];
+                for (let j = 0; j < 512; j++) uf2View.setUint8(offset + j, src[j]);
+                uf2View.setUint32(offset + 20, blockIdx, true);
+                uf2View.setUint32(offset + 24, totalBlocks, true);
+                blockIdx++;
+            }
+
+            // Gap
+            for (let i = 0; i < gapBlocks; i++) {
+                let offset = blockIdx * 512;
+                let addr = firmwareEnd + (i * 256);
+                uf2View.setUint32(offset + 0, UF2_MAGIC_START0, true);
+                uf2View.setUint32(offset + 4, UF2_MAGIC_START1, true);
+                uf2View.setUint32(offset + 8, 0x00002000, true);
+                uf2View.setUint32(offset + 12, addr, true);
+                uf2View.setUint32(offset + 16, 256, true);
+                uf2View.setUint32(offset + 20, blockIdx, true);
+                uf2View.setUint32(offset + 24, totalBlocks, true);
+                uf2View.setUint32(offset + 28, RP2040_FAMILY_ID, true);
+                for (let k = 0; k < 256; k++) uf2View.setUint8(offset + 32 + k, 0xFF);
+                uf2View.setUint32(offset + 508, UF2_MAGIC_END, true);
+                blockIdx++;
+            }
+
+            // Metadata Block (UPDATED)
+            {
+                let offset = blockIdx * 512;
+                uf2View.setUint32(offset + 0, UF2_MAGIC_START0, true);
+                uf2View.setUint32(offset + 4, UF2_MAGIC_START1, true);
+                uf2View.setUint32(offset + 8, 0x00002000, true);
+                uf2View.setUint32(offset + 12, targetAddr, true);
+                uf2View.setUint32(offset + 16, 256, true);
+                uf2View.setUint32(offset + 20, blockIdx, true);
+                uf2View.setUint32(offset + 24, totalBlocks, true);
+                uf2View.setUint32(offset + 28, RP2040_FAMILY_ID, true);
+
+                // Payload
+                // +0: Magic (4)
+                // +4: Count (4)
+                // +8: Settings (28)
+                const payloadStart = offset + 32;
+                uf2View.setUint32(payloadStart + 0, FLASH_MAGIC, true); // Use shared magic constant
+                uf2View.setUint32(payloadStart + 4, sampleFiles.length, true);
+
+                // Write Settings
+                const s = payloadStart + 8;
+                uf2View.setUint8(s + 0, document.getElementById('voicePreview').checked ? 1 : 0);
+                uf2View.setUint8(s + 1, getVal('p1Mode')); uf2View.setUint8(s + 2, getVal('p1Ch')); uf2View.setUint8(s + 3, getVal('p1Arg'));
+                uf2View.setUint8(s + 4, getVal('p2Mode')); uf2View.setUint8(s + 5, getVal('p2Ch')); uf2View.setUint8(s + 6, getVal('p2Arg'));
+                uf2View.setUint8(s + 7, getVal('c1Mode')); uf2View.setUint8(s + 8, getVal('c1Ch')); uf2View.setUint8(s + 9, getVal('c1Arg'));
+                uf2View.setUint8(s + 10, getVal('c2Mode')); uf2View.setUint8(s + 11, getVal('c2Ch')); uf2View.setUint8(s + 12, getVal('c2Arg'));
+                // Defaults for Knobs
+                uf2View.setUint8(s + 13, 1);
+                uf2View.setUint8(s + 14, 2);
+                uf2View.setUint8(s + 15, 3);
+
+                // Range Settings (Offsets 16, 17)
+                uf2View.setUint8(s + 16, getVal('c1Range'));
+                uf2View.setUint8(s + 17, getVal('c2Range'));
+
+                // Audio Settings (Offsets 18, 19)
+                uf2View.setUint8(s + 18, document.getElementById('audioQuantize').checked ? 1 : 0);
+                uf2View.setUint8(s + 19, document.getElementById('audioHold').checked ? 1 : 0);
+
+                // Rest is 0
+                for (let k = 20; k < 248; k++) uf2View.setUint8(payloadStart + 8 + k, 0);
+
+                uf2View.setUint32(offset + 508, UF2_MAGIC_END, true);
+                blockIdx++;
+            }
+
+            // Sample Data Blocks
+            for (let i = 0; i < sampleDataBlocks; i++) {
+                let offset = blockIdx * 512;
+                uf2View.setUint32(offset + 0, UF2_MAGIC_START0, true);
+                uf2View.setUint32(offset + 4, UF2_MAGIC_START1, true);
+                uf2View.setUint32(offset + 8, 0x00002000, true);
+                uf2View.setUint32(offset + 12, targetAddr + 256 + (i * 256), true);
+                uf2View.setUint32(offset + 16, 256, true);
+                uf2View.setUint32(offset + 20, blockIdx, true);
+                uf2View.setUint32(offset + 24, totalBlocks, true);
+                uf2View.setUint32(offset + 28, RP2040_FAMILY_ID, true);
+
+                let srcPtr = i * 256;
+                let len = Math.min(256, totalContentSize - srcPtr);
+                for (let j = 0; j < len; j++) uf2View.setUint8(offset + 32 + j, content[srcPtr + j]);
+                uf2View.setUint32(offset + 508, UF2_MAGIC_END, true);
+                blockIdx++;
+            }
+
+            const blob = new Blob([uf2], { type: "application/octet-stream" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "flux.uf2"; // Generic name
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+    </script>
+    <script>
+        // --- DASHBOARD LOGIC ---
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+
+            document.getElementById('viewSettings').style.display = (tab === 'settings') ? 'block' : 'none';
+            document.getElementById('viewDashboard').style.display = (tab === 'dashboard') ? 'block' : 'none';
+        }
+
+        // Knob Logic
+        const makeKnob = (id, label, cc, min, max, initial) => {
+            const range = max - min;
+            let currentVal = initial;
+
+            // SVG Knob
+            const el = document.createElement('div');
+            el.className = 'knob-container';
+            el.innerHTML = `
+                <div class="knob-label">${label}</div>
+                <div class="knob-wrap" data-cc="${cc}" data-min="${min}" data-max="${max}">
+                    <svg viewBox="0 0 100 100" class="knob-svg">
+                        <circle cx="50" cy="50" r="40" stroke="#333" stroke-width="8" fill="none" />
+                        <circle cx="50" cy="50" r="40" stroke="var(--accent)" stroke-width="8" fill="none" 
+                                class="knob-ring" stroke-dasharray="251.2" stroke-dashoffset="251.2" transform="rotate(135 50 50)" />
+                        <line x1="50" y1="50" x2="50" y2="10" stroke="#fff" stroke-width="3" stroke-linecap="round" 
+                              class="knob-pointer" transform="rotate(0 50 50)" />
+                    </svg>
+                </div>
+                <div class="knob-val" id="val_${cc}">${initial}</div>
+            `;
+
+            // Interaction
+            const ring = el.querySelector('.knob-ring');
+            const pointer = el.querySelector('.knob-pointer');
+            const wrap = el.querySelector('.knob-wrap');
+
+            const updateVisuals = (val) => {
+                const pct = (val - min) / range;
+                const angle = 270 * pct; // 0 to 270 degrees
+
+                pointer.setAttribute('transform', `rotate(${angle - 135} 50 50)`);
+
+                // Arc
+                const maxArc = 188.4; // 251.2 * 0.75
+                ring.style.strokeDasharray = `${maxArc} 251.2`;
+                ring.style.strokeDashoffset = maxArc - (maxArc * pct);
+            };
+
+            let startY = 0;
+            let startVal = 0;
+
+            const onMove = (e) => {
+                const dy = startY - e.clientY;
+                const dVal = Math.floor(dy * 0.5); // Sensitivity
+                let newVal = startVal + dVal;
+                if (newVal < min) newVal = min;
+                if (newVal > max) newVal = max;
+
+                if (newVal !== currentVal) {
+                    currentVal = newVal;
+                    updateVisuals(currentVal);
+                    document.getElementById(`val_${cc}`).innerText = currentVal;
+                    sendCC(cc, currentVal);
+                }
+            };
+
+            const onUp = () => {
+                window.removeEventListener('mousemove', onMove);
+                window.removeEventListener('mouseup', onUp);
+            };
+
+            wrap.addEventListener('mousedown', (e) => {
+                startY = e.clientY;
+                startVal = currentVal;
+                window.addEventListener('mousemove', onMove);
+                window.addEventListener('mouseup', onUp);
+            });
+
+            // Initial
+            updateVisuals(initial);
+
+            // Store ref for external update
+            el.setKnobValue = (v) => {
+                currentVal = v;
+                updateVisuals(v);
+                document.getElementById(`val_${cc}`).innerText = v;
+            };
+
+            return el;
+        };
+
+        function renderDashboard() {
+            const container = document.getElementById('dashboardControls');
+            if (!container) return;
+            container.innerHTML = '<div style="font-size:0.8em; opacity:0.6; margin-bottom:20px; text-align:center;">Bidirectional Control Surface</div>';
+
+            if ((typeof DEVICE_CONTROLS === 'undefined') || !DEVICE_CONTROLS.controls) {
+                container.innerHTML += '<div style="color:var(--error)">Error: flux_controls.js not loaded.</div>';
+                return;
+            }
+
+            // Grouping
+            const groups = { "Global": [], "Synth": [], "Effects": [] };
+            DEVICE_CONTROLS.controls.forEach(c => {
+                if (groups[c.group]) groups[c.group].push(c);
+                else groups["Global"].push(c); // Fallback
+            });
+
+            // Helper to render group
+            const renderGroup = (name, items) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.id = 'group_' + name; // ID for visibility toggling
+                card.style.marginBottom = '20px';
+
+                const title = document.createElement('h3');
+                title.style.color = 'var(--accent)';
+                title.style.marginTop = '0';
+                title.innerText = name;
+                card.appendChild(title);
+
+                // Sort: Enums First, then Others
+                items.sort((a, b) => (a.type === 'enum' ? -1 : 1));
+
+                // Container for Enums
+                const enumContainer = document.createElement('div');
+                enumContainer.style.display = 'flex';
+                enumContainer.style.gap = '20px';
+                enumContainer.style.marginBottom = '20px';
+                enumContainer.style.flexWrap = 'wrap';
+
+                // Container for Knobs
+                const knobContainer = document.createElement('div');
+                knobContainer.style.display = 'flex';
+                knobContainer.style.gap = '20px';
+                knobContainer.style.flexWrap = 'wrap';
+                knobContainer.style.justifyContent = 'center';
+
+                items.forEach(c => {
+                    if (c.type === 'enum') {
+                        const wrapper = document.createElement('div');
+                        wrapper.style.flexGrow = '1';
+                        wrapper.innerHTML = `<label style="display:block; font-size:0.8em; margin-bottom:5px; color:var(--text);">${c.name}</label>`;
+
+                        let opts = c.options.map(o => `<option value="${o.val}">${o.label}</option>`).join('');
+                        wrapper.innerHTML += `<select id="cc_${c.cc}" onchange="sendCC(${c.cc}, this.value)" style="width:100%; padding:8px;">${opts}</select>`;
+                        enumContainer.appendChild(wrapper);
+                    } else if (c.type === 'range') {
+                        const k = makeKnob('cc_' + c.cc, c.name, c.cc, c.min, c.max, 0);
+                        k.id = 'knob_wrapper_' + c.cc; // Hook for finding wrapper
+                        knobContainer.appendChild(k);
+                    }
+                });
+
+                if (enumContainer.children.length > 0) card.appendChild(enumContainer);
+                if (knobContainer.children.length > 0) card.appendChild(knobContainer);
+
+                container.appendChild(card);
+            };
+
+            renderGroup("Global", groups["Global"]);
+            renderGroup("Internal Synth", groups["Synth"]);
+            renderGroup("Effects Processor", groups["Effects"]);
+        }
+
+        function sendCC(cc, val) {
+            if (midiOut) {
+                // Send Control Change on Channel 1 (0xB0)
+                midiOut.send([0xB0, cc, parseInt(val)]);
+            }
+        }
+
+        // Update UI from incoming MIDI
+        function handleIncomingCC(cc, val) {
+            // Check Enum Selects
+            const el = document.getElementById('cc_' + cc);
+            if (el && el.tagName === 'SELECT') {
+                el.value = val;
+                return;
+            }
+            // Check Knobs
+            const kw = document.getElementById('knob_wrapper_' + cc);
+            if (kw && kw.setKnobValue) {
+                kw.setKnobValue(val);
+            }
+        }
+
+        // Request Initial State on Connection
+        function requestState() {
+            // CC 127, Value 127 (Arbitrary value)
+            console.log("Requesting Device State...");
+            sendCC(127, 127);
+        }
+
+        // Initialize (Wait for DOM)
+        window.addEventListener('DOMContentLoaded', () => {
+            renderDashboard();
+
+            // Hook into MIDI connection to request state
+            // existing navigator.requestMIDIAccess logic is likely in flux_manager.html above?
+            // checking... checking...
+            // It seems requestMIDIAccess is at the top of the file (viewed previously).
+            // We can just call requestState() after a short delay or if midiOut is ready.
+
+            setTimeout(requestState, 1000); // Simple hack for now
+        });
+    </script>
+</body>
+
+</html>

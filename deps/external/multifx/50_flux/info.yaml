@@ -1,0 +1,6 @@
+Description: Multi-FX and Synth Firmware
+Name: Flux
+Language: C++ (RP2040 SDK)
+Creator: WorkshopSystem
+Version: 1.0
+Status: Release

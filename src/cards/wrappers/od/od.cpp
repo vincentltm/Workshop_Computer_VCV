@@ -1,0 +1,267 @@
+#include <stdint.h>
+#include <stddef.h>
+#include <stdlib.h>
+#include <math.h>
+
+struct Attractor {
+    float x = 0.9f;
+    float y = 0.0f;
+    float z = 0.0f;
+};
+
+class OdCard : public ComputerCard {
+public:
+    Attractor att_a;
+    Attractor att_b;
+    Attractor init_a;
+    Attractor init_b;
+
+    bool is_looping = false;
+    bool was_looping = false;
+    int loop_counter = 0;
+    int loop_steps = 0;
+
+    int sample_counter = 0;
+    int samples_per_tick = 480; // 48000 Hz / 100 Hz = 480 samples
+
+    int pulse_timer_a = 0;
+    int pulse_timer_b = 0;
+    int flash_timer_4 = 0;
+    int flash_timer_5_6 = 0;
+
+    const float MINIMUM_TIMESTEP = 0.0001f;
+    const float MAXIMUM_TIMESTEP = 0.01f;
+    const float TIMESTEP_FACTOR = 5.f / 11.f;
+    const float RANDOM_FACTOR_MAX = 2.0f;
+
+    bool last_sw_down = false;
+
+    OdCard() {
+        init_a.x = 0.9f; init_a.y = 0.0f; init_a.z = 0.0f;
+        init_b.x = 0.9f; init_b.y = 0.0f; init_b.z = 0.0f;
+        att_a = init_a;
+        att_b = init_b;
+    }
+
+    virtual void ProcessSample() override {
+        sample_counter++;
+        if (sample_counter >= samples_per_tick) {
+            sample_counter = 0;
+            update_inputs();
+            tick_100hz();
+        }
+
+        // Output CV values scaled by amplitude (magnitude) VCAs
+        // Mag A:
+        float mag_a = 1.0f;
+        if (Connected(Input::Audio1)) {
+            // Audio input ranges -2048 to 2047, map it to 0.f to 5.f V, then divide by 5.f
+            float v = g_audio_in[0];
+            if (v < 0.f) v = 0.f;
+            if (v > 5.f) v = 5.f;
+            mag_a = v / 5.f;
+        } else {
+            mag_a = (float)KnobVal(Knob::X) / 4095.f;
+        }
+
+        // Mag B:
+        float mag_b = 1.0f;
+        if (Connected(Input::Audio2)) {
+            float v = g_audio_out[1]; // wait, input is g_audio_in[1]
+            float v_in = g_audio_in[1];
+            if (v_in < 0.f) v_in = 0.f;
+            if (v_in > 5.f) v_in = 5.f;
+            mag_b = v_in / 5.f;
+        } else {
+            mag_b = (float)KnobVal(Knob::X) / 4095.f;
+        }
+
+        // Map x to [-6, 6]V, and z to [-6, 6]V
+        // V_out = (x / 24) * 6 = x * 0.25
+        // V_out = ((z / 55) * 2 - 1) * 6
+        float out_ax = att_a.x * 0.25f * mag_a;
+        float out_az = ((att_a.z / 55.f) * 2.f - 1.f) * 6.f * mag_a;
+        float out_bx = att_b.x * 0.25f * mag_b;
+        float out_bz = ((att_b.z / 55.f) * 2.f - 1.f) * 6.f * mag_b;
+
+        // Write to CV & Audio outputs (in 12-bit signed range)
+        CVOut1((int16_t)(out_ax * (2048.f / 6.f)));
+        AudioOut1((int16_t)(out_az * (2048.f / 6.f)));
+        CVOut2((int16_t)(out_bx * (2048.f / 6.f)));
+        AudioOut2((int16_t)(out_bz * (2048.f / 6.f)));
+    }
+
+private:
+    void euler_step(Attractor& att, float dt) {
+        float x = att.x;
+        float y = att.y;
+        float z = att.z;
+        att.x = x + dt * (10.f * (y - x));
+        att.y = y + dt * (x * (28.f - z) - y);
+        att.z = z + dt * (x * y - (8.f / 3.f) * z);
+    }
+
+    void reset_attractor(Attractor& att, const Attractor& init, float rf) {
+        if (rf > 0.0f) {
+            att.x = init.x + rf * ((float)::rand() / RAND_MAX);
+            att.y = init.y + rf * ((float)::rand() / RAND_MAX);
+            att.z = init.z + rf * ((float)::rand() / RAND_MAX);
+        } else {
+            att.x = init.x;
+            att.y = init.y;
+            att.z = init.z;
+        }
+    }
+
+    void set_initial_coordinates() {
+        init_a = att_a;
+        init_b = att_b;
+        loop_counter = 0;
+        flash_timer_4 = 10; // flash LED 4 for 100ms
+    }
+
+    void tick_100hz() {
+        // Compute speed timestep A
+        float min_t = MINIMUM_TIMESTEP + ((float)KnobVal(Knob::Main) / 4095.f) * (MAXIMUM_TIMESTEP - MINIMUM_TIMESTEP);
+        float t_a = min_t;
+        if (Connected(Input::CV1)) {
+            // CV1: -6V to +6V, map -5V to +5V range to 0.f to 1.f
+            float volts = g_cv_in[0];
+            float t_pct = (volts + 5.f) / 10.f;
+            if (t_pct < 0.f) t_pct = 0.f;
+            if (t_pct > 1.f) t_pct = 1.f;
+            t_a = min_t + t_pct * (MAXIMUM_TIMESTEP - min_t);
+        }
+        float t_b = t_a * TIMESTEP_FACTOR;
+
+        // Compute random factor
+        float max_rf = ((float)KnobVal(Knob::Y) / 4095.f) * RANDOM_FACTOR_MAX;
+        float rf = max_rf;
+        if (Connected(Input::CV2)) {
+            float volts = g_cv_in[1];
+            float rf_pct = (volts + 5.f) / 10.f;
+            if (rf_pct < 0.f) rf_pct = 0.f;
+            if (rf_pct > 1.f) rf_pct = 1.f;
+            rf = rf_pct * max_rf;
+        }
+
+        // Handle Switch Z
+        Switch sw = SwitchVal();
+        if (sw == Switch::Up) {
+            if (!was_looping) {
+                is_looping = true;
+                loop_steps = loop_counter;
+                loop_counter = 0;
+                reset_attractor(att_a, init_a, rf);
+                reset_attractor(att_b, init_b, rf);
+                LedOn(3, true); // Status LED 3 on
+                was_looping = true;
+            }
+        } else if (sw == Switch::Middle) {
+            if (was_looping) {
+                is_looping = false;
+                loop_steps = 0;
+                LedOn(3, false);
+                was_looping = false;
+            }
+        }
+
+        // Switch momentary down
+        if (sw == Switch::Down) {
+            if (!last_sw_down) {
+                set_initial_coordinates();
+                last_sw_down = true;
+            }
+        } else {
+            last_sw_down = false;
+        }
+
+        // Handle Pulse Inputs
+        if (PulseIn1RisingEdge()) {
+            if (sw == Switch::Middle) {
+                // toggle looping
+                is_looping = !is_looping;
+                if (is_looping) {
+                    loop_steps = loop_counter;
+                    loop_counter = 0;
+                    reset_attractor(att_a, init_a, rf);
+                    reset_attractor(att_b, init_b, rf);
+                    LedOn(3, true);
+                } else {
+                    loop_steps = 0;
+                    LedOn(3, false);
+                }
+            }
+        }
+        if (PulseIn2RisingEdge()) {
+            set_initial_coordinates();
+        }
+
+        // Take step
+        if (is_looping && loop_steps > 0) {
+            if (loop_counter >= loop_steps) {
+                reset_attractor(att_a, init_a, rf);
+                reset_attractor(att_b, init_b, rf);
+                loop_counter = 0;
+                flash_timer_5_6 = 10; // Flash LEDs 5 & 6
+            }
+        }
+
+        float prev_x_a = att_a.x;
+        float prev_x_b = att_b.x;
+
+        euler_step(att_a, t_a);
+        euler_step(att_b, t_b);
+
+        // Zero crossing trigger timers
+        if (prev_x_a * att_a.x <= 0.f) {
+            pulse_timer_a = 5; // 50ms pulse
+        }
+        if (prev_x_b * att_b.x <= 0.f) {
+            pulse_timer_b = 5;
+        }
+
+        loop_counter++;
+
+        // Process timers for pulse outputs & LEDs
+        if (pulse_timer_a > 0) {
+            pulse_timer_a--;
+            PulseOut1(true);
+            LedOn(1, true);
+        } else {
+            PulseOut1(false);
+            LedOn(1, false);
+        }
+
+        if (pulse_timer_b > 0) {
+            pulse_timer_b--;
+            PulseOut2(true);
+            LedOn(2, true);
+        } else {
+            PulseOut2(false);
+            LedOn(2, false);
+        }
+
+        if (flash_timer_4 > 0) {
+            flash_timer_4--;
+            LedOn(4, true);
+        } else {
+            LedOn(4, false);
+        }
+
+        if (flash_timer_5_6 > 0) {
+            flash_timer_5_6--;
+            LedOn(5, true);
+            LedOn(6, true);
+        } else {
+            LedOn(5, false);
+            LedOn(6, false);
+        }
+    }
+};
+
+int main() {
+    OdCard oc;
+    oc.Run();
+    return 0;
+}

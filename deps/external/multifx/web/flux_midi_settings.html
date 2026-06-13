@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flux Device Settings (MIDI)</title>
+    <style>
+        :root {
+            --bg: #18181b;
+            --panel: #27272a;
+            --text: #e4e4e7;
+            --accent: #38bdf8;
+            --border: #3f3f46;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: var(--panel);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        h1 {
+            color: var(--accent);
+            margin-top: 0;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+
+        select,
+        button {
+            padding: 8px;
+            background: #000;
+            color: #fff;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+        }
+
+        button {
+            cursor: pointer;
+            background: var(--accent);
+            color: #000;
+            border: none;
+            font-weight: bold;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        #status {
+            margin-bottom: 20px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+
+        .success {
+            color: #4ade80;
+        }
+
+        .error {
+            color: #ef4444;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>Flux Device Settings</h1>
+        <div id="status">Connecting...</div>
+
+        <div class="row">
+            <label>Voice Preview (Main Out)</label>
+            <input type="checkbox" id="voicePreview">
+        </div>
+
+        <div class="row">
+            <label>Pulse 1 Mode</label>
+            <select id="pulse1">
+                <option value="0">Gate (Voice 0)</option>
+                <option value="1">Clock</option>
+                <option value="2">Trigger</option>
+            </select>
+        </div>
+
+        <div class="row">
+            <label>Pulse 2 Mode</label>
+            <select id="pulse2">
+                <option value="0">Gate (Voice 0)</option>
+                <option value="1">Clock</option>
+                <option value="2">Trigger</option>
+            </select>
+        </div>
+
+        <div class="row">
+            <label>CV 1 Output</label>
+            <select id="cv1">
+                <option value="0">Pitch (Voice 0)</option>
+                <option value="1">Velocity</option>
+                <option value="2">LFO</option>
+            </select>
+        </div>
+
+        <div class="row">
+            <label>CV 2 Output</label>
+            <select id="cv2">
+                <option value="0">Timbre</option>
+                <option value="1">Envelope</option>
+                <option value="2">LFO</option>
+            </select>
+        </div>
+
+        <div style="margin-top: 30px; display: flex; gap: 10px;">
+            <button onclick="readSettings()">Read from Device</button>
+            <button onclick="sendSettings()">Apply (Runtime)</button>
+            <button onclick="saveSettings()">Save to Flash</button>
+            <button onclick="reboot()">Reboot</button>
+        </div>
+    </div>
+
+    <script>
+        let midiOut = null;
+        let midiIn = null;
+
+        navigator.requestMIDIAccess({ sysex: true }).then(access => {
+            const outputs = Array.from(access.outputs.values());
+            const inputs = Array.from(access.inputs.values());
+
+            // Find Flux or similar
+            midiOut = outputs.find(o => o.name.includes("Flux") || o.name.includes("Workshop") || o.name.includes("TinyUSB"));
+            midiIn = inputs.find(i => i.name.includes("Flux") || i.name.includes("Workshop") || i.name.includes("TinyUSB"));
+
+            if (midiOut && midiIn) {
+                document.getElementById('status').innerText = "Connected: " + midiOut.name;
+                document.getElementById('status').className = "success";
+                midiIn.onmidimessage = onMessage;
+                readSettings();
+            } else {
+                document.getElementById('status').innerText = "Device not found.";
+                document.getElementById('status').className = "error";
+            }
+        });
+
+        function onMessage(e) {
+            if (e.data[0] === 0xF0 && e.data[1] === 0x7D && e.data[2] === 0x03) {
+                // Read Response
+                const d = e.data;
+                document.getElementById('voicePreview').checked = (d[3] === 1);
+                document.getElementById('pulse1').value = d[4];
+                document.getElementById('pulse2').value = d[5];
+                document.getElementById('cv1').value = d[6];
+                document.getElementById('cv2').value = d[7];
+                console.log("Settings Read");
+            }
+        }
+
+        function getValues() {
+            return [
+                document.getElementById('voicePreview').checked ? 1 : 0,
+                parseInt(document.getElementById('pulse1').value),
+                parseInt(document.getElementById('pulse2').value),
+                parseInt(document.getElementById('cv1').value),
+                parseInt(document.getElementById('cv2').value)
+            ];
+        }
+
+        function sendSettings() {
+            if (!midiOut) return;
+            const v = getValues();
+            // F0 7D 01 [Data] F7
+            midiOut.send([0xF0, 0x7D, 0x01, ...v, 0xF7]);
+        }
+
+        function saveSettings() {
+            if (!midiOut) return;
+            sendSettings(); // Apply first
+            setTimeout(() => midiOut.send([0xF0, 0x7D, 0x02, 0xF7]), 50);
+        }
+
+        function readSettings() {
+            if (!midiOut) return;
+            midiOut.send([0xF0, 0x7D, 0x03, 0xF7]);
+        }
+
+        function reboot() {
+            if (!midiOut) return;
+            if (confirm("Reboot device?")) midiOut.send([0xF0, 0x7D, 0x04, 0xF7]);
+        }
+
+        // Auto-send on change?
+        const inputs = document.querySelectorAll('select, input');
+        inputs.forEach(i => i.addEventListener('change', () => sendSettings()));
+
+    </script>
+</body>
+
+</html>

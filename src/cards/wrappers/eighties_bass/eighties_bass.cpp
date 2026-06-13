@@ -1,0 +1,168 @@
+#include <stdint.h>
+#include <stddef.h>
+#include <stdlib.h>
+#include <math.h>
+
+#include "mozzi_pgmspace.h"
+#include "mozzi_rand.h"
+#include "mozzi_midi.h"
+#include "Oscil.h"
+#include "ResonantFilter.h"
+#include "saw_analogue512_int8.h"
+
+#define NUM_VOICES 5
+#define MOZZI_AUDIO_RATE 32768
+#define MOZZI_CONTROL_RATE 128
+
+const int CVlowPoint5V = 384;
+const int CVhighPoint5V = 3744;
+const int CVlowPoint = 100;
+const int CVhighPoint = 4065;
+
+class Computer {
+public:
+    void begin() {}
+    void update() {}
+
+    int knobMain() { return ComputerCard::thisptr->KnobVal(ComputerCard::Knob::Main); }
+    int knobX() { return ComputerCard::thisptr->KnobVal(ComputerCard::Knob::X); }
+    int knobY() { return ComputerCard::thisptr->KnobVal(ComputerCard::Knob::Y); }
+    int switchPos() {
+        return (ComputerCard::thisptr->SwitchVal() == ComputerCard::Switch::Down) ? 0 :
+               ((ComputerCard::thisptr->SwitchVal() == ComputerCard::Switch::Up) ? 4095 : 2048);
+    }
+    int cv1In() { return ComputerCard::thisptr->CVIn1() + 2048; }
+    int cv2In() { return ComputerCard::thisptr->CVIn2() + 2048; }
+    int audio1In() { return ComputerCard::thisptr->AudioIn1() + 2048; }
+    int audio2In() { return ComputerCard::thisptr->AudioIn2() + 2048; }
+
+    void setLED(int num, int val) {
+        ComputerCard::thisptr->LedOn(num, val == 1);
+    }
+};
+
+class EightiesBassCard : public ComputerCard {
+public:
+    Oscil<SAW_ANALOGUE512_NUM_CELLS, MOZZI_AUDIO_RATE> aOscs[NUM_VOICES];
+    MultiResonantFilter filt;
+    int filt_mode = 0;
+    const int num_filt_modes = 3;
+    float detune = 1.0f;
+    float noisey_amt = 0.1f;
+    float signal_amt = 0.9f;
+    float midi_note = 0.0f;
+    Computer comp;
+
+    int control_counter = 0;
+    int control_rate_samples = 0;
+
+    EightiesBassCard() {
+        control_rate_samples = 48000 / MOZZI_CONTROL_RATE; // default control rate
+        
+        filt.setCutoffFreqAndResonance(20, 170);
+        for (int i = 0; i < NUM_VOICES; i++) {
+            aOscs[i].setTable(SAW_ANALOGUE512_DATA);
+        }
+        
+        // Initial LED configuration
+        LedOn(filt_mode * 2, true);
+    }
+
+    virtual void ProcessSample() override {
+        // Run control updates at control rate
+        control_counter++;
+        if (control_counter >= control_rate_samples) {
+            control_counter = 0;
+            updateControl();
+        }
+
+        // Run audio update
+        int32_t asig = 0;
+        for (int i = 0; i < NUM_VOICES; i++) {
+            asig += aOscs[i].next();
+        }
+        
+        // Match original: asig = signal_amt * asig + noisey_amt * rand(255)
+        int32_t noise = rand(255);
+        asig = signal_amt * asig + noisey_amt * noise;
+
+        filt.next(asig);
+
+        int32_t filtered_sig = 0;
+        switch (filt_mode) {
+            case 0: filtered_sig = filt.low(); break;
+            case 1: filtered_sig = filt.band(); break;
+            case 2: filtered_sig = filt.high(); break;
+        }
+
+        // Boost output level to match original gain of other cards
+        AudioOut1(filtered_sig * 3);
+        AudioOut2(filtered_sig * 3);
+    }
+
+private:
+    float mapfloat(float x, float in_min, float in_max, float out_min, float out_max) {
+        return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+    }
+
+    void setNotes(int midi_note_num) {
+        float f = mtof(midi_note_num);
+        for (int i = 1; i < NUM_VOICES - 1; i++) {
+            aOscs[i].setFreq(f + (float)(i * detune * rand(100) / 100.0f));
+        }
+        aOscs[0].setFreq(f); // Keep first osc on fundamental
+        aOscs[NUM_VOICES - 1].setFreq(f / 2.0f); // Sub-oscillator
+    }
+
+    void updateControl() {
+        comp.update();
+
+        // only do detune change occasionally
+        if (comp.audio1In() > 2000 && comp.audio1In() < 2100) {
+            detune = 1.0f;
+        } else {
+            detune = mapfloat(comp.audio1In(), CVlowPoint5V, CVhighPoint5V, 0.02f, 10.0f);
+            if (detune < 0.02f) detune = 0.02f;
+            if (detune > 10.0f) detune = 10.0f;
+        }
+
+        // Switch cycles filter modes on press down
+        static int last_switch_val = 4095;
+        int current_switch_val = comp.switchPos();
+        if (current_switch_val < 500 && last_switch_val >= 500) {
+            // switch pushed down
+            LedOn(1 + filt_mode * 2, false);
+            filt_mode = (filt_mode + 1) % num_filt_modes;
+            LedOn(1 + filt_mode * 2, true);
+        }
+        last_switch_val = current_switch_val;
+
+        noisey_amt = abs(mapfloat(comp.audio2In(), CVlowPoint5V, CVhighPoint5V, -0.7f, 0.7f));
+        if (noisey_amt > 0.7f) noisey_amt = 0.7f;
+        signal_amt = 1.0f - noisey_amt;
+
+        // filter range (0-255)
+        int cutoff_freq = (comp.knobMain() * 149) / 4095 + 1; // map 0-4095 to 1-150
+        int resonance = (comp.knobY() * 255) / 4095;
+        int cutoff_freq_cv = ((comp.cv2In() - CVlowPoint) * 200) / (CVhighPoint - CVlowPoint) - 100; // map to -100 to 100
+
+        cutoff_freq = cutoff_freq + cutoff_freq_cv;
+        if (cutoff_freq < 0) cutoff_freq = 0;
+        if (cutoff_freq > 255) cutoff_freq = 255;
+        filt.setCutoffFreqAndResonance(cutoff_freq, resonance);
+
+        int midi_note_knob = (comp.knobX() * 127) / 4096 - 63;
+        int midi_note_cv1 = ((comp.cv1In() - CVlowPoint5V) * 120) / (CVhighPoint5V - CVlowPoint5V);
+        midi_note = midi_note_cv1 + midi_note_knob;
+        if (midi_note < 0) midi_note = 0;
+        if (midi_note > 127) midi_note = 127;
+
+        setNotes((int)midi_note);
+    }
+};
+
+int main() {
+    EightiesBassCard ebc;
+    ebc.Run();
+    return 0;
+}

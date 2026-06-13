@@ -1,0 +1,244 @@
+# Auto-generated makefile configuration for card sources
+
+# Card libraries target definitions
+ifeq ($(OS), Windows_NT)
+	CARD_LIB_EXT := dll
+	CARD_LDFLAGS_SHARED := -shared
+else
+	UNAME_S := $(shell uname -s)
+	ifeq ($(UNAME_S), Darwin)
+		CARD_LIB_EXT := dylib
+		CARD_LDFLAGS_SHARED := -dynamiclib -undefined dynamic_lookup
+	else
+		CARD_LIB_EXT := so
+		CARD_LDFLAGS_SHARED := -shared -fPIC
+	endif
+endif
+
+CARD_LIBS := res/cards/libcard_simple_midi.$(CARD_LIB_EXT) res/cards/libcard_turing_machine.$(CARD_LIB_EXT) res/cards/libcard_byo_benjolin.$(CARD_LIB_EXT) res/cards/libcard_chord_blimey.$(CARD_LIB_EXT) res/cards/libcard_usb_audio_bridge.$(CARD_LIB_EXT) res/cards/libcard_bumpers.$(CARD_LIB_EXT) res/cards/libcard_bytebeat.$(CARD_LIB_EXT) res/cards/libcard_divcom.$(CARD_LIB_EXT) res/cards/libcard_twists.$(CARD_LIB_EXT) res/cards/libcard_goldfish.$(CARD_LIB_EXT) res/cards/libcard_am_coupler.$(CARD_LIB_EXT) res/cards/libcard_noisebox.$(CARD_LIB_EXT) res/cards/libcard_cvmod.$(CARD_LIB_EXT) res/cards/libcard_mlrws.$(CARD_LIB_EXT) res/cards/libcard_chord_organ.$(CARD_LIB_EXT) res/cards/libcard_reverb.$(CARD_LIB_EXT) res/cards/libcard_resonator.$(CARD_LIB_EXT) res/cards/libcard_sheep.$(CARD_LIB_EXT) res/cards/libcard_slowmod.$(CARD_LIB_EXT) res/cards/libcard_crafted_volts.$(CARD_LIB_EXT) res/cards/libcard_utility_pair.$(CARD_LIB_EXT) res/cards/libcard_siren.$(CARD_LIB_EXT) res/cards/libcard_eighties_bass.$(CARD_LIB_EXT) res/cards/libcard_cirpy_wavetable.$(CARD_LIB_EXT) res/cards/libcard_esp.$(CARD_LIB_EXT) res/cards/libcard_vink.$(CARD_LIB_EXT) res/cards/libcard_drumdrum.$(CARD_LIB_EXT) res/cards/libcard_dual_quant.$(CARD_LIB_EXT) res/cards/libcard_od.$(CARD_LIB_EXT) res/cards/libcard_knots.$(CARD_LIB_EXT) res/cards/libcard_blackbird.$(CARD_LIB_EXT) res/cards/libcard_backyard_rain.$(CARD_LIB_EXT) res/cards/libcard_birds.$(CARD_LIB_EXT) res/cards/libcard_bends.$(CARD_LIB_EXT) res/cards/libcard_rompler.$(CARD_LIB_EXT) res/cards/libcard_nzt.$(CARD_LIB_EXT) res/cards/libcard_modes.$(CARD_LIB_EXT) res/cards/libcard_flux.$(CARD_LIB_EXT) res/cards/libcard_grains.$(CARD_LIB_EXT) res/cards/libcard_glitter.$(CARD_LIB_EXT) res/cards/libcard_tapegrade.$(CARD_LIB_EXT) res/cards/libcard_fifths.$(CARD_LIB_EXT) res/cards/libcard_krell.$(CARD_LIB_EXT) res/cards/libcard_glitch.$(CARD_LIB_EXT) res/cards/libcard_lochovibes.$(CARD_LIB_EXT) res/cards/libcard_markov.$(CARD_LIB_EXT) res/cards/libcard_stretchcore.$(CARD_LIB_EXT) res/cards/libcard_trace.$(CARD_LIB_EXT) res/cards/libcard_degenerator.$(CARD_LIB_EXT) res/cards/libcard_motorik.$(CARD_LIB_EXT) res/cards/libcard_wild_pebble.$(CARD_LIB_EXT) res/cards/libcard_talker.$(CARD_LIB_EXT) res/cards/libcard_computer_grids.$(CARD_LIB_EXT) res/cards/libcard_tesserae.$(CARD_LIB_EXT) res/cards/libcard_duo_midi.$(CARD_LIB_EXT) res/cards/libcard_toolbox.$(CARD_LIB_EXT)
+
+res/cards/libcard_simple_midi.$(CARD_LIB_EXT): src/cards/Card_simple_midi.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Isrc/cards/wrappers/simple_midi" "-Ideps/Workshop_Computer/releases/00_Simple_MIDI" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_simple_midi.cpp
+
+res/cards/libcard_turing_machine.$(CARD_LIB_EXT): src/cards/Card_turing_machine.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/03_Turing_Machine/Rev_1_5_Code" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_turing_machine.cpp
+
+res/cards/libcard_byo_benjolin.$(CARD_LIB_EXT): src/cards/Card_byo_benjolin.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/04_BYO_Benjolin" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_byo_benjolin.cpp
+
+res/cards/libcard_chord_blimey.$(CARD_LIB_EXT): src/cards/Card_chord_blimey.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/05_chord_blimey/src" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_chord_blimey.cpp
+
+res/cards/libcard_usb_audio_bridge.$(CARD_LIB_EXT): src/cards/Card_usb_audio_bridge.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS)  $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_usb_audio_bridge.cpp
+
+res/cards/libcard_bumpers.$(CARD_LIB_EXT): src/cards/Card_bumpers.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/07_bumpers/src" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_bumpers.cpp
+
+res/cards/libcard_bytebeat.$(CARD_LIB_EXT): src/cards/Card_bytebeat.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Isrc/cards/wrappers/bytebeat" "-Ideps/Workshop_Computer/releases/08_bytebeat/Arduino Code/08_bytebeat" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_bytebeat.cpp
+
+res/cards/libcard_divcom.$(CARD_LIB_EXT): src/cards/Card_divcom.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/external/divcom" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_divcom.cpp
+
+res/cards/libcard_twists.$(CARD_LIB_EXT): src/cards/Card_twists.cpp src/cards/Card_twists_braids_usb_worker_cc.cpp src/cards/Card_twists_braids_analog_oscillator_cc.cpp src/cards/Card_twists_braids_digital_oscillator_cc.cpp src/cards/Card_twists_braids_macro_oscillator_cc.cpp src/cards/Card_twists_braids_quantizer_cc.cpp src/cards/Card_twists_braids_resources_cc.cpp src/cards/Card_twists_braids_settings_cc.cpp src/cards/Card_twists_braids_ui_cc.cpp src/cards/Card_twists_stmlib_utils_random_cc.cpp src/cards/Card_twists_braids_drivers_dac_cc.cpp src/cards/Card_twists_braids_drivers_display_cc.cpp src/cards/Card_twists_braids_drivers_gate_input_cc.cpp src/cards/Card_twists_braids_drivers_switch_cc.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/10_twists/src" "-Ideps/Workshop_Computer/releases/10_twists/src/braids" "-Ideps/Workshop_Computer/releases/10_twists/src/braids/drivers" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_twists.cpp src/cards/Card_twists_braids_usb_worker_cc.cpp src/cards/Card_twists_braids_analog_oscillator_cc.cpp src/cards/Card_twists_braids_digital_oscillator_cc.cpp src/cards/Card_twists_braids_macro_oscillator_cc.cpp src/cards/Card_twists_braids_quantizer_cc.cpp src/cards/Card_twists_braids_resources_cc.cpp src/cards/Card_twists_braids_settings_cc.cpp src/cards/Card_twists_braids_ui_cc.cpp src/cards/Card_twists_stmlib_utils_random_cc.cpp src/cards/Card_twists_braids_drivers_dac_cc.cpp src/cards/Card_twists_braids_drivers_display_cc.cpp src/cards/Card_twists_braids_drivers_gate_input_cc.cpp src/cards/Card_twists_braids_drivers_switch_cc.cpp
+
+res/cards/libcard_goldfish.$(CARD_LIB_EXT): src/cards/Card_goldfish.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/11_goldfish" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_goldfish.cpp
+
+res/cards/libcard_am_coupler.$(CARD_LIB_EXT): src/cards/Card_am_coupler.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/12_am_coupler" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_am_coupler.cpp
+
+res/cards/libcard_noisebox.$(CARD_LIB_EXT): src/cards/Card_noisebox.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Isrc/cards/wrappers/noisebox" "-Isrc/cards/wrappers/noisebox/dsp" "-Ideps/Workshop_Computer/releases/13_noisebox" "-Ideps/Workshop_Computer/releases/13_noisebox/dsp" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_noisebox.cpp
+
+res/cards/libcard_cvmod.$(CARD_LIB_EXT): src/cards/Card_cvmod.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/14_cvmod" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_cvmod.cpp
+
+res/cards/libcard_mlrws.$(CARD_LIB_EXT): src/cards/Card_mlrws.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/15_MLRws" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_mlrws.cpp
+
+res/cards/libcard_chord_organ.$(CARD_LIB_EXT): src/cards/Card_chord_organ.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/18_chord_organ" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_chord_organ.cpp
+
+res/cards/libcard_reverb.$(CARD_LIB_EXT): src/cards/Card_reverb.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/20_reverb" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_reverb.cpp
+
+res/cards/libcard_resonator.$(CARD_LIB_EXT): src/cards/Card_resonator.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/21_resonator" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_resonator.cpp
+
+res/cards/libcard_sheep.$(CARD_LIB_EXT): src/cards/Card_sheep.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/22_sheep" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_sheep.cpp
+
+res/cards/libcard_slowmod.$(CARD_LIB_EXT): src/cards/Card_slowmod.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/external/slowmod" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_slowmod.cpp
+
+res/cards/libcard_crafted_volts.$(CARD_LIB_EXT): src/cards/Card_crafted_volts.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Isrc/cards/wrappers/crafted_volts" "-Ideps/Workshop_Computer/releases/24_crafted_volts" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_crafted_volts.cpp
+
+res/cards/libcard_utility_pair.$(CARD_LIB_EXT): src/cards/Card_utility_pair.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/external/utility_pair_singlecard" "-Ideps/external/utility_pair_singlecard/src" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_utility_pair.cpp
+
+res/cards/libcard_siren.$(CARD_LIB_EXT): src/cards/Card_siren.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/27_Siren" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_siren.cpp
+
+res/cards/libcard_eighties_bass.$(CARD_LIB_EXT): src/cards/Card_eighties_bass.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Isrc/cards/wrappers/eighties_bass" "-Ideps/Workshop_Computer/releases/28_eighties_bass" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_eighties_bass.cpp
+
+res/cards/libcard_cirpy_wavetable.$(CARD_LIB_EXT): src/cards/Card_cirpy_wavetable.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Isrc/cards/wrappers/cirpy_wavetable" "-Ideps/Workshop_Computer/releases/30_cirpy_wavetable" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_cirpy_wavetable.cpp
+
+res/cards/libcard_esp.$(CARD_LIB_EXT): src/cards/Card_esp.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/31_esp" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_esp.cpp
+
+res/cards/libcard_vink.$(CARD_LIB_EXT): src/cards/Card_vink.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/32_vink" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_vink.cpp
+
+res/cards/libcard_drumdrum.$(CARD_LIB_EXT): src/cards/Card_drumdrum.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/33_drumdrum" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_drumdrum.cpp
+
+res/cards/libcard_dual_quant.$(CARD_LIB_EXT): src/cards/Card_dual_quant.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/34_dual_quant" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_dual_quant.cpp
+
+res/cards/libcard_od.$(CARD_LIB_EXT): src/cards/Card_od.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Isrc/cards/wrappers/od" "-Ideps/Workshop_Computer/releases/38_od" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_od.cpp
+
+res/cards/libcard_knots.$(CARD_LIB_EXT): src/cards/Card_knots.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/39_knots/src/knots/src" "-Ideps/Workshop_Computer/releases/39_knots/src/knots" "-Ideps/Workshop_Computer/releases/39_knots/src" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_knots.cpp
+
+res/cards/libcard_blackbird.$(CARD_LIB_EXT): src/cards/Card_blackbird.cpp src/cards/Card_blackbird_lib_casl_c.cpp src/cards/Card_blackbird_lib_slopes_c.cpp src/cards/Card_blackbird_lib_ashapes_c.cpp src/cards/Card_blackbird_lib_detect_c.cpp src/cards/Card_blackbird_lib_caw_c.cpp src/cards/Card_blackbird_lib_ii_c.cpp src/cards/Card_blackbird_lib_metro_c.cpp src/cards/Card_blackbird_lib_clock_c.cpp src/cards/Card_blackbird_lib_clock_ll_c.cpp src/cards/Card_blackbird_lib_events_lockfree_c.cpp src/cards/Card_blackbird_lib_usb_lockfree_c.cpp src/cards/Card_blackbird_lib_l_bootstrap_c.cpp src/cards/Card_blackbird_lib_l_crowlib_c.cpp src/cards/Card_blackbird_lib_l_ii_mod_c.cpp src/cards/Card_blackbird_lib_ll_timers_c.cpp src/cards/Card_blackbird_lib_random_c.cpp src/cards/Card_blackbird_lib_wrblocks_c.cpp src/cards/Card_blackbird_lib_mailbox_c.cpp src/cards/Card_blackbird_lib_fastmath_c.cpp src/cards/Card_blackbird_lib_fastmath_lut_c.cpp src/cards/Card_blackbird_lib_flash_storage_cpp.cpp src/cards/Card_blackbird_lua_src_lapi_c.cpp src/cards/Card_blackbird_lua_src_lauxlib_c.cpp src/cards/Card_blackbird_lua_src_lbaselib_c.cpp src/cards/Card_blackbird_lua_src_lcode_c.cpp src/cards/Card_blackbird_lua_src_lcorolib_c.cpp src/cards/Card_blackbird_lua_src_lctype_c.cpp src/cards/Card_blackbird_lua_src_ldebug_c.cpp src/cards/Card_blackbird_lua_src_ldo_c.cpp src/cards/Card_blackbird_lua_src_ldump_c.cpp src/cards/Card_blackbird_lua_src_lfunc_c.cpp src/cards/Card_blackbird_lua_src_lgc_c.cpp src/cards/Card_blackbird_lua_src_linit_crow_c.cpp src/cards/Card_blackbird_lua_src_llex_c.cpp src/cards/Card_blackbird_lua_src_lmathlib_c.cpp src/cards/Card_blackbird_lua_src_lmem_c.cpp src/cards/Card_blackbird_lua_src_loadlib_c.cpp src/cards/Card_blackbird_lua_src_lobject_c.cpp src/cards/Card_blackbird_lua_src_lopcodes_c.cpp src/cards/Card_blackbird_lua_src_lparser_c.cpp src/cards/Card_blackbird_lua_src_lstate_c.cpp src/cards/Card_blackbird_lua_src_lstring_c.cpp src/cards/Card_blackbird_lua_src_lstrlib_c.cpp src/cards/Card_blackbird_lua_src_ltable_c.cpp src/cards/Card_blackbird_lua_src_ltablib_c.cpp src/cards/Card_blackbird_lua_src_ltm_c.cpp src/cards/Card_blackbird_lua_src_lundump_c.cpp src/cards/Card_blackbird_lua_src_lvm_c.cpp src/cards/Card_blackbird_lua_src_lzio_c.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Isrc/cards/wrappers/blackbird" "-Ideps/Workshop_Computer/releases/41_blackbird" "-Ideps/external/blackbird_lua" "-Ideps/external/blackbird_lua/lua" "-Ideps/external/blackbird_lua/lua/src" "-Ideps/Workshop_Computer/releases/41_blackbird/lib" "-Isrc/cards/wrappers/blackbird" "-DLUA_32BITS=1" "-DLUA_USE_C89=1" "-DLUA_COMPAT_5_3=1" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_blackbird.cpp src/cards/Card_blackbird_lib_casl_c.cpp src/cards/Card_blackbird_lib_slopes_c.cpp src/cards/Card_blackbird_lib_ashapes_c.cpp src/cards/Card_blackbird_lib_detect_c.cpp src/cards/Card_blackbird_lib_caw_c.cpp src/cards/Card_blackbird_lib_ii_c.cpp src/cards/Card_blackbird_lib_metro_c.cpp src/cards/Card_blackbird_lib_clock_c.cpp src/cards/Card_blackbird_lib_clock_ll_c.cpp src/cards/Card_blackbird_lib_events_lockfree_c.cpp src/cards/Card_blackbird_lib_usb_lockfree_c.cpp src/cards/Card_blackbird_lib_l_bootstrap_c.cpp src/cards/Card_blackbird_lib_l_crowlib_c.cpp src/cards/Card_blackbird_lib_l_ii_mod_c.cpp src/cards/Card_blackbird_lib_ll_timers_c.cpp src/cards/Card_blackbird_lib_random_c.cpp src/cards/Card_blackbird_lib_wrblocks_c.cpp src/cards/Card_blackbird_lib_mailbox_c.cpp src/cards/Card_blackbird_lib_fastmath_c.cpp src/cards/Card_blackbird_lib_fastmath_lut_c.cpp src/cards/Card_blackbird_lib_flash_storage_cpp.cpp src/cards/Card_blackbird_lua_src_lapi_c.cpp src/cards/Card_blackbird_lua_src_lauxlib_c.cpp src/cards/Card_blackbird_lua_src_lbaselib_c.cpp src/cards/Card_blackbird_lua_src_lcode_c.cpp src/cards/Card_blackbird_lua_src_lcorolib_c.cpp src/cards/Card_blackbird_lua_src_lctype_c.cpp src/cards/Card_blackbird_lua_src_ldebug_c.cpp src/cards/Card_blackbird_lua_src_ldo_c.cpp src/cards/Card_blackbird_lua_src_ldump_c.cpp src/cards/Card_blackbird_lua_src_lfunc_c.cpp src/cards/Card_blackbird_lua_src_lgc_c.cpp src/cards/Card_blackbird_lua_src_linit_crow_c.cpp src/cards/Card_blackbird_lua_src_llex_c.cpp src/cards/Card_blackbird_lua_src_lmathlib_c.cpp src/cards/Card_blackbird_lua_src_lmem_c.cpp src/cards/Card_blackbird_lua_src_loadlib_c.cpp src/cards/Card_blackbird_lua_src_lobject_c.cpp src/cards/Card_blackbird_lua_src_lopcodes_c.cpp src/cards/Card_blackbird_lua_src_lparser_c.cpp src/cards/Card_blackbird_lua_src_lstate_c.cpp src/cards/Card_blackbird_lua_src_lstring_c.cpp src/cards/Card_blackbird_lua_src_lstrlib_c.cpp src/cards/Card_blackbird_lua_src_ltable_c.cpp src/cards/Card_blackbird_lua_src_ltablib_c.cpp src/cards/Card_blackbird_lua_src_ltm_c.cpp src/cards/Card_blackbird_lua_src_lundump_c.cpp src/cards/Card_blackbird_lua_src_lvm_c.cpp src/cards/Card_blackbird_lua_src_lzio_c.cpp
+
+res/cards/libcard_backyard_rain.$(CARD_LIB_EXT): src/cards/Card_backyard_rain.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Isrc/cards/wrappers/backyard_rain" "-Ideps/Workshop_Computer/releases/42_backyard_rain" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_backyard_rain.cpp
+
+res/cards/libcard_birds.$(CARD_LIB_EXT): src/cards/Card_birds.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/44_Birds" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_birds.cpp
+
+res/cards/libcard_bends.$(CARD_LIB_EXT): src/cards/Card_bends.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/45_bends" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_bends.cpp
+
+res/cards/libcard_rompler.$(CARD_LIB_EXT): src/cards/Card_rompler.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/46_rompler" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_rompler.cpp
+
+res/cards/libcard_nzt.$(CARD_LIB_EXT): src/cards/Card_nzt.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/external/ws" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_nzt.cpp
+
+res/cards/libcard_modes.$(CARD_LIB_EXT): src/cards/Card_modes.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/49_modes" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_modes.cpp
+
+res/cards/libcard_flux.$(CARD_LIB_EXT): src/cards/Card_flux.cpp src/cards/Card_flux_lib_pipicofx_src_audiotools_c.cpp src/cards/Card_flux_lib_pipicofx_src_bitcrusher_c.cpp src/cards/Card_flux_lib_pipicofx_src_compressor_c.cpp src/cards/Card_flux_lib_pipicofx_src_compressor2_c.cpp src/cards/Card_flux_lib_pipicofx_src_compressor3_c.cpp src/cards/Card_flux_lib_pipicofx_src_delay_c.cpp src/cards/Card_flux_lib_pipicofx_src_exptable_c.cpp src/cards/Card_flux_lib_pipicofx_src_fastExpLog_c.cpp src/cards/Card_flux_lib_pipicofx_src_firFilter_c.cpp src/cards/Card_flux_lib_pipicofx_src_firstOrderIirFilter_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramAmpModel_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramAmpModel2_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramCathedral_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramCompressor_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramCwo_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramDelay_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramEchoVerb_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramEq_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramFreeVerb_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramGenLoss_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramGranular_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramLossy_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramMicroLoop_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramMonsterCrusher_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramOff_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramOilCan_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramPitchShifter_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramPlateReverb_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramReverb_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramReverb2_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramReverb3_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramShimmerVerb_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramSineChorus_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramSpectral_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramSpeech_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramSpringReverb_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramStrings_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramTremolo_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramVibChorus_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramWind_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxPrograms_c.cpp src/cards/Card_flux_lib_pipicofx_src_gainstage_c.cpp src/cards/Card_flux_lib_pipicofx_src_intFunctions_c.cpp src/cards/Card_flux_lib_pipicofx_src_logtable_c.cpp src/cards/Card_flux_lib_pipicofx_src_oversamplingWaveshaper_c.cpp src/cards/Card_flux_lib_pipicofx_src_phaseDistortedSineSquare_c.cpp src/cards/Card_flux_lib_pipicofx_src_pitchshifter_c.cpp src/cards/Card_flux_lib_pipicofx_src_reverb_c.cpp src/cards/Card_flux_lib_pipicofx_src_reverb2_c.cpp src/cards/Card_flux_lib_pipicofx_src_reverb3_c.cpp src/cards/Card_flux_lib_pipicofx_src_reverbUtils_c.cpp src/cards/Card_flux_lib_pipicofx_src_secondOrderIirFilter_c.cpp src/cards/Card_flux_lib_pipicofx_src_simpleChorus_c.cpp src/cards/Card_flux_lib_pipicofx_src_sineChorus_c.cpp src/cards/Card_flux_lib_pipicofx_src_stringFunctions_c.cpp src/cards/Card_flux_lib_pipicofx_src_threeBandEq_c.cpp src/cards/Card_flux_lib_pipicofx_src_tremolo_c.cpp src/cards/Card_flux_lib_pipicofx_src_waveShaper_c.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/external/multifx/50_flux" "-Ideps/external/multifx/50_flux/src" "-Ideps/external/multifx/50_flux/src/synths" "-Ideps/external/multifx/50_flux/include" "-Ideps/external/multifx/50_flux/lib/pipicofx/inc" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_flux.cpp src/cards/Card_flux_lib_pipicofx_src_audiotools_c.cpp src/cards/Card_flux_lib_pipicofx_src_bitcrusher_c.cpp src/cards/Card_flux_lib_pipicofx_src_compressor_c.cpp src/cards/Card_flux_lib_pipicofx_src_compressor2_c.cpp src/cards/Card_flux_lib_pipicofx_src_compressor3_c.cpp src/cards/Card_flux_lib_pipicofx_src_delay_c.cpp src/cards/Card_flux_lib_pipicofx_src_exptable_c.cpp src/cards/Card_flux_lib_pipicofx_src_fastExpLog_c.cpp src/cards/Card_flux_lib_pipicofx_src_firFilter_c.cpp src/cards/Card_flux_lib_pipicofx_src_firstOrderIirFilter_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramAmpModel_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramAmpModel2_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramCathedral_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramCompressor_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramCwo_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramDelay_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramEchoVerb_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramEq_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramFreeVerb_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramGenLoss_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramGranular_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramLossy_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramMicroLoop_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramMonsterCrusher_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramOff_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramOilCan_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramPitchShifter_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramPlateReverb_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramReverb_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramReverb2_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramReverb3_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramShimmerVerb_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramSineChorus_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramSpectral_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramSpeech_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramSpringReverb_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramStrings_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramTremolo_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramVibChorus_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxProgramWind_c.cpp src/cards/Card_flux_lib_pipicofx_src_fxPrograms_c.cpp src/cards/Card_flux_lib_pipicofx_src_gainstage_c.cpp src/cards/Card_flux_lib_pipicofx_src_intFunctions_c.cpp src/cards/Card_flux_lib_pipicofx_src_logtable_c.cpp src/cards/Card_flux_lib_pipicofx_src_oversamplingWaveshaper_c.cpp src/cards/Card_flux_lib_pipicofx_src_phaseDistortedSineSquare_c.cpp src/cards/Card_flux_lib_pipicofx_src_pitchshifter_c.cpp src/cards/Card_flux_lib_pipicofx_src_reverb_c.cpp src/cards/Card_flux_lib_pipicofx_src_reverb2_c.cpp src/cards/Card_flux_lib_pipicofx_src_reverb3_c.cpp src/cards/Card_flux_lib_pipicofx_src_reverbUtils_c.cpp src/cards/Card_flux_lib_pipicofx_src_secondOrderIirFilter_c.cpp src/cards/Card_flux_lib_pipicofx_src_simpleChorus_c.cpp src/cards/Card_flux_lib_pipicofx_src_sineChorus_c.cpp src/cards/Card_flux_lib_pipicofx_src_stringFunctions_c.cpp src/cards/Card_flux_lib_pipicofx_src_threeBandEq_c.cpp src/cards/Card_flux_lib_pipicofx_src_tremolo_c.cpp src/cards/Card_flux_lib_pipicofx_src_waveShaper_c.cpp
+
+res/cards/libcard_grains.$(CARD_LIB_EXT): src/cards/Card_grains.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/51_grains" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_grains.cpp
+
+res/cards/libcard_glitter.$(CARD_LIB_EXT): src/cards/Card_glitter.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/external/mtws/53_glitter" "-Ideps/external/mtws/53_glitter/src" "-Ideps/external/mtws/53_glitter/inc" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_glitter.cpp
+
+res/cards/libcard_tapegrade.$(CARD_LIB_EXT): src/cards/Card_tapegrade.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/54_Tapegrade" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_tapegrade.cpp
+
+res/cards/libcard_fifths.$(CARD_LIB_EXT): src/cards/Card_fifths.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/55_fifths" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_fifths.cpp
+
+res/cards/libcard_krell.$(CARD_LIB_EXT): src/cards/Card_krell.cpp src/cards/Card_krell_lib_casl_c.cpp src/cards/Card_krell_lib_slopes_c.cpp src/cards/Card_krell_lib_ashapes_c.cpp src/cards/Card_krell_lib_detect_c.cpp src/cards/Card_krell_lib_caw_c.cpp src/cards/Card_krell_lib_ii_c.cpp src/cards/Card_krell_lib_metro_c.cpp src/cards/Card_krell_lib_clock_c.cpp src/cards/Card_krell_lib_clock_ll_c.cpp src/cards/Card_krell_lib_events_lockfree_c.cpp src/cards/Card_krell_lib_usb_lockfree_c.cpp src/cards/Card_krell_lib_l_bootstrap_c.cpp src/cards/Card_krell_lib_l_crowlib_c.cpp src/cards/Card_krell_lib_l_ii_mod_c.cpp src/cards/Card_krell_lib_ll_timers_c.cpp src/cards/Card_krell_lib_random_c.cpp src/cards/Card_krell_lib_wrblocks_c.cpp src/cards/Card_krell_lib_mailbox_c.cpp src/cards/Card_krell_lib_fastmath_c.cpp src/cards/Card_krell_lib_fastmath_lut_c.cpp src/cards/Card_krell_lib_flash_storage_cpp.cpp src/cards/Card_krell_lua_src_lapi_c.cpp src/cards/Card_krell_lua_src_lauxlib_c.cpp src/cards/Card_krell_lua_src_lbaselib_c.cpp src/cards/Card_krell_lua_src_lcode_c.cpp src/cards/Card_krell_lua_src_lcorolib_c.cpp src/cards/Card_krell_lua_src_lctype_c.cpp src/cards/Card_krell_lua_src_ldebug_c.cpp src/cards/Card_krell_lua_src_ldo_c.cpp src/cards/Card_krell_lua_src_ldump_c.cpp src/cards/Card_krell_lua_src_lfunc_c.cpp src/cards/Card_krell_lua_src_lgc_c.cpp src/cards/Card_krell_lua_src_linit_crow_c.cpp src/cards/Card_krell_lua_src_llex_c.cpp src/cards/Card_krell_lua_src_lmathlib_c.cpp src/cards/Card_krell_lua_src_lmem_c.cpp src/cards/Card_krell_lua_src_loadlib_c.cpp src/cards/Card_krell_lua_src_lobject_c.cpp src/cards/Card_krell_lua_src_lopcodes_c.cpp src/cards/Card_krell_lua_src_lparser_c.cpp src/cards/Card_krell_lua_src_lstate_c.cpp src/cards/Card_krell_lua_src_lstring_c.cpp src/cards/Card_krell_lua_src_lstrlib_c.cpp src/cards/Card_krell_lua_src_ltable_c.cpp src/cards/Card_krell_lua_src_ltablib_c.cpp src/cards/Card_krell_lua_src_ltm_c.cpp src/cards/Card_krell_lua_src_lundump_c.cpp src/cards/Card_krell_lua_src_lvm_c.cpp src/cards/Card_krell_lua_src_lzio_c.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Isrc/cards/wrappers/krell" "-Ideps/Workshop_Computer/releases/41_blackbird" "-Ideps/external/blackbird_lua" "-Ideps/external/blackbird_lua/lua" "-Ideps/external/blackbird_lua/lua/src" "-Ideps/Workshop_Computer/releases/41_blackbird/lib" "-Isrc/cards/wrappers/krell" "-DLUA_32BITS=1" "-DLUA_USE_C89=1" "-DLUA_COMPAT_5_3=1" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_krell.cpp src/cards/Card_krell_lib_casl_c.cpp src/cards/Card_krell_lib_slopes_c.cpp src/cards/Card_krell_lib_ashapes_c.cpp src/cards/Card_krell_lib_detect_c.cpp src/cards/Card_krell_lib_caw_c.cpp src/cards/Card_krell_lib_ii_c.cpp src/cards/Card_krell_lib_metro_c.cpp src/cards/Card_krell_lib_clock_c.cpp src/cards/Card_krell_lib_clock_ll_c.cpp src/cards/Card_krell_lib_events_lockfree_c.cpp src/cards/Card_krell_lib_usb_lockfree_c.cpp src/cards/Card_krell_lib_l_bootstrap_c.cpp src/cards/Card_krell_lib_l_crowlib_c.cpp src/cards/Card_krell_lib_l_ii_mod_c.cpp src/cards/Card_krell_lib_ll_timers_c.cpp src/cards/Card_krell_lib_random_c.cpp src/cards/Card_krell_lib_wrblocks_c.cpp src/cards/Card_krell_lib_mailbox_c.cpp src/cards/Card_krell_lib_fastmath_c.cpp src/cards/Card_krell_lib_fastmath_lut_c.cpp src/cards/Card_krell_lib_flash_storage_cpp.cpp src/cards/Card_krell_lua_src_lapi_c.cpp src/cards/Card_krell_lua_src_lauxlib_c.cpp src/cards/Card_krell_lua_src_lbaselib_c.cpp src/cards/Card_krell_lua_src_lcode_c.cpp src/cards/Card_krell_lua_src_lcorolib_c.cpp src/cards/Card_krell_lua_src_lctype_c.cpp src/cards/Card_krell_lua_src_ldebug_c.cpp src/cards/Card_krell_lua_src_ldo_c.cpp src/cards/Card_krell_lua_src_ldump_c.cpp src/cards/Card_krell_lua_src_lfunc_c.cpp src/cards/Card_krell_lua_src_lgc_c.cpp src/cards/Card_krell_lua_src_linit_crow_c.cpp src/cards/Card_krell_lua_src_llex_c.cpp src/cards/Card_krell_lua_src_lmathlib_c.cpp src/cards/Card_krell_lua_src_lmem_c.cpp src/cards/Card_krell_lua_src_loadlib_c.cpp src/cards/Card_krell_lua_src_lobject_c.cpp src/cards/Card_krell_lua_src_lopcodes_c.cpp src/cards/Card_krell_lua_src_lparser_c.cpp src/cards/Card_krell_lua_src_lstate_c.cpp src/cards/Card_krell_lua_src_lstring_c.cpp src/cards/Card_krell_lua_src_lstrlib_c.cpp src/cards/Card_krell_lua_src_ltable_c.cpp src/cards/Card_krell_lua_src_ltablib_c.cpp src/cards/Card_krell_lua_src_ltm_c.cpp src/cards/Card_krell_lua_src_lundump_c.cpp src/cards/Card_krell_lua_src_lvm_c.cpp src/cards/Card_krell_lua_src_lzio_c.cpp
+
+res/cards/libcard_glitch.$(CARD_LIB_EXT): src/cards/Card_glitch.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/57_glitch" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_glitch.cpp
+
+res/cards/libcard_lochovibes.$(CARD_LIB_EXT): src/cards/Card_lochovibes.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/58_LoChoVibes" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_lochovibes.cpp
+
+res/cards/libcard_markov.$(CARD_LIB_EXT): src/cards/Card_markov.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/60_markov" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_markov.cpp
+
+res/cards/libcard_stretchcore.$(CARD_LIB_EXT): src/cards/Card_stretchcore.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/66_stretchcore" "-Ideps/Workshop_Computer/releases/66_stretchcore/src" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_stretchcore.cpp
+
+res/cards/libcard_trace.$(CARD_LIB_EXT): src/cards/Card_trace.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/69_trace" "-Ideps/Workshop_Computer/releases/69_trace/src" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_trace.cpp
+
+res/cards/libcard_degenerator.$(CARD_LIB_EXT): src/cards/Card_degenerator.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/external/Degenerator" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_degenerator.cpp
+
+res/cards/libcard_motorik.$(CARD_LIB_EXT): src/cards/Card_motorik.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/external/motorik" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_motorik.cpp
+
+res/cards/libcard_wild_pebble.$(CARD_LIB_EXT): src/cards/Card_wild_pebble.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/74_Wild_Pebble" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_wild_pebble.cpp
+
+res/cards/libcard_talker.$(CARD_LIB_EXT): src/cards/Card_talker.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Isrc/cards/wrappers/talker" "-Isrc/cards/wrappers/talker/src" "-Ideps/Workshop_Computer/releases/78_Talker" "-Ideps/Workshop_Computer/releases/78_Talker/src" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_talker.cpp
+
+res/cards/libcard_computer_grids.$(CARD_LIB_EXT): src/cards/Card_computer_grids.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/82_Computer_Grids" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_computer_grids.cpp
+
+res/cards/libcard_tesserae.$(CARD_LIB_EXT): src/cards/Card_tesserae.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/external/Tesserae" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_tesserae.cpp
+
+res/cards/libcard_duo_midi.$(CARD_LIB_EXT): src/cards/Card_duo_midi.cpp src/cards/Card_duo_midi_lib_casl_c.cpp src/cards/Card_duo_midi_lib_slopes_c.cpp src/cards/Card_duo_midi_lib_ashapes_c.cpp src/cards/Card_duo_midi_lib_detect_c.cpp src/cards/Card_duo_midi_lib_caw_c.cpp src/cards/Card_duo_midi_lib_ii_c.cpp src/cards/Card_duo_midi_lib_metro_c.cpp src/cards/Card_duo_midi_lib_clock_c.cpp src/cards/Card_duo_midi_lib_clock_ll_c.cpp src/cards/Card_duo_midi_lib_events_lockfree_c.cpp src/cards/Card_duo_midi_lib_usb_lockfree_c.cpp src/cards/Card_duo_midi_lib_l_bootstrap_c.cpp src/cards/Card_duo_midi_lib_l_crowlib_c.cpp src/cards/Card_duo_midi_lib_l_ii_mod_c.cpp src/cards/Card_duo_midi_lib_ll_timers_c.cpp src/cards/Card_duo_midi_lib_random_c.cpp src/cards/Card_duo_midi_lib_wrblocks_c.cpp src/cards/Card_duo_midi_lib_mailbox_c.cpp src/cards/Card_duo_midi_lib_fastmath_c.cpp src/cards/Card_duo_midi_lib_fastmath_lut_c.cpp src/cards/Card_duo_midi_lib_flash_storage_cpp.cpp src/cards/Card_duo_midi_lua_src_lapi_c.cpp src/cards/Card_duo_midi_lua_src_lauxlib_c.cpp src/cards/Card_duo_midi_lua_src_lbaselib_c.cpp src/cards/Card_duo_midi_lua_src_lcode_c.cpp src/cards/Card_duo_midi_lua_src_lcorolib_c.cpp src/cards/Card_duo_midi_lua_src_lctype_c.cpp src/cards/Card_duo_midi_lua_src_ldebug_c.cpp src/cards/Card_duo_midi_lua_src_ldo_c.cpp src/cards/Card_duo_midi_lua_src_ldump_c.cpp src/cards/Card_duo_midi_lua_src_lfunc_c.cpp src/cards/Card_duo_midi_lua_src_lgc_c.cpp src/cards/Card_duo_midi_lua_src_linit_crow_c.cpp src/cards/Card_duo_midi_lua_src_llex_c.cpp src/cards/Card_duo_midi_lua_src_lmathlib_c.cpp src/cards/Card_duo_midi_lua_src_lmem_c.cpp src/cards/Card_duo_midi_lua_src_loadlib_c.cpp src/cards/Card_duo_midi_lua_src_lobject_c.cpp src/cards/Card_duo_midi_lua_src_lopcodes_c.cpp src/cards/Card_duo_midi_lua_src_lparser_c.cpp src/cards/Card_duo_midi_lua_src_lstate_c.cpp src/cards/Card_duo_midi_lua_src_lstring_c.cpp src/cards/Card_duo_midi_lua_src_lstrlib_c.cpp src/cards/Card_duo_midi_lua_src_ltable_c.cpp src/cards/Card_duo_midi_lua_src_ltablib_c.cpp src/cards/Card_duo_midi_lua_src_ltm_c.cpp src/cards/Card_duo_midi_lua_src_lundump_c.cpp src/cards/Card_duo_midi_lua_src_lvm_c.cpp src/cards/Card_duo_midi_lua_src_lzio_c.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Isrc/cards/wrappers/duo_midi" "-Ideps/Workshop_Computer/releases/41_blackbird" "-Ideps/external/blackbird_lua" "-Ideps/external/blackbird_lua/lua" "-Ideps/external/blackbird_lua/lua/src" "-Ideps/Workshop_Computer/releases/41_blackbird/lib" "-Isrc/cards/wrappers/duo_midi" "-DLUA_32BITS=1" "-DLUA_USE_C89=1" "-DLUA_COMPAT_5_3=1" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_duo_midi.cpp src/cards/Card_duo_midi_lib_casl_c.cpp src/cards/Card_duo_midi_lib_slopes_c.cpp src/cards/Card_duo_midi_lib_ashapes_c.cpp src/cards/Card_duo_midi_lib_detect_c.cpp src/cards/Card_duo_midi_lib_caw_c.cpp src/cards/Card_duo_midi_lib_ii_c.cpp src/cards/Card_duo_midi_lib_metro_c.cpp src/cards/Card_duo_midi_lib_clock_c.cpp src/cards/Card_duo_midi_lib_clock_ll_c.cpp src/cards/Card_duo_midi_lib_events_lockfree_c.cpp src/cards/Card_duo_midi_lib_usb_lockfree_c.cpp src/cards/Card_duo_midi_lib_l_bootstrap_c.cpp src/cards/Card_duo_midi_lib_l_crowlib_c.cpp src/cards/Card_duo_midi_lib_l_ii_mod_c.cpp src/cards/Card_duo_midi_lib_ll_timers_c.cpp src/cards/Card_duo_midi_lib_random_c.cpp src/cards/Card_duo_midi_lib_wrblocks_c.cpp src/cards/Card_duo_midi_lib_mailbox_c.cpp src/cards/Card_duo_midi_lib_fastmath_c.cpp src/cards/Card_duo_midi_lib_fastmath_lut_c.cpp src/cards/Card_duo_midi_lib_flash_storage_cpp.cpp src/cards/Card_duo_midi_lua_src_lapi_c.cpp src/cards/Card_duo_midi_lua_src_lauxlib_c.cpp src/cards/Card_duo_midi_lua_src_lbaselib_c.cpp src/cards/Card_duo_midi_lua_src_lcode_c.cpp src/cards/Card_duo_midi_lua_src_lcorolib_c.cpp src/cards/Card_duo_midi_lua_src_lctype_c.cpp src/cards/Card_duo_midi_lua_src_ldebug_c.cpp src/cards/Card_duo_midi_lua_src_ldo_c.cpp src/cards/Card_duo_midi_lua_src_ldump_c.cpp src/cards/Card_duo_midi_lua_src_lfunc_c.cpp src/cards/Card_duo_midi_lua_src_lgc_c.cpp src/cards/Card_duo_midi_lua_src_linit_crow_c.cpp src/cards/Card_duo_midi_lua_src_llex_c.cpp src/cards/Card_duo_midi_lua_src_lmathlib_c.cpp src/cards/Card_duo_midi_lua_src_lmem_c.cpp src/cards/Card_duo_midi_lua_src_loadlib_c.cpp src/cards/Card_duo_midi_lua_src_lobject_c.cpp src/cards/Card_duo_midi_lua_src_lopcodes_c.cpp src/cards/Card_duo_midi_lua_src_lparser_c.cpp src/cards/Card_duo_midi_lua_src_lstate_c.cpp src/cards/Card_duo_midi_lua_src_lstring_c.cpp src/cards/Card_duo_midi_lua_src_lstrlib_c.cpp src/cards/Card_duo_midi_lua_src_ltable_c.cpp src/cards/Card_duo_midi_lua_src_ltablib_c.cpp src/cards/Card_duo_midi_lua_src_ltm_c.cpp src/cards/Card_duo_midi_lua_src_lundump_c.cpp src/cards/Card_duo_midi_lua_src_lvm_c.cpp src/cards/Card_duo_midi_lua_src_lzio_c.cpp
+
+res/cards/libcard_toolbox.$(CARD_LIB_EXT): src/cards/Card_toolbox.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/external/toolbox" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_toolbox.cpp
+
+SOURCES += src/cards/CardRegistry.cpp

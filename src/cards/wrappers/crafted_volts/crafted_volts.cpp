@@ -1,0 +1,82 @@
+#include <stdint.h>
+#include <stddef.h>
+#include <stdlib.h>
+#include <math.h>
+
+class CraftedVoltsCard : public ComputerCard {
+public:
+    CraftedVoltsCard() {}
+
+    virtual void ProcessSample() override {
+        update_inputs();
+
+        // 1. Audio loop (mixes Audio In 1 and Audio In 2, then attenuverts using Main Knob)
+        int32_t main_knob_signed = KnobVal(Knob::Main) - 2048; // -2048 to 2047
+        int32_t mix = 0;
+        if (Connected(Input::Audio1) && Connected(Input::Audio2)) {
+            mix = (AudioIn1() + AudioIn2()) / 2;
+        } else if (Connected(Input::Audio1)) {
+            mix = AudioIn1();
+        } else if (Connected(Input::Audio2)) {
+            mix = AudioIn2();
+        } else {
+            mix = 2048; // Default unpatched behavior
+        }
+        
+        int32_t output_value = (mix * main_knob_signed) / 2048;
+        
+        // Write to Audio Outputs (Audio 1 inverted, Audio 2 non-inverted)
+        AudioOut1(-output_value);
+        AudioOut2(output_value);
+        
+        // LEDs 1 & 2 reflect outputs
+        float led1_val = (float)(output_value + 2048) / 4095.f;
+        float led2_val = (float)(2047 - output_value) / 4095.f;
+        LedBrightness(0, led1_val * led1_val * 4095.f);
+        LedBrightness(1, led2_val * led2_val * 4095.f);
+
+        // CV1 output (Knob X attenuverts CV 1 Input)
+        int32_t x_knob_signed = KnobVal(Knob::X) - 2048;
+        int32_t cv1_val = 2048;
+        if (Connected(Input::CV1)) {
+            cv1_val = CVIn1();
+        }
+        int32_t cv1_out_val = (cv1_val * x_knob_signed) / 2048;
+        CVOut1(cv1_out_val); // Non-inverted output
+
+        // CV2 output (Knob Y attenuverts CV 2 Input)
+        int32_t y_knob_signed = KnobVal(Knob::Y) - 2048;
+        int32_t cv2_val = 2048;
+        if (Connected(Input::CV2)) {
+            cv2_val = CVIn2();
+        }
+        int32_t cv2_out_val = (cv2_val * y_knob_signed) / 2048;
+        CVOut2(cv2_out_val); // Non-inverted output
+
+        // LEDs 3 & 4 reflect CV outputs
+        float led3_val = (float)(cv1_out_val + 2048) / 4095.f;
+        float led4_val = (float)(cv2_out_val + 2048) / 4095.f;
+        LedBrightness(2, led3_val * led3_val * 4095.f);
+        LedBrightness(3, led4_val * led4_val * 4095.f);
+
+        // 3. Pulse loop
+        Switch sw = SwitchVal();
+        if (sw == Switch::Up || sw == Switch::Down) {
+            PulseOut1(true);
+            PulseOut2(false);
+            LedOn(4, true);
+            LedOn(5, false);
+        } else {
+            PulseOut1(false);
+            PulseOut2(true);
+            LedOn(4, false);
+            LedOn(5, true);
+        }
+    }
+};
+
+int main() {
+    CraftedVoltsCard cvc;
+    cvc.Run();
+    return 0;
+}

@@ -1,0 +1,21 @@
+# OS / Misc
+.DS_Store
+.vscode/
+
+# Build
+build/
+*.bin
+*.elf
+*.hex
+*.map
+*.uf2
+!default_samples.uf2
+
+# Assets
+assets_tmp/
+temp_conv.wav
+*.wav
+
+# Python
+__pycache__/
+*.pyc

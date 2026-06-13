@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		},
+		{
+			"path": "../../50_multifx_release"
+		},
+		{
+			"path": "../../../patchnotes"
+		}
+	],
+	"settings": {
+		"liveServer.settings.multiRootWorkspaceName": "50_multifx"
+	}
+}

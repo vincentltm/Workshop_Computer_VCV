@@ -1,0 +1,3 @@
+[submodule "deps/Workshop_Computer"]
+	path = deps/Workshop_Computer
+	url = https://github.com/vincent-maurer/Workshop_Computer.git

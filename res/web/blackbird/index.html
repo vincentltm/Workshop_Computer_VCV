@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>web-druid</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="node_modules/monaco-editor/min/vs/editor/editor.main.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="header-left">
+                <div class="title-pill">
+                    <h1>//// web-druid</h1>
+                </div>
+                <button id="boweryBtn" class="repl-connection-btn">bowery</button>
+                <button id="bbboweryBtn" class="repl-connection-btn">bbbowery</button>
+            </div>
+            <div class="header-right">
+                <button id="scriptReferenceBtn" class="repl-connection-btn">documentation</button>
+                <a class="repl-connection-btn source-link" href="https://github.com/dessertplanet/web-druid" target="_blank" rel="noopener noreferrer">source</a>
+                <div class="editor-toggle-pill">
+                    <span class="editor-toggle-label">editor</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="toggleEditorBtn">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+        </header>
+
+        <div class="workspace">
+            <div class="toolbar hidden" id="toolbar">
+                <div class="toolbar-group">
+                    <span id="scriptName" class="script-name">untitled.lua</span>
+                </div>
+                <div class="toolbar-group">
+                    <button id="runBtn" class="toolbar-btn" disabled title="Run script (⌘P)">▶ run</button>
+                    <button id="uploadBtn" class="toolbar-btn" disabled title="Upload & save script">↑ upload</button>
+                </div>
+                <div class="toolbar-group">
+                    <button id="newBtn" class="toolbar-btn">new</button>
+                    <button id="openBtn" class="toolbar-btn">open</button>
+                    <div class="save-btn-container">
+                        <button id="saveBtn" class="toolbar-btn">save</button>
+                        <button id="saveDropdownBtn" class="toolbar-btn save-dropdown-btn" title="Save options">▼</button>
+                        <div id="saveDropdownMenu" class="save-dropdown-menu" style="display: none;">
+                            <button class="save-dropdown-item" data-format="lua">script</button>
+                            <button class="save-dropdown-item" data-format="uf2">blackbird uf2</button>
+                        </div>
+                    </div>
+                    <button id="renameBtn" class="toolbar-btn">rename</button>
+                </div>
+                <div class="toolbar-group layout-toggle-group">
+                    <button id="horizontalLayoutBtn" class="layout-btn active" title="Horizontal layout">
+                        <svg width="20" height="20" viewBox="0 0 20 20">
+                            <rect x="2" y="4" width="7" height="12"/>
+                            <rect x="12" y="4" width="7" height="12"/>
+                        </svg>
+                    </button>
+                    <button id="verticalLayoutBtn" class="layout-btn" title="Vertical layout">
+                        <svg width="20" height="20" viewBox="0 0 20 20">
+                            <rect x="4" y="2" width="12" height="7"/>
+                            <rect x="4" y="12" width="12" height="7"/>
+                        </svg>
+                    </button>
+                    <button id="swapPanesBtn" class="layout-btn" title="Swap panes">
+                        <svg class="swap-horizontal" width="20" height="20" viewBox="0 0 20 20">
+                            <path d="M 6 6 L 14 6 M 6 6 L 8 4 M 6 6 L 8 8" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"/>
+                            <path d="M 14 14 L 6 14 M 14 14 L 12 12 M 14 14 L 12 16" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"/>
+                        </svg>
+                        <svg class="swap-vertical" width="20" height="20" viewBox="0 0 20 20" style="display: none;">
+                            <path d="M 6 6 L 6 14 M 6 6 L 4 8 M 6 6 L 8 8" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"/>
+                            <path d="M 14 14 L 14 6 M 14 14 L 12 12 M 14 14 L 16 12" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="split-container" id="splitContainer">
+                <div class="editor-pane hidden" id="editorPane">
+                    <div id="editor"></div>
+                </div>
+                <div class="split-handle hidden" id="splitHandle">
+                    <div class="split-handle-bar"></div>
+                </div>
+                <div class="repl-pane full-width" id="replPane">
+                    <div class="repl-content">
+                        <div id="output" class="repl-output"></div>
+                        <div class="stream-monitors">
+                            <div class="stream-monitor" id="streamMonitor1">
+                                <div class="stream-monitor-header">input[1]</div>
+                                <canvas class="stream-monitor-canvas" id="streamCanvas1" width="200" height="60"></canvas>
+                                <div class="stream-monitor-value" id="streamValue1">---</div>
+                            </div>
+                            <div class="stream-monitor" id="streamMonitor2">
+                                <div class="stream-monitor-header">input[2]</div>
+                                <canvas class="stream-monitor-canvas" id="streamCanvas2" width="200" height="60"></canvas>
+                                <div class="stream-monitor-value" id="streamValue2">---</div>
+                            </div>
+                        </div>
+                        <div class="repl-actions">
+                            <div class="repl-status-pill">
+                                <span id="replStatusIndicator" class="repl-status-indicator"></span>
+                                <span id="replStatusText" class="repl-status-text">not connected</span>
+                            </div>
+                            <button id="replConnectionBtn" class="repl-connection-btn">connect</button>
+                            <button id="resetBtn" class="repl-action-btn">reset</button>
+                            <button id="helpBtn" class="repl-action-btn">help</button>
+                            <button id="clearBtn" class="repl-action-btn">cleanup</button>
+                            <div class="repl-actions-spacer"></div>
+                            <div class="autocomplete-pill">
+                                <span class="repl-autocomplete-label">auto-complete</span>
+                                <label class="toggle-switch repl-toggle">
+                                    <input type="checkbox" id="toggleReplAutocomplete" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="repl-input-container">
+                            <div id="replEditorContainer" class="repl-editor-container" style="display: none;"></div>
+                            <textarea id="replInput" class="repl-input" placeholder="send word to the bird"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <input type="file" id="fileInput" accept=".lua" style="display: none;">
+    </div>
+
+    <div id="browserWarning" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h2>Browser Not Supported</h2>
+            <p>This application requires the Web Serial API, which is only available in Chromium-based browsers.</p>
+            <p>Please use Chrome, Edge, or Opera.</p>
+            <button id="closeWarning" class="modal-btn">Close</button>
+        </div>
+    </div>
+
+    <div id="boweryModal" class="modal" style="display: none;">
+        <div class="modal-content bowery-modal">
+            <div class="modal-header">
+                <h2>Browse bowery scripts</h2>
+                <button id="closeBowery" class="modal-close">&times;</button>
+            </div>
+            <div class="modal-info">
+                <div id="boweryAction" class="info-line"></div>
+                <div class="info-line">Scripts fetched from <a href="https://github.com/monome/bowery" target="_blank">github.com/monome/bowery</a></div>
+            </div>
+            <div class="modal-search">
+                <input type="text" id="bowerySearch" placeholder="Search scripts..." class="search-input">
+            </div>
+            <div id="boweryLoading" class="modal-loading">Loading scripts...</div>
+            <div id="boweryError" class="modal-error" style="display: none;"></div>
+            <div id="boweryList" class="bowery-list" style="display: none;"></div>
+        </div>
+    </div>
+
+    <div id="bbboweryModal" class="modal" style="display: none;">
+        <div class="modal-content bowery-modal">
+            <div class="modal-header">
+                <h2>Browse bbbowery scripts</h2>
+                <button id="closeBbbowery" class="modal-close">&times;</button>
+            </div>
+            <div class="modal-info">
+                <div id="bbboweryAction" class="info-line"></div>
+                <div class="info-line">Scripts fetched from <a href="https://github.com/TomWhitwell/Workshop_Computer/tree/main/releases/41_blackbird/examples/bbbowery" target="_blank">github.com/TomWhitwell/Workshop_Computer</a></div>
+            </div>
+            <div class="modal-search">
+                <input type="text" id="bbbowerySearch" placeholder="Search scripts..." class="search-input">
+            </div>
+            <div id="bbboweryLoading" class="modal-loading">Loading scripts...</div>
+            <div id="bbboweryError" class="modal-error" style="display: none;"></div>
+            <div id="bbboweryList" class="bowery-list" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script src="node_modules/monaco-editor/min/vs/loader.js"></script>
+    <script>
+        // Temporarily disable AMD to prevent luaparse from registering as a module
+        var define_backup = window.define;
+        window.define = undefined;
+    </script>
+    <script src="node_modules/luaparse/luaparse.js"></script>
+    <script>
+        // Restore AMD after luaparse has loaded
+        window.define = define_backup;
+    </script>
+    <script src="druid.js"></script>
+</body>
+</html>

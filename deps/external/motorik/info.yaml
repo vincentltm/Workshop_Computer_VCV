@@ -1,0 +1,6 @@
+Description: "Motorik drum machine with kick/snare/hihat, bass and melody CV outputs and inputs. Classic Krautrock grooves."
+Language: "C++ (Pico SDK)"
+Creator: "Joep Vermaat"
+Version: "1.0"
+Status: "released"
+Repository: https://codeberg.org/johantv/motorik

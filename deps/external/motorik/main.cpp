@@ -1,0 +1,612 @@
+#include "ComputerCard.h"
+#include "samples.h"
+#include <cstdint>
+
+class Motorik : public ComputerCard
+{
+private:
+    static constexpr int32_t SAMPLE_RATE = 48000;
+
+    enum Voice { KICK, SNARE, HIHAT, NUM_VOICES };
+
+    static constexpr uint16_t KICK_BASE   = (1<<0)|(1<<2)|(1<<6)|(1<<8)|(1<<10)|(1<<14);
+    static constexpr uint16_t SNARE_BASE  = (1<<4)|(1<<12);
+    static constexpr uint16_t HIHAT_BASE  = (1<<0)|(1<<2)|(1<<4)|(1<<6)|(1<<8)|(1<<10)|(1<<12)|(1<<14);
+
+    static constexpr uint16_t KICK_FILL   = (1<<0)|(1<<4)|(1<<8)|(1<<12);
+    static constexpr uint16_t SNARE_FILL  = (1<<0)|(1<<4)|(1<<8)|(1<<12);
+    static constexpr uint16_t HIHAT_BREAK = (1<<0);
+
+    uint32_t rng_state;
+
+    uint32_t Xorshift32() {
+        rng_state ^= rng_state << 13;
+        rng_state ^= rng_state >> 17;
+        rng_state ^= rng_state << 5;
+        return rng_state;
+    }
+
+    struct SamplePlayer {
+        uint32_t position;
+        bool active;
+        int16_t const* data;
+        uint32_t length;
+        uint8_t trigger_delay;
+
+        void Trigger(int16_t const* sample_data, uint32_t sample_len, uint8_t delay) {
+            position = 0;
+            active = true;
+            data = sample_data;
+            length = sample_len;
+            trigger_delay = delay;
+        }
+
+        int16_t Process() {
+            if (!active) return 0;
+            if (trigger_delay > 0) {
+                trigger_delay--;
+                return 0;
+            }
+
+            uint32_t idx = position >> 8;
+            if (idx >= length - 1) {
+                active = false;
+                return 0;
+            }
+
+            uint32_t frac = position & 0xFF;
+            int32_t s0 = data[idx];
+            int32_t s1 = data[idx + 1];
+            int32_t sample = ((s0 * (256 - frac)) + (s1 * frac)) >> 8;
+
+            position += 256;
+
+            return static_cast<int16_t>(sample);
+        }
+    };
+
+    SamplePlayer voices[NUM_VOICES];
+
+    int32_t current_step;
+    uint32_t sample_counter;
+
+    bool prev_pulse1;
+
+    static constexpr int8_t PENTATONIC[5] = {0, 3, 5, 7, 10};
+
+    struct BassEvent {
+        int8_t degree;
+        uint8_t steps;
+    };
+
+    static constexpr BassEvent BASS_BAR1[] = {
+        {-1, 2},
+        { 0, 3},
+        {-1, 1},
+        { 5, 2},
+        { 0, 1},
+        {-1, 3},
+        { 0, 2},
+        { 2, 2},
+    };
+    static constexpr int32_t BASS_BAR1_LEN = 8;
+
+    static constexpr BassEvent BASS_BAR2[] = {
+        {-1, 2},
+        { 0, 3},
+        {-1, 1},
+        { 5, 2},
+        { 0, 1},
+        {-1, 3},
+        { 0, 2},
+        { 2, 1},
+        {-1, 1},
+    };
+    static constexpr int32_t BASS_BAR2_LEN = 9;
+
+    static constexpr int32_t BASS_RETRIGGER_SAMPLES = 200;
+
+    int32_t bass_note_current;
+    int32_t bass_event_idx;
+    int32_t bass_event_step;
+    int32_t bass_retrigger;
+    int32_t cv2_note_current;
+    int32_t cv2_retrigger;
+
+    uint32_t bar_counter;
+    int32_t bar_step;
+    int32_t humanize_kick;
+    int32_t humanize_snare;
+    int32_t humanize_hihat;
+    int32_t humanize_range;
+
+    uint16_t kick_pattern;
+    uint16_t snare_pattern;
+    uint16_t hihat_pattern;
+
+    uint16_t saved_kick;
+    uint16_t saved_snare;
+    uint16_t saved_hihat;
+
+    int32_t saved_energy_zone;
+    int32_t saved_tilt;
+    int32_t saved_variation;
+    int32_t saved_root_offset;
+    int32_t saved_bar1_shift;
+    int32_t saved_bar2_shift;
+    int32_t saved_fill_prob;
+
+    int32_t fill_type;
+    int32_t fill_steps_remaining;
+    bool fill_active;
+
+    int32_t lp_l;
+    int32_t lp_r;
+
+    int32_t prev_main;
+    int32_t prev_x;
+    int32_t prev_y;
+
+    int32_t saved_humanize_range;
+
+    int32_t saved_decim_rate;
+    uint32_t decim_counter;
+    int32_t decim_l;
+    int32_t decim_r;
+
+    int32_t env1;
+    int32_t env2;
+
+    int32_t cv1_val;
+    int32_t cv2_val;
+
+    static constexpr int32_t KNOB_DEADZONE = 4;
+
+    static constexpr uint32_t SAMPLES_PER_STEP = (SAMPLE_RATE * 60) / (120 * 4);
+
+    void TriggerKick(uint8_t delay) {
+        voices[KICK].Trigger(Samples::kick, Samples::KICK_SAMPLES, delay);
+    }
+
+    void TriggerSnare(uint8_t delay) {
+        voices[SNARE].Trigger(Samples::snare, Samples::SNARE_SAMPLES, delay);
+    }
+
+    void TriggerHihat(uint8_t delay) {
+        voices[HIHAT].Trigger(Samples::hihat, Samples::HIHAT_SAMPLES, delay);
+    }
+
+    int32_t PentatonicNote(int32_t root, int32_t index) {
+        int32_t octave = index / 5;
+        int32_t degree = ((index % 5) + 5) % 5;
+        return root + PENTATONIC[degree] + octave * 12;
+    }
+
+    void StartFill() {
+        saved_kick = kick_pattern;
+        saved_snare = snare_pattern;
+        saved_hihat = hihat_pattern;
+
+        fill_type = (Xorshift32() & 1);
+
+        if (fill_type == 0) {
+            kick_pattern = KICK_BASE;
+            snare_pattern = SNARE_BASE;
+            hihat_pattern = HIHAT_BREAK;
+        } else {
+            kick_pattern |= KICK_FILL;
+            snare_pattern |= SNARE_FILL;
+            hihat_pattern = HIHAT_BASE;
+        }
+
+        fill_active = true;
+        fill_steps_remaining = 16;
+    }
+
+    void EndFill() {
+        kick_pattern = saved_kick;
+        snare_pattern = saved_snare;
+        hihat_pattern = saved_hihat;
+        fill_active = false;
+    }
+
+    void ApplyVariation() {
+        for (uint32_t i = 0; i < 16; i++) {
+            if ((Xorshift32() & 4095) < (uint32_t)saved_variation) {
+                kick_pattern ^= (1 << i);
+            }
+            if ((Xorshift32() & 4095) < (uint32_t)saved_variation) {
+                snare_pattern ^= (1 << i);
+            }
+            if ((Xorshift32() & 4095) < (uint32_t)saved_variation) {
+                hihat_pattern ^= (1 << i);
+            }
+        }
+    }
+
+    int32_t AdvanceBassEvent(int32_t shift, const BassEvent* bar, int32_t bar_len) {
+        int32_t idx = 0;
+        int32_t step = 0;
+
+        if (shift > 0) {
+            int32_t remaining = shift;
+            while (remaining > 0 && idx < bar_len - 1) {
+                if (remaining >= bar[idx].steps) {
+                    remaining -= bar[idx].steps;
+                    idx++;
+                } else {
+                    step = remaining;
+                    remaining = 0;
+                }
+            }
+        } else if (shift < 0) {
+            int32_t total = 0;
+            for (uint32_t i = 0; i < (uint32_t)bar_len; i++) {
+                total += bar[i].steps;
+            }
+            int32_t target = total + shift;
+            if (target < 0) target = 0;
+            while (idx < bar_len - 1 && target >= bar[idx].steps) {
+                target -= bar[idx].steps;
+                idx++;
+            }
+            step = target;
+        }
+
+        bass_event_idx = idx;
+        bass_event_step = step;
+        return idx;
+    }
+
+    void AdvanceStep() {
+        int32_t main_knob = KnobVal(Knob::Main);
+        int32_t x_knob = KnobVal(Knob::X);
+        int32_t y_knob = KnobVal(Knob::Y);
+
+        bool main_changed = (main_knob < prev_main - KNOB_DEADZONE || main_knob > prev_main + KNOB_DEADZONE);
+        bool x_changed = (x_knob < prev_x - KNOB_DEADZONE || x_knob > prev_x + KNOB_DEADZONE);
+        bool y_changed = (y_knob < prev_y - KNOB_DEADZONE || y_knob > prev_y + KNOB_DEADZONE);
+
+        if (main_changed) prev_main = main_knob;
+        if (x_changed) prev_x = x_knob;
+        if (y_changed) prev_y = y_knob;
+
+        Switch sw = SwitchVal();
+        if (sw == Switch::Middle) {
+            if (main_changed) saved_energy_zone = main_knob >> 10;
+            if (y_changed) saved_fill_prob = y_knob;
+        } else if (sw == Switch::Down) {
+            if (main_changed) saved_tilt = main_knob;
+            if (x_changed) saved_bar1_shift = (x_knob * 8 >> 12) - 4;
+            if (y_changed) saved_bar2_shift = (y_knob * 8 >> 12) - 4;
+        } else if (sw == Switch::Up) {
+            if (main_changed) saved_decim_rate = main_knob;
+            if (x_changed) saved_variation = x_knob >> 4;
+            if (y_changed) saved_humanize_range = (y_knob * 15) >> 12;
+        }
+
+        if (sw == Switch::Middle && x_changed) {
+            saved_root_offset = (x_knob * 12) >> 12;
+        }
+
+        humanize_range = saved_humanize_range;
+
+        humanize_kick = Xorshift32() % (humanize_range + 1);
+        humanize_snare = Xorshift32() % (humanize_range + 1);
+        humanize_hihat = Xorshift32() % (humanize_range + 1);
+
+        bar_step = current_step & 15;
+
+        if (bar_step == 0) {
+            bar_counter++;
+
+            ApplyVariation();
+
+            if (sw == Switch::Middle) {
+                int32_t threshold = (saved_fill_prob * 3) >> 12;
+                if ((int32_t)(Xorshift32() & 3) < threshold) {
+                    if (!fill_active) StartFill();
+                }
+            }
+        }
+
+        int32_t energy_zone = saved_energy_zone;
+        if (env1 > 16) {
+            energy_zone = (env1 * 3) >> 11;
+            if (energy_zone > 3) energy_zone = 3;
+        }
+
+        if (kick_pattern & (1 << bar_step)) TriggerKick(humanize_kick);
+
+        if (energy_zone >= 2) {
+            if (snare_pattern & (1 << bar_step)) TriggerSnare(humanize_snare);
+        }
+
+        if (energy_zone >= 1) {
+            if (energy_zone >= 3) {
+                TriggerHihat(humanize_hihat);
+            } else if (hihat_pattern & (1 << bar_step)) {
+                TriggerHihat(humanize_hihat);
+            }
+        }
+
+        if (fill_active) {
+            fill_steps_remaining--;
+            if (fill_steps_remaining <= 0) {
+                EndFill();
+            }
+        }
+
+        UpdateCVNotes();
+        UpdateLEDs();
+
+        current_step = (current_step + 1) & 0xFFFFFF;
+    }
+
+    void UpdateCVNotes() {
+        const BassEvent* bass_bar = (bar_counter & 1) ? BASS_BAR2 : BASS_BAR1;
+        int32_t bass_bar_len = (bar_counter & 1) ? BASS_BAR2_LEN : BASS_BAR1_LEN;
+
+        int32_t root = 36 + saved_root_offset;
+        int32_t cv_root = (cv1_val * 12) >> 12;
+        root += cv_root;
+        if (root < 24) root = 24;
+        if (root > 60) root = 60;
+
+        int32_t cv_shift = (cv2_val * 4) >> 12;
+
+        if (bar_step == 0) {
+            int32_t shift = (bar_counter & 1) ? saved_bar2_shift : saved_bar1_shift;
+            shift += cv_shift;
+            if (shift > 4) shift = 4;
+            if (shift < -4) shift = -4;
+            AdvanceBassEvent(shift, bass_bar, bass_bar_len);
+
+            int8_t degree = bass_bar[bass_event_idx].degree;
+            if (degree < 0) {
+                bass_note_current = 0;
+                cv2_note_current = 0;
+            } else {
+                bass_note_current = PentatonicNote(root, degree);
+                cv2_note_current = PentatonicNote(root + 12, degree);
+                bass_retrigger = BASS_RETRIGGER_SAMPLES;
+                cv2_retrigger = BASS_RETRIGGER_SAMPLES;
+            }
+        } else {
+            bass_event_step++;
+            if (bass_event_step >= bass_bar[bass_event_idx].steps) {
+                bass_event_idx++;
+                if (bass_event_idx >= bass_bar_len) {
+                    bass_event_idx = 0;
+                }
+                bass_event_step = 0;
+                int8_t degree = bass_bar[bass_event_idx].degree;
+                if (degree < 0) {
+                    bass_note_current = 0;
+                    cv2_note_current = 0;
+                } else {
+                    bass_note_current = PentatonicNote(root, degree);
+                    cv2_note_current = PentatonicNote(root + 12, degree);
+                    bass_retrigger = BASS_RETRIGGER_SAMPLES;
+                    cv2_retrigger = BASS_RETRIGGER_SAMPLES;
+                }
+            }
+        }
+    }
+
+    void UpdateLEDs() {
+        int32_t beat_pos = bar_step >> 2;
+        LedOn(0, beat_pos == 0);
+        LedOn(1, beat_pos == 1);
+        LedOn(2, beat_pos == 2);
+        LedOn(3, beat_pos == 3);
+        LedOn(4, bass_note_current > 0);
+        LedOn(5, fill_active);
+    }
+
+public:
+    Motorik() {
+        for (uint32_t i = 0; i < NUM_VOICES; i++) {
+            voices[i].active = false;
+            voices[i].position = 0;
+            voices[i].trigger_delay = 0;
+        }
+
+        rng_state = (uint32_t)(UniqueCardID() ^ (UniqueCardID() >> 32));
+
+        current_step = 0;
+        sample_counter = 0;
+
+        prev_pulse1 = false;
+
+        bass_note_current = 0;
+        bass_event_idx = 0;
+        bass_event_step = 0;
+        bass_retrigger = 0;
+        cv2_note_current = 0;
+        cv2_retrigger = 0;
+
+        bar_counter = 0;
+        bar_step = 0;
+        humanize_kick = 0;
+        humanize_snare = 0;
+        humanize_hihat = 0;
+        humanize_range = 3;
+        saved_humanize_range = 3;
+
+        kick_pattern = KICK_BASE;
+        snare_pattern = SNARE_BASE;
+        hihat_pattern = HIHAT_BASE;
+        saved_kick = KICK_BASE;
+        saved_snare = SNARE_BASE;
+        saved_hihat = HIHAT_BASE;
+
+        fill_type = 0;
+        fill_steps_remaining = 0;
+        fill_active = false;
+
+        saved_energy_zone = 2;
+        saved_tilt = 2048;
+        saved_variation = 0;
+        saved_root_offset = 0;
+        saved_bar1_shift = 0;
+        saved_bar2_shift = 0;
+        saved_fill_prob = 0;
+
+        lp_l = 0;
+        lp_r = 0;
+
+        saved_decim_rate = 0;
+        decim_counter = 0;
+        decim_l = 0;
+        decim_r = 0;
+
+        env1 = 0;
+        env2 = 0;
+
+        cv1_val = 0;
+        cv2_val = 0;
+
+        prev_main = 0;
+        prev_x = 0;
+        prev_y = 0;
+
+        EnableNormalisationProbe();
+    }
+
+    virtual void ProcessSample() override {
+        Switch sw = SwitchVal();
+
+        if (Disconnected(Input::Pulse1)) {
+            sample_counter++;
+            if (sample_counter >= SAMPLES_PER_STEP) {
+                sample_counter = 0;
+                AdvanceStep();
+            }
+        } else {
+            bool pulse1 = PulseIn1();
+            if (pulse1 && !prev_pulse1) {
+                AdvanceStep();
+            }
+            prev_pulse1 = pulse1;
+        }
+
+        if (PulseIn2RisingEdge()) {
+            if (!fill_active) StartFill();
+        }
+
+        if (!Disconnected(Input::Audio1)) {
+            int32_t a = AudioIn1();
+            if (a < 0) a = -a;
+            if (a > env1) {
+                env1 += ((a - env1) * 128) >> 8;
+            } else {
+                env1 += ((a - env1) * 2) >> 8;
+            }
+        } else {
+            env1 = 0;
+        }
+
+        if (!Disconnected(Input::Audio2)) {
+            int32_t a = AudioIn2();
+            if (a < 0) a = -a;
+            if (a > env2) {
+                env2 += ((a - env2) * 128) >> 8;
+            } else {
+                env2 += ((a - env2) * 2) >> 8;
+            }
+        } else {
+            env2 = 0;
+        }
+
+        cv1_val = CVIn1();
+        cv2_val = CVIn2();
+
+        int32_t kick_out = voices[KICK].Process();
+        int32_t snare_out = voices[SNARE].Process();
+        int32_t hihat_out = voices[HIHAT].Process();
+
+        int32_t tilt = saved_tilt;
+        int32_t kick_level = 4096 - ((tilt * 2867) >> 12);
+        int32_t hihat_level = 1229 + ((tilt * 2867) >> 12);
+
+        int32_t mixed = (kick_out * kick_level
+                       + snare_out * 2048
+                       + hihat_out * hihat_level) >> 12;
+        int32_t out_l = mixed;
+        int32_t out_r = mixed;
+
+        if (out_l > 2047) out_l = 2047;
+        if (out_l < -2048) out_l = -2048;
+        if (out_r > 2047) out_r = 2047;
+        if (out_r < -2048) out_r = -2048;
+
+        if (!Disconnected(Input::Audio2)) {
+            int32_t coeff = 8 + ((env2 * 247) >> 11);
+            if (coeff > 255) coeff = 255;
+            lp_l += ((out_l - lp_l) * coeff) >> 8;
+            lp_r += ((out_r - lp_r) * coeff) >> 8;
+            out_l = lp_l;
+            out_r = lp_r;
+        } else if (sw == Switch::Up) {
+            int32_t main_knob = KnobVal(Knob::Main);
+            int32_t coeff = 8 + ((main_knob * 247) >> 12);
+            lp_l += ((out_l - lp_l) * coeff) >> 8;
+            lp_r += ((out_r - lp_r) * coeff) >> 8;
+            out_l = lp_l;
+            out_r = lp_r;
+        } else {
+            lp_l = out_l;
+            lp_r = out_r;
+        }
+
+        if (!Disconnected(Input::Audio2)) {
+            uint32_t decim_rate = 1 + ((saved_decim_rate * saved_decim_rate >> 12) * 253 >> 12);
+            if (++decim_counter >= decim_rate) {
+                decim_counter = 0;
+                decim_l = out_l;
+                decim_r = out_r;
+            }
+            out_l = decim_l;
+            out_r = decim_r;
+        }
+
+        AudioOut1((int16_t)out_l);
+        AudioOut2((int16_t)out_r);
+
+        if (bass_note_current > 0) {
+            CVOut1MIDINote((uint8_t)bass_note_current);
+            if (bass_retrigger > 0) {
+                bass_retrigger--;
+                PulseOut1(false);
+            } else {
+                PulseOut1(true);
+            }
+        } else {
+            CVOut1(0);
+            PulseOut1(false);
+        }
+
+        if (cv2_note_current > 0) {
+            CVOut2MIDINote((uint8_t)cv2_note_current);
+            if (cv2_retrigger > 0) {
+                cv2_retrigger--;
+                PulseOut2(false);
+            } else {
+                PulseOut2(true);
+            }
+        } else {
+            CVOut2(0);
+            PulseOut2(false);
+        }
+    }
+};
+
+int main() {
+    set_sys_clock_khz(144000, true);
+
+    Motorik motorik;
+    motorik.Run();
+
+    return 0;
+}

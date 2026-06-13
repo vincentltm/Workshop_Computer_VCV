@@ -1,0 +1,3 @@
+run res/cards/libcard_modes.dylib
+thread backtrace all
+quit
