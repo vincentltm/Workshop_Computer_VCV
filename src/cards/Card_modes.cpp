@@ -27,6 +27,20 @@
 #include <locale.h>
 #include <inttypes.h>
 #include <cinttypes>
+#include <array>
+#include <cmath>
+#include <complex>
+#include <random>
+#include <functional>
+#include <queue>
+#include <deque>
+#include <map>
+#include <set>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
+#include <numeric>
+#include <initializer_list>
 #include "pico_mocks.h"
 #include "tusb.h"
 #define while(...) while((__VA_ARGS__) && !g_cancellation_requested.load(std::memory_order_relaxed))
