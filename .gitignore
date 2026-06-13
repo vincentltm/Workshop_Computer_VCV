@@ -1,9 +1,9 @@
-build/
-build_cards/
-dep/
+/build/
+/build_cards/
+/dep/
 *.dylib
 *.dSYM/
-res/cards/
+/res/cards/
 *.o
 *.d
 flash_*.bin
