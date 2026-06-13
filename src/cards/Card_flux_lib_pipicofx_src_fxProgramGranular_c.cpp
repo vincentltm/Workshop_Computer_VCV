@@ -551,54 +551,87 @@ FxProgram23DataType fxProgram23data;
 
 FxProgramType fxProgramGranular = {
     .name = "Clouds",
-    .nParameters = 6,
-    .parameters = {{.name = "Mix            ",
-                    .control = 0,
-                    .increment = 1,
-                    .rawValue = 0,
-                    .getParameterDisplay = &fxProgramParam1Display,
-                    .getParameterValue = 0,
-                    .setParameter = &fxProgramParam1Callback},
-                   {.name = "Size           ",
-                    .control = 1,
-                    .increment = 1,
-                    .rawValue = 0,
-                    .getParameterDisplay = &fxProgramParam2Display,
-                    .getParameterValue = 0,
-                    .setParameter = &fxProgramParam2Callback},
-                   {.name = "Atmo           ",
-                    .control = 2,
-                    .increment = 1,
-                    .rawValue = 0,
-                    .getParameterDisplay = &fxProgramParam3Display,
-                    .getParameterValue = 0,
-                    .setParameter = &fxProgramParam3Callback},
-                   {.name = "Freeze         ",
-                    .control = 0xff,
-                    .increment = 1,
-                    .rawValue = 0,
-                    .getParameterDisplay = 0,
-                    .getParameterValue = 0,
-                    .setParameter = &fxProgramParamFreezeCallback},
-                   {.name = "Width          ",
-                    .control = 0xff,
-                    .increment = 1,
-                    .rawValue = 255,
-                    .getParameterDisplay = &fxProgramParam4Display,
-                    .getParameterValue = 0,
-                    .setParameter = &fxProgramParam4Callback},
-                   {.name = "Volume",
-                    .control = 0xff,
-                    .increment = 1,
-                    .rawValue = 0x3ff,
-                    .setParameter = fxProgramPresetVolumeCallback,
-                    .getParameterValue = 0,
-                    .getParameterDisplay = fxProgramPresetVolumeDisplay}},
+    .parameters = {
+        {
+            .name = "Mix            ",
+            .control = 0,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgramParam1Display,
+            .setParameter = &fxProgramParam1Callback
+        },
+        {
+            .name = "Size           ",
+            .control = 1,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgramParam2Display,
+            .setParameter = &fxProgramParam2Callback
+        },
+        {
+            .name = "Atmo           ",
+            .control = 2,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgramParam3Display,
+            .setParameter = &fxProgramParam3Callback
+        },
+        {
+            .name = "Freeze         ",
+            .control = 0xff,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = &fxProgramParamFreezeCallback
+        },
+        {
+            .name = "Width          ",
+            .control = 0xff,
+            .rawValue = 255,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgramParam4Display,
+            .setParameter = &fxProgramParam4Callback
+        },
+        {
+            .name = "Volume",
+            .control = 0xff,
+            .rawValue = 0x3ff,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxProgramPresetVolumeDisplay,
+            .setParameter = fxProgramPresetVolumeCallback
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        }
+    },
     .processSample = &fxProgram23processSample,
     .processSampleStereo = &fxProgram23processSampleStereo,
     .setup = &fxProgram23SetupStereo,
     .reset = 0,
+    .nParameters = 6,
     .isStereo = 1,
-    .data = (void *)&fxProgram23data};
+    .data = (void *)&fxProgram23data
+};
 
 } // namespace Card_Flux

@@ -263,52 +263,84 @@ static FxProgram9DataType fxProgram9Data;
 
 FxProgramType fxProgramEchoVerb = {
     .name = "Echo Verb",
-    .nParameters = 5,
     .parameters = {
         {
             .name = "Mix",
-            .control = 2, // Knob Main 
-            .increment = 64,
+            .control = 2,
             .rawValue = 1000,
-            .setParameter = paramMixCallback,
-            .getParameterDisplay = paramMixDisplay
+            .increment = 64,
+            .getParameterValue = 0,
+            .getParameterDisplay = paramMixDisplay,
+            .setParameter = paramMixCallback
         },
         {
             .name = "Time",
-            .control = 0, // Knob X
-            .increment = 64,
+            .control = 0,
             .rawValue = 2000,
-            .setParameter = paramTimeCallback,
-            .getParameterDisplay = paramTimeDisplay
+            .increment = 64,
+            .getParameterValue = 0,
+            .getParameterDisplay = paramTimeDisplay,
+            .setParameter = paramTimeCallback
         },
         {
             .name = "Warm Wash",
-            .control = 1, // Knob Y
-            .increment = 64,
+            .control = 1,
             .rawValue = 2000,
-            .setParameter = paramWarmthCallback,
-            .getParameterDisplay = paramWarmthDisplay
+            .increment = 64,
+            .getParameterValue = 0,
+            .getParameterDisplay = paramWarmthDisplay,
+            .setParameter = paramWarmthCallback
         },
         {
             .name = "Freeze",
             .control = 0xFF,
-            .increment = 2048,
             .rawValue = 0,
-            .setParameter = paramFreezeCallback,
-            .getParameterDisplay = NULL
+            .increment = 2048,
+            .getParameterValue = 0,
+            .getParameterDisplay = NULL,
+            .setParameter = paramFreezeCallback
         },
         {
             .name = "Level",
             .control = 0xFF,
-            .increment = 32,
             .rawValue = 0x300,
-            .setParameter = paramVolumeCallback,
-            .getParameterDisplay = paramVolumeDisplay
+            .increment = 32,
+            .getParameterValue = 0,
+            .getParameterDisplay = paramVolumeDisplay,
+            .setParameter = paramVolumeCallback
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
         }
     },
     .processSampleStereo = fxProgramProcessSampleStereo,
     .setup = fxProgramSetup,
     .reset = NULL,
+    .nParameters = 5,
     .isStereo = 1,
     .data = (void*)&fxProgram9Data
 };

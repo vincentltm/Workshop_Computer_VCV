@@ -204,16 +204,83 @@ static void fxDisplayVol(void *data, char *res) { decimalInt16ToChar(((FxProgram
 
 FxProgramType fxProgramSpectral = {
     .name = "Spectral Freeze",
-    .nParameters = 5,
     .parameters = {
-        {.name = "Mix", .control = 2, .increment = 1, .rawValue = 2048, .setParameter = fxParamMix, .getParameterDisplay = fxDisplayMix},
-        {.name = "Blur", .control = 0, .increment = 1, .rawValue = 2048, .setParameter = fxParamBlur, .getParameterDisplay = fxDisplayBlur},
-        {.name = "Warp", .control = 1, .increment = 1, .rawValue = 0, .setParameter = fxParamWarp, .getParameterDisplay = fxDisplayWarp},
-        {.name = "Freeze", .control = 0xff, .increment = 1, .rawValue = 0, .setParameter = fxParamFreeze, .getParameterDisplay = 0},
-        {.name = "Volume", .control = 0xff, .increment = 1, .rawValue = 0x400, .setParameter = fxParamVol, .getParameterDisplay = fxDisplayVol}
+        {
+            .name = "Mix",
+            .control = 2,
+            .rawValue = 2048,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxDisplayMix,
+            .setParameter = fxParamMix
+        },
+        {
+            .name = "Blur",
+            .control = 0,
+            .rawValue = 2048,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxDisplayBlur,
+            .setParameter = fxParamBlur
+        },
+        {
+            .name = "Warp",
+            .control = 1,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxDisplayWarp,
+            .setParameter = fxParamWarp
+        },
+        {
+            .name = "Freeze",
+            .control = 0xff,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = fxParamFreeze
+        },
+        {
+            .name = "Volume",
+            .control = 0xff,
+            .rawValue = 0x400,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxDisplayVol,
+            .setParameter = fxParamVol
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        }
     },
     .processSampleStereo = fxProgram28ProcessSampleStereo,
     .setup = fxProgram28SetupStereo,
+    .nParameters = 5,
     .isStereo = 1,
     .data = &progData
 };

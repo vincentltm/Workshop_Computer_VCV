@@ -182,7 +182,14 @@ static void fxProgram1Reset(void*data)
 }
 
 FxProgram1DataType fxProgram1data = {
-    /* butterworth lowpass @ 6000Hz */
+    .highpassCutoff = 31000,
+    .nWaveshapers = 1,
+    .highpass_out = 0,
+    .highpass_old_out = 0,
+    .highpass_old_in = 0,
+    .filter3 = {
+        .coefficients = {0x62c, 0x674, 0x7d6, 0xbc4, 0x1312, 0x1ea7, 0x2e33, 0x3b3a, 0x3a9e, 0x29bf, 0x15f5, 0x878, 0xf984, 0xebee, 0xe813, 0xe93e, 0xec34, 0xf3d3, 0xfd12, 0x312, 0x5bf, 0x6eb, 0x5da, 0x487, 0x614, 0x771, 0x837, 0x784, 0x299, 0xfc8e, 0xf9f8, 0xfbd5, 0x2b, 0x44c, 0x599, 0x2f3, 0x43, 0x2, 0xfe5b, 0xfc3c, 0xfd4d, 0xb7, 0x4ac, 0x823, 0xa3b, 0xa6a, 0x915, 0x74c, 0x69c, 0x6e5, 0x73e, 0x6cc, 0x4bf, 0x215, 0xffae, 0xfd9b, 0xfde5, 0xffd2, 0x222, 0x3cd, 0x50d, 0x5fa, 0x659, 0x61f}
+    },
     .filter1 = {
         	//.coeffB = {3199, 6398, 3199},
             //.coeffA = {-30893, 10922},
@@ -194,65 +201,99 @@ FxProgram1DataType fxProgram1data = {
             .y2=0,
             .acc=0
     },
-    .filter3 = {
-        .coefficients = {0x62c, 0x674, 0x7d6, 0xbc4, 0x1312, 0x1ea7, 0x2e33, 0x3b3a, 0x3a9e, 0x29bf, 0x15f5, 0x878, 0xf984, 0xebee, 0xe813, 0xe93e, 0xec34, 0xf3d3, 0xfd12, 0x312, 0x5bf, 0x6eb, 0x5da, 0x487, 0x614, 0x771, 0x837, 0x784, 0x299, 0xfc8e, 0xf9f8, 0xfbd5, 0x2b, 0x44c, 0x599, 0x2f3, 0x43, 0x2, 0xfe5b, 0xfc3c, 0xfd4d, 0xb7, 0x4ac, 0x823, 0xa3b, 0xa6a, 0x915, 0x74c, 0x69c, 0x6e5, 0x73e, 0x6cc, 0x4bf, 0x215, 0xffae, 0xfd9b, 0xfde5, 0xffd2, 0x222, 0x3cd, 0x50d, 0x5fa, 0x659, 0x61f}
+    .delay = {
+        .feedbackFunction = &analogDelayFeedbackFunction
     },
-    .highpass_old_in=0,
-    .highpass_old_out=0,
-    .highpass_out=0,
-    .highpassCutoff = 31000,
-    .nWaveshapers = 1,
-    .feedbackFilter.alpha=14000,
-    .feedbackFilter.oldXVal=0,
-    .feedbackFilter.oldVal=0,
-    .delay.feedbackFunction=&analogDelayFeedbackFunction,
-    .presetVolume.gain=0xff,
-    .presetVolume.offset=0
+    .feedbackFilter = {
+        .alpha = 14000,
+        .oldXVal = 0,
+        .oldVal = 0
+    },
+    .presetVolume = {
+        .gain = 0xff,
+        .offset = 0
+    }
 };
 FxProgramType fxProgramAmpModel = {
     .name = "Amp-Simulator",
-    .nParameters = 4,
     .parameters = {
         {
-            .name="Hi-Cut         ",
-            .control=0,
-            .increment=1,
-            .rawValue=31500,
-            .setParameter=&fxProgram1Param1Callback,
-            .getParameterValue=0,
-            .getParameterDisplay=&fxProgram1Param1Display
+            .name = "Hi-Cut         ",
+            .control = 0,
+            .rawValue = 31500,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgram1Param1Display,
+            .setParameter = &fxProgram1Param1Callback
         },
         {
-            .name="Gain/Stages    ",
-            .control=1,
-            .increment = 512, // 4096/8
-            .rawValue=0,
-            .setParameter=&fxProgram1Param2Callback,
-            .getParameterValue=0,
-            .getParameterDisplay=&fxProgram1Param2Display
+            .name = "Gain/Stages    ",
+            .control = 1,
+            .rawValue = 0,
+            .increment = 512,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgram1Param2Display,
+            .setParameter = &fxProgram1Param2Callback
         },
         {
-            .name="Delay Intensity",
-            .control=2,
-            .increment=1,
-            .rawValue=0,
-            .setParameter=&fxProgram1Param3Callback,
-            .getParameterValue=0,
-            .getParameterDisplay=&fxProgram1Param3Display
+            .name = "Delay Intensity",
+            .control = 2,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgram1Param3Display,
+            .setParameter = &fxProgram1Param3Callback
         },
         {
-            .name="Volume",
-            .control=0xff,
-            .increment=1,
-            .rawValue=0x3FF,
-            .setParameter=fxProgramPresetVolumeCallback,
-            .getParameterValue=0,
-            .getParameterDisplay=fxProgramPresetVolumeDisplay
+            .name = "Volume",
+            .control = 0xff,
+            .rawValue = 0x3FF,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxProgramPresetVolumeDisplay,
+            .setParameter = fxProgramPresetVolumeCallback
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
         }
     },
     .processSample = &fxProgram1processSample,
     .setup = &fxProgram1Setup,
     .reset = &fxProgram1Reset,
+    .nParameters = 4,
     .data = (void*)&fxProgram1data
 };
 } // namespace Card_Flux

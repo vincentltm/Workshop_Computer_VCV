@@ -242,11 +242,36 @@ static void fxProgram4Reset(void*data)
 }
 
 FxProgram4DataType fxProgram4data = {
+    .gainStage = {
+        .gain = 512
+    },
+    .cabSimType = 1,
+    .nWaveshapers = 4,
+    .waveshaperType = 0,
+    .cabNames = {
+        "Hiwatt M412     (F)", 
+        "Hiwatt M412     (I)",
+        "Fender Frontman (F)",
+        "Fender Frontman (I)",
+        "Vox AC15        (F)",
+        "Vox AC15        (I)"  
+    },
+    .waveShaperNames = {
+        "Overdrive 1   ",
+        "Soft Overdrive",
+        "Distortion    ",
+        "OVerdrive 2   "
+    },
     .hiwattFir = {
         .coefficients= {-42, -42, -6, 317, 1371, 3572, 7006, 11147, 14461, 14434, 9110, 4, -7520, -9233, -8098, -6638, -4065, -601, 2424, 3345, 1940, 242, 302, 976, 809, 424, -56, -633, -650, -448, -767, -1168, -598, 952, 2050, 1294, -1130, -3011, -3906, -3785, -2258, -467, 841, 1033, 81, -771, -368, 398, 469, 505, 527, -281, -1373, -2394, -3074, -2888, -2175, -1570, -877, 258, 821, 194, -528, -772}
         },
-    .hiwattIir1 = 
-    { 
+    .waveshaper1 = {
+        .oversamplingFilter = {
+            .coeffB = {3199, 6398, 3199},
+            .coeffA = {-30893, 10922}
+        }
+    },
+    .hiwattIir1 = { 
         .coeffA = {-16557, 7532},
         .coeffB =  {-319, -722, -382},
         .y1=0,
@@ -255,8 +280,7 @@ FxProgram4DataType fxProgram4data = {
         .x2=0,
         .acc=0
     },
-    .hiwattIir2 = 
-    { 
+    .hiwattIir2 = { 
         .coeffA = {3428,3068},
         .coeffB = {4426,5564, 871},
         .y1=0,
@@ -265,8 +289,7 @@ FxProgram4DataType fxProgram4data = {
         .x2=0,
         .acc=0
     },
-    .hiwattIir3 = 
-    { 
+    .hiwattIir3 = { 
         .coeffA = {2860, 1804},
         .coeffB = {-10189, -4775, -2987},
         .y1=0,
@@ -278,8 +301,7 @@ FxProgram4DataType fxProgram4data = {
     .frontmanFir = {
         .coefficients = {-513, -1756, -3336, -5308, -7784, -9918, -9872, -6752, -2173, 1032, 1765, 1104, 18, 210, 2189, 4246, 4499, 2834, 138, -2553, -4127, -3345, 241, 4895, 7840, 7047, 3855, 1730, 986, -265, -2714, -4937, -5139, -3073, -59, 2420, 3183, 2875, 2107, -511, -4239, -5117, -1723, 3057, 5753, 5872, 5194, 4838, 5248, 6182, 4671, 1171, -1765, -2505, -1594, -619, -843, -1589, -749, 2533, 6338, 6855, 3017, -236}
     },
-    .frontmanIir1 = 
-    { 
+    .frontmanIir1 = { 
         .coeffA = {-16836, 5299},
         .coeffB = {-148, -389, -436},
         .y1=0,
@@ -288,8 +310,7 @@ FxProgram4DataType fxProgram4data = {
         .x2=0,
         .acc=0
     },
-    .frontmanIir2 = 
-    { 
+    .frontmanIir2 = { 
         .coeffA = {-2990, -1681},
         .coeffB = {-25230, -12670, 2490},
         .y1=0,
@@ -298,8 +319,7 @@ FxProgram4DataType fxProgram4data = {
         .x2=0,
         .acc=0
     },
-    .frontmanIir3 = 
-    { 
+    .frontmanIir3 = { 
         .coeffA = {-3343, -4287},
         .coeffB = {-7552, 3249, 6865},
         .y1=0,
@@ -337,86 +357,89 @@ FxProgram4DataType fxProgram4data = {
         .x1=0,
         .x2=0,
         .acc=0
-    },
-    .cabNames = {
-        "Hiwatt M412     (F)", 
-        "Hiwatt M412     (I)",
-        "Fender Frontman (F)",
-        "Fender Frontman (I)",
-        "Vox AC15        (F)",
-        "Vox AC15        (I)"  
-    },
-    .waveShaperNames = {
-        "Overdrive 1   ",
-        "Soft Overdrive",
-        "Distortion    ",
-        "OVerdrive 2   "
-    },
-    .gainStage.gain=512,
-    .nWaveshapers = 4,
-    .waveshaperType=0,
-    .cabSimType = 1,
-    .waveshaper1 = {
-        .oversamplingFilter = {
-            .coeffB = {3199, 6398, 3199},
-            .coeffA = {-30893, 10922}
-        }
     }
 };
 
 FxProgramType fxProgramAmpModel2 = {
     .name = "Amp Model 2",
-    .nParameters=5,
     .parameters = {
         {
             .name = "Gain           ",
-            .control=0,
-            .increment=32,
-            .rawValue=0,
-            .getParameterDisplay=&fxProgram4Param1Display,
-            .getParameterValue=0,
-            .setParameter=&fxProgram4Param1Callback
+            .control = 0,
+            .rawValue = 0,
+            .increment = 32,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgram4Param1Display,
+            .setParameter = &fxProgram4Param1Callback
         },
         {
             .name = "DC-Offset      ",
-            .control=1,
-            .increment=32,
-            .rawValue=0,
-            .getParameterDisplay=&fxProgram4Param2Display,
-            .getParameterValue=0,
-            .setParameter=&fxProgram4Param2Callback
-        },   
+            .control = 1,
+            .rawValue = 0,
+            .increment = 32,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgram4Param2Display,
+            .setParameter = &fxProgram4Param2Callback
+        },
         {
             .name = "Cab Type       ",
-            .control=2,
-            .increment=32,
-            .rawValue=0,
-            .getParameterDisplay=&fxProgram4Param3Display,
-            .getParameterValue=0,
-            .setParameter=&fxProgram4Param3Callback
+            .control = 2,
+            .rawValue = 0,
+            .increment = 32,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgram4Param3Display,
+            .setParameter = &fxProgram4Param3Callback
         },
         {
             .name = "Gainstages     ",
-            .control=0xFF,
-            .increment=1024,
-            .rawValue=0,
-            .getParameterDisplay=&fxProgram4Param4Display,
-            .getParameterValue=0,
-            .setParameter=&fxProgram4Param4Callback
+            .control = 0xFF,
+            .rawValue = 0,
+            .increment = 1024,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgram4Param4Display,
+            .setParameter = &fxProgram4Param4Callback
         },
         {
             .name = "OD/Dist Type",
             .control = 0xFF,
-            .increment = 1024,
             .rawValue = 0,
-            .getParameterDisplay=&fxProgram4Param5Display,
-            .getParameterValue=0,
-            .setParameter=&fxProgram4Param5Callback
-        }     
+            .increment = 1024,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgram4Param5Display,
+            .setParameter = &fxProgram4Param5Callback
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        }
     },
     .processSample = &fxProgram4processSample,
     .setup = &fxProgram4Setup,
     .reset = &fxProgram4Reset,
+    .nParameters = 5,
     .data = (void*)&fxProgram4data
 };
 

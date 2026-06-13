@@ -217,16 +217,85 @@ FxProgramSpeechDataType fxProgramSpeechData;
 
 FxProgramType fxProgramSpeech = {
     .name = "Chatter",
-    .nParameters = 3,
     .parameters = {
-        { .name = "Pitch", .control = 0, .increment = 64, .rawValue = 2048, .setParameter = fxProgramSpeechParam1Callback, .getParameterDisplay = fxProgramSpeechParam1Display },
-        { .name = "Echo", .control = 1, .increment = 64, .rawValue = 0, .setParameter = fxProgramSpeechParam2Callback, .getParameterDisplay = fxProgramSpeechParam2Display },
-        { .name = "Sample", .control = 2, .increment = 100, .rawValue = 0, .setParameter = fxProgramSpeechParam3Callback, .getParameterDisplay = fxProgramSpeechParam3Display }
+        {
+            .name = "Pitch",
+            .control = 0,
+            .rawValue = 2048,
+            .increment = 64,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxProgramSpeechParam1Display,
+            .setParameter = fxProgramSpeechParam1Callback
+        },
+        {
+            .name = "Echo",
+            .control = 1,
+            .rawValue = 0,
+            .increment = 64,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxProgramSpeechParam2Display,
+            .setParameter = fxProgramSpeechParam2Callback
+        },
+        {
+            .name = "Sample",
+            .control = 2,
+            .rawValue = 0,
+            .increment = 100,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxProgramSpeechParam3Display,
+            .setParameter = fxProgramSpeechParam3Callback
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        }
     },
     .processSample = fxProgramSpeechProcessSample,
     .processSampleStereo = 0,
     .setup = fxProgramSpeechSetup,
     .reset = 0,
+    .nParameters = 3,
     .isStereo = 0,
     .data = (void*)&fxProgramSpeechData
 };

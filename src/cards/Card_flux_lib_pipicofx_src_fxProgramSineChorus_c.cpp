@@ -228,68 +228,85 @@ FxProgram11StereoDataType fxProgram11data = {
 
 FxProgramType fxProgramSineChorus = {
     .name = "Sine Chorus",
-    .nParameters=6,
-    .processSample = &fxProgramprocessSample,
-    .processSampleStereo = &fxProgramprocessSampleStereo,
     .parameters = {
         {
             .name = "Blend         ",
-            .control=0,
-            .increment=1,
-            .rawValue=0,
-            .getParameterDisplay=&fxProgramParam3Display,
-            .getParameterValue=0,
-            .setParameter=&fxProgramParam3Callback
+            .control = 0,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgramParam3Display,
+            .setParameter = &fxProgramParam3Callback
         },
         {
             .name = "Frequency      ",
-            .control=1,
+            .control = 1,
+            .rawValue = 0,
             .increment = 1,
-            .rawValue=0,
-            .getParameterDisplay=&fxProgramParam1Display,
-            .getParameterValue=0,
-            .setParameter=&fxProgramParam1Callback
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgramParam1Display,
+            .setParameter = &fxProgramParam1Callback
         },
         {
             .name = "Depth          ",
-            .control=2,
+            .control = 2,
+            .rawValue = 0,
             .increment = 1,
-            .rawValue=0,
-            .getParameterDisplay=&fxProgramParam2Display,
-            .getParameterValue=0,
-            .setParameter=&fxProgramParam2Callback
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgramParam2Display,
+            .setParameter = &fxProgramParam2Callback
         },
         {
             .name = "Offset         ",
-            .control=0xFF,
-            .increment=1,
-            .rawValue=0,
-            .getParameterDisplay=&fxProgramParam4Display,
-            .getParameterValue=0,
-            .setParameter=&fxProgramParam4Callback
+            .control = 0xFF,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgramParam4Display,
+            .setParameter = &fxProgramParam4Callback
         },
         {
             .name = "Feedback       ",
-            .control=0xFF,
-            .increment=1,
-            .rawValue=0,
-            .getParameterDisplay=&fxProgramParam5Display,
-            .getParameterValue=0,
-            .setParameter=&fxProgramParam5Callback
+            .control = 0xFF,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgramParam5Display,
+            .setParameter = &fxProgramParam5Callback
         },
         {
-            .name="Volume",
-            .control=0xff,
-            .increment=1,
-            .rawValue=0x3FF,
-            .setParameter=fxProgramPresetVolumeCallback,
-            .getParameterValue=0,
-            .getParameterDisplay=fxProgramPresetVolumeDisplay
+            .name = "Volume",
+            .control = 0xff,
+            .rawValue = 0x3FF,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxProgramPresetVolumeDisplay,
+            .setParameter = fxProgramPresetVolumeCallback
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
         }
-
     },
+    .processSample = &fxProgramprocessSample,
+    .processSampleStereo = &fxProgramprocessSampleStereo,
     .setup = &fxProgramSetupStereo,
     .reset = 0,
+    .nParameters = 6,
     .isStereo = 1,
     .data = (void*)&fxProgram11data
 };

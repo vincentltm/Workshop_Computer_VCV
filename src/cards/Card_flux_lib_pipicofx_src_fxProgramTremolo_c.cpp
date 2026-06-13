@@ -129,13 +129,17 @@ static void fxProgramPresetVolumeDisplay(void*data,char*res)
 
 FxProgram18DataType fxProgram18data=
 {
-    .tremolo.currentLfoVal=0,
-    .tremolo.depth=24000,
-    .tremolo.modulator.currentPhase=0,
-    .tremolo.modulator.phaseIncrement=131,
-    .tremolo.modulator.phaseIncrementCorrection1=0,
-    .tremolo.modulator.pulseWidth=0,
-    .tremolo.modulator.squareRatio=0,
+    .tremolo = {
+        .depth = 24000,
+        .currentLfoVal = 0,
+        .modulator = {
+            .squareRatio = 0,
+            .phaseIncrement = 131,
+            .phaseIncrementCorrection1 = 0,
+            .currentPhase = 0,
+            .pulseWidth = 0
+        }
+    },
     .presetVolume = {
         .gain = 0xff,
         .offset = 0
@@ -161,57 +165,84 @@ void fxProgram18Setup(void*data)
 
 FxProgramType fxProgramTremolo = {
     .name = "Tremolo",
-    .nParameters=5,
     .parameters = {
         {
-            .name="Depth",
-            .control=0,
-            .increment=1,
-            .rawValue=0,
-            .getParameterDisplay=&fxProgramParam2Display,
-            .getParameterValue=0,
-            .setParameter=&fxProgramParam2Callback
+            .name = "Depth",
+            .control = 0,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgramParam2Display,
+            .setParameter = &fxProgramParam2Callback
         },
         {
-            .name="Rate",
-            .control=1,
-            .increment=1,
-            .rawValue=0,
-            .getParameterDisplay=&fxProgramParam1Display,
-            .getParameterValue=0,
-            .setParameter=&fxProgramParam1Callback
+            .name = "Rate",
+            .control = 1,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgramParam1Display,
+            .setParameter = &fxProgramParam1Callback
         },
         {
-            .name="Shape",
-            .control=2,
-            .increment=1,
-            .rawValue=0,
-            .getParameterDisplay=&fxProgramParam3Display,
-            .getParameterValue=0,
-            .setParameter=&fxProgramParam3Callback
+            .name = "Shape",
+            .control = 2,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgramParam3Display,
+            .setParameter = &fxProgramParam3Callback
         },
         {
-            .name="PulseWidth",
-            .control=0xFF,
-            .increment=1,
-            .rawValue=0,
-            .getParameterDisplay=&fxProgramParam4Display,
-            .getParameterValue=0,
-            .setParameter=&fxProgramParam4Callback
+            .name = "PulseWidth",
+            .control = 0xFF,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgramParam4Display,
+            .setParameter = &fxProgramParam4Callback
         },
         {
-            .name="Volume",
-            .control=0xff,
-            .increment=1,
-            .rawValue=0x3ff,
-            .setParameter=fxProgramPresetVolumeCallback,
-            .getParameterValue=0,
-            .getParameterDisplay=fxProgramPresetVolumeDisplay
+            .name = "Volume",
+            .control = 0xff,
+            .rawValue = 0x3ff,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxProgramPresetVolumeDisplay,
+            .setParameter = fxProgramPresetVolumeCallback
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
         }
     },
     .processSample = &fxProgram18processSample,
     .setup = &fxProgram18Setup,
     .reset = 0,
+    .nParameters = 5,
     .data = (void*)&fxProgram18data
 };
 

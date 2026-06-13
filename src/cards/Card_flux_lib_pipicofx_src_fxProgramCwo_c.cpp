@@ -319,32 +319,86 @@ void fxProgram22ProcessSampleStereo(int16_t *inL, int16_t *inR, int16_t *outL, i
 
 FxProgramType fxProgramCwo = {
     .name = "Cow Echo (Bode)",
-    .nParameters = 3,
     .parameters = {
         {
             .name = "Mix",
-            .control = 0, // Main
+            .control = 0,
             .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
             .setParameter = fxProgram22Param1Callback
         },
         {
             .name = "Freq Shift",
-            .control = 1, // X
-            .rawValue = 2048, // Center
+            .control = 1,
+            .rawValue = 2048,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
             .setParameter = fxProgram22Param2Callback
         },
         {
             .name = "Space (Dly/Fb)",
-            .control = 2, // Y
+            .control = 2,
             .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
             .setParameter = fxProgram22Param3Callback
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
         }
     },
-    .processSample = 0, // Null - forces stereo path
+    .processSample = 0,
     .processSampleStereo = fxProgram22ProcessSampleStereo,
     .setup = fxProgram22Setup,
     .reset = fxProgram22Reset,
-    .isStereo = 1, // CRITICAL: Enable stereo processing
+    .nParameters = 3,
+    .isStereo = 1,
     .data = (void*)&data
 };
 

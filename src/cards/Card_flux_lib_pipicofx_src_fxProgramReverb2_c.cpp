@@ -93,17 +93,98 @@ static void fxProgram12SetupStereo(void*data) {
     pData->freeze = 0;
 }
 
-FxProgram12StereoDataType fxProgram12data= { .reverbL.mix=16384, .reverbR.mix=16384, .presetVolume = { .gain =0xff, .offset=0 }, .freeze = 0 };
+FxProgram12StereoDataType fxProgram12data= {
+    .reverbL = {
+        .mix = 16384
+    },
+    .reverbR = {
+        .mix = 16384
+    },
+    .presetVolume = { .gain =0xff, .offset=0 },
+    .freeze = 0
+};
 
 FxProgramType fxProgramReverb2 = {
-    .name = "AllpassReverb", .nParameters=4,
+    .name = "AllpassReverb",
     .parameters = {
-        { .name="Mix", .control=0, .increment=1, .rawValue=0, .setParameter=fxProgramParam1Callback, .getParameterDisplay=fxProgramParam1Display },
-        { .name="Decay", .control=1, .increment=1, .rawValue=0, .setParameter=fxProgramParam2Callback, .getParameterDisplay=fxProgramParam2Display },
-        { .name="Freeze", .control=0xff, .increment=1, .rawValue=0, .setParameter=fxProgramParamFreezeCallback, .getParameterDisplay=0 },
-        { .name="Volume", .control=0xff, .increment=1, .rawValue=0x3ff, .setParameter=fxProgramPresetVolumeCallback, .getParameterDisplay=fxProgramPresetVolumeDisplay }
+        {
+            .name = "Mix",
+            .control = 0,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxProgramParam1Display,
+            .setParameter = fxProgramParam1Callback
+        },
+        {
+            .name = "Decay",
+            .control = 1,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxProgramParam2Display,
+            .setParameter = fxProgramParam2Callback
+        },
+        {
+            .name = "Freeze",
+            .control = 0xff,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = fxProgramParamFreezeCallback
+        },
+        {
+            .name = "Volume",
+            .control = 0xff,
+            .rawValue = 0x3ff,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxProgramPresetVolumeDisplay,
+            .setParameter = fxProgramPresetVolumeCallback
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        }
     },
-    .processSampleStereo = &fxProgram12processSampleStereo, .setup = &fxProgram12SetupStereo, .isStereo = 1, .data = (void*)&fxProgram12data
+    .processSampleStereo = &fxProgram12processSampleStereo,
+    .setup = &fxProgram12SetupStereo,
+    .nParameters = 4,
+    .isStereo = 1,
+    .data = (void*)&fxProgram12data
 };
 
 } // namespace Card_Flux

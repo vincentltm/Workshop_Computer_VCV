@@ -210,17 +210,83 @@ static void fxDisplayVol(void* data, char* res) {
 
 FxProgramType fxProgramOilCan = {
     .name = "Oil Can Echo",
-    .nParameters = 6,
     .parameters = {
-        {.name="Mix", .control=0, .increment=1, .rawValue=0, .setParameter=fxParamMix, .getParameterDisplay=fxDisplayMix},
-        {.name="Speed", .control=1, .increment=1, .rawValue=0, .setParameter=fxParamTime, .getParameterDisplay=fxDisplayTime},
-        {.name="Smudge", .control=2, .increment=1, .rawValue=0, .setParameter=fxParamSmudge, .getParameterDisplay=fxDisplaySmudge},
-        {.name="Freeze", .control=0xff, .increment=1, .rawValue=0, .setParameter=fxParamFreeze, .getParameterDisplay=0},
-        {.name="Wobble", .control=0xff, .increment=1, .rawValue=100, .setParameter=fxParamWobble, .getParameterDisplay=fxDisplayWobble},
-        {.name="Volume", .control=0xff, .increment=1, .rawValue=0x400, .setParameter=fxParamVol, .getParameterDisplay=fxDisplayVol}
+        {
+            .name = "Mix",
+            .control = 0,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxDisplayMix,
+            .setParameter = fxParamMix
+        },
+        {
+            .name = "Speed",
+            .control = 1,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxDisplayTime,
+            .setParameter = fxParamTime
+        },
+        {
+            .name = "Smudge",
+            .control = 2,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxDisplaySmudge,
+            .setParameter = fxParamSmudge
+        },
+        {
+            .name = "Freeze",
+            .control = 0xff,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = fxParamFreeze
+        },
+        {
+            .name = "Wobble",
+            .control = 0xff,
+            .rawValue = 100,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxDisplayWobble,
+            .setParameter = fxParamWobble
+        },
+        {
+            .name = "Volume",
+            .control = 0xff,
+            .rawValue = 0x400,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxDisplayVol,
+            .setParameter = fxParamVol
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        }
     },
     .processSampleStereo = fxProgram29ProcessSampleStereo,
     .setup = fxProgram29Setup,
+    .nParameters = 6,
     .isStereo = 1,
     .data = &progData
 };

@@ -280,39 +280,97 @@ static void fxProgram20SetupStereo(void*data) {
 }
 
 FxProgram20StereoDataType fxProgram20data = {
-    .coreL.mix = 16384,
-    .coreR.mix = 16384,
-    .presetVolume.gain = 0x100,
+    .coreL = {
+        .mix = 16384
+    },
+    .coreR = {
+        .mix = 16384
+    },
+    .presetVolume = {
+        .gain = 0x100
+    },
     .freeze = 0
 };
 
 FxProgramType fxProgramSpringReverb = {
     .name = "Spring Reverb",
-    .nParameters = 5,
     .parameters = {
         {
-            .name="Mix", .control=0, .increment=1, .rawValue=0,
-            .setParameter=fxProgramParam1Callback, .getParameterDisplay=fxProgramParam1Display
+            .name = "Mix",
+            .control = 0,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxProgramParam1Display,
+            .setParameter = fxProgramParam1Callback
         },
         {
-            .name="Decay", .control=1, .increment=1, .rawValue=0,
-            .setParameter=fxProgramParam2Callback, .getParameterDisplay=fxProgramParam2Display
+            .name = "Decay",
+            .control = 1,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxProgramParam2Display,
+            .setParameter = fxProgramParam2Callback
         },
         {
-            .name="Tone", .control=2, .increment=1, .rawValue=0,
-            .setParameter=fxProgramParam3Callback, .getParameterDisplay=fxProgramParam3Display
+            .name = "Tone",
+            .control = 2,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxProgramParam3Display,
+            .setParameter = fxProgramParam3Callback
         },
         {
-            .name="Freeze", .control=0xff, .increment=1, .rawValue=0,
-            .setParameter=fxProgramParamFreezeCallback, .getParameterDisplay=0
+            .name = "Freeze",
+            .control = 0xff,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = fxProgramParamFreezeCallback
         },
         {
-            .name="Volume", .control=0xff, .increment=1, .rawValue=0x3ff,
-            .setParameter=fxProgramPresetVolumeCallback, .getParameterDisplay=fxProgramPresetVolumeDisplay
+            .name = "Volume",
+            .control = 0xff,
+            .rawValue = 0x3ff,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxProgramPresetVolumeDisplay,
+            .setParameter = fxProgramPresetVolumeCallback
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
         }
     },
     .processSampleStereo = &fxProgram20processSampleStereo,
     .setup = &fxProgram20SetupStereo,
+    .nParameters = 5,
     .isStereo = 1,
     .data = (void*)&fxProgram20data
 };

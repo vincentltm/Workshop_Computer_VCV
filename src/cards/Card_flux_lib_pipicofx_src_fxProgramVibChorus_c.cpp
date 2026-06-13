@@ -176,54 +176,89 @@ FxProgram2StereoDataType fxProgram2data = {
         .gain=0xFF,
         .offset=0
     }
-    
 };
 
 FxProgramType fxProgramVibChorus = {
     .name = "Vibrato/Chorus",
-    .nParameters=4,
-    .processSample = &fxProgram2processSample,
-    .processSampleStereo = &fxProgram2processSampleStereo,
     .parameters = {
         {
             .name = "Mix            ",
-            .control=0,
-            .increment=1,
-            .rawValue=0,
-            .getParameterDisplay=&fxProgram2Param3Display,
-            .getParameterValue=0,
-            .setParameter=&fxProgram2Param3Callback
+            .control = 0,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgram2Param3Display,
+            .setParameter = &fxProgram2Param3Callback
         },
         {
             .name = "Frequency      ",
-            .control=1,
+            .control = 1,
+            .rawValue = 0,
             .increment = 1,
-            .rawValue=0,
-            .getParameterDisplay=&fxProgram2Param1Display,
-            .getParameterValue=0,
-            .setParameter=&fxProgram2Param1Callback
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgram2Param1Display,
+            .setParameter = &fxProgram2Param1Callback
         },
         {
             .name = "Depth          ",
-            .control=2,
+            .control = 2,
+            .rawValue = 0,
             .increment = 1,
-            .rawValue=0,
-            .getParameterDisplay=&fxProgram2Param2Display,
-            .getParameterValue=0,
-            .setParameter=&fxProgram2Param2Callback
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgram2Param2Display,
+            .setParameter = &fxProgram2Param2Callback
         },
         {
-            .name="Volume",
-            .control=0xff,
-            .increment=1,
-            .rawValue=0x3FF,
-            .setParameter=fxProgramPresetVolumeCallback,
-            .getParameterValue=0,
-            .getParameterDisplay=fxProgramPresetVolumeDisplay
+            .name = "Volume",
+            .control = 0xff,
+            .rawValue = 0x3FF,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxProgramPresetVolumeDisplay,
+            .setParameter = fxProgramPresetVolumeCallback
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
         }
     },
+    .processSample = &fxProgram2processSample,
+    .processSampleStereo = &fxProgram2processSampleStereo,
     .setup = &fxProgram2SetupStereo,
     .reset = 0,
+    .nParameters = 4,
     .isStereo = 1,
     .data = (void*)&fxProgram2data
 };

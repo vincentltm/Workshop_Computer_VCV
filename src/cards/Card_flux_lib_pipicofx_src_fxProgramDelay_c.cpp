@@ -539,14 +539,18 @@ static void fxProgram6SetupStereoLofi(void *data) {
 
 // Shared Data Initialization
 FxProgram6StereoDataType fxProgram6data = {
-    .delayL.mix = 16384,
-    .delayR.mix = 16384,
+    .delayL = {
+        .mix = 16384
+    },
+    .delayR = {
+        .mix = 16384
+    },
     .presetVolume = {.gain = 0xff, .offset = 0},
     .mode = 0,
-    .timeSmoothed = 0,
-    .timeTarget = 0,
     .tapeL_old = 0,
     .tapeR_old = 0,
+    .timeSmoothed = 0,
+    .timeTarget = 0,
     .lofiPhase = 0,
     .inputLpf = 0,
     .lofiOutLpf = 0,
@@ -554,186 +558,347 @@ FxProgram6StereoDataType fxProgram6data = {
     .lofiR_hold = 0,
     .lfoPhase = 0,
     .lastTimeKnob = 0,
-    .freeze = 0};
+    .freeze = 0
+};
 
 // Program Definitions
 FxProgramType fxProgramDelay = {
     .name = "Delay",
-    .nParameters = 5,
-    .parameters = {{.name = "Mix            ",
-                    .control = 0,
-                    .increment = 1,
-                    .rawValue = 0,
-                    .getParameterDisplay = &fxProgram6Param3Display,
-                    .getParameterValue = 0,
-                    .setParameter = &fxProgram6Param3Callback},
-                   {.name = "Time           ",
-                    .control = 1,
-                    .increment = 1,
-                    .rawValue = 0,
-                    .getParameterDisplay = &fxProgram6Param1Display,
-                    .getParameterValue = 0,
-                    .setParameter = &fxProgram6Param1Callback},
-                   {.name = "Feedback       ",
-                    .control = 2,
-                    .increment = 1,
-                    .rawValue = 0,
-                    .getParameterDisplay = &fxProgram6Param2Display,
-                    .getParameterValue = 0,
-                    .setParameter = &fxProgram6Param2Callback},
-                   {.name = "Freeze",
-                    .control = 0xff,
-                    .increment = 1,
-                    .rawValue = 0,
-                    .setParameter = fxProgram6ParamFreezeCallback,
-                    .getParameterValue = 0,
-                    .getParameterDisplay = 0},
-                   {.name = "Volume",
-                    .control = 0xff,
-                    .increment = 1,
-                    .rawValue = 0x3ff,
-                    .setParameter = fxProgramPresetVolumeCallback,
-                    .getParameterValue = 0,
-                    .getParameterDisplay = fxProgramPresetVolumeDisplay}},
+    .parameters = {
+        {
+            .name = "Mix            ",
+            .control = 0,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgram6Param3Display,
+            .setParameter = &fxProgram6Param3Callback
+        },
+        {
+            .name = "Time           ",
+            .control = 1,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgram6Param1Display,
+            .setParameter = &fxProgram6Param1Callback
+        },
+        {
+            .name = "Feedback       ",
+            .control = 2,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgram6Param2Display,
+            .setParameter = &fxProgram6Param2Callback
+        },
+        {
+            .name = "Freeze",
+            .control = 0xff,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = fxProgram6ParamFreezeCallback
+        },
+        {
+            .name = "Volume",
+            .control = 0xff,
+            .rawValue = 0x3ff,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxProgramPresetVolumeDisplay,
+            .setParameter = fxProgramPresetVolumeCallback
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        }
+    },
     .processSample = &fxProgram6processSample,
     .processSampleStereo = &fxProgram6processSampleStereo,
     .setup = &fxProgram6SetupStereoNormal,
     .reset = 0,
+    .nParameters = 5,
     .isStereo = 1,
-    .data = (void *)&fxProgram6data};
+    .data = (void *)&fxProgram6data
+};
 
 FxProgramType fxProgramPingPong = {
     .name = "Ping Pong Delay",
-    .nParameters = 5,
-    .parameters = {{.name = "Mix            ",
-                    .control = 0,
-                    .increment = 1,
-                    .rawValue = 0,
-                    .getParameterDisplay = &fxProgram6Param3Display,
-                    .getParameterValue = 0,
-                    .setParameter = &fxProgram6Param3Callback},
-                   {.name = "Time           ",
-                    .control = 1,
-                    .increment = 1,
-                    .rawValue = 0,
-                    .getParameterDisplay = &fxProgram6Param1Display,
-                    .getParameterValue = 0,
-                    .setParameter = &fxProgram6Param1Callback},
-                   {.name = "Feedback       ",
-                    .control = 2,
-                    .increment = 1,
-                    .rawValue = 0,
-                    .getParameterDisplay = &fxProgram6Param2Display,
-                    .getParameterValue = 0,
-                    .setParameter = &fxProgram6Param2Callback},
-                   {.name = "Freeze",
-                    .control = 0xff,
-                    .increment = 1,
-                    .rawValue = 0,
-                    .setParameter = fxProgram6ParamFreezeCallback,
-                    .getParameterValue = 0,
-                    .getParameterDisplay = 0},
-                   {.name = "Volume",
-                    .control = 0xff,
-                    .increment = 1,
-                    .rawValue = 0x3ff,
-                    .setParameter = fxProgramPresetVolumeCallback,
-                    .getParameterValue = 0,
-                    .getParameterDisplay = fxProgramPresetVolumeDisplay}},
+    .parameters = {
+        {
+            .name = "Mix            ",
+            .control = 0,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgram6Param3Display,
+            .setParameter = &fxProgram6Param3Callback
+        },
+        {
+            .name = "Time           ",
+            .control = 1,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgram6Param1Display,
+            .setParameter = &fxProgram6Param1Callback
+        },
+        {
+            .name = "Feedback       ",
+            .control = 2,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgram6Param2Display,
+            .setParameter = &fxProgram6Param2Callback
+        },
+        {
+            .name = "Freeze",
+            .control = 0xff,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = fxProgram6ParamFreezeCallback
+        },
+        {
+            .name = "Volume",
+            .control = 0xff,
+            .rawValue = 0x3ff,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxProgramPresetVolumeDisplay,
+            .setParameter = fxProgramPresetVolumeCallback
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        }
+    },
     .processSample = &fxProgram6processSample,
     .processSampleStereo = &fxProgram6processSampleStereo,
     .setup = &fxProgram6SetupStereoPingPong,
     .reset = 0,
+    .nParameters = 5,
     .isStereo = 1,
-    .data = (void *)&fxProgram6data};
+    .data = (void *)&fxProgram6data
+};
 
 FxProgramType fxProgramTape = {
     .name = "Tape Delay",
-    .nParameters = 5,
-    .parameters = {{.name = "Mix            ",
-                    .control = 0,
-                    .increment = 1,
-                    .rawValue = 0,
-                    .getParameterDisplay = &fxProgram6Param3Display,
-                    .getParameterValue = 0,
-                    .setParameter = &fxProgram6Param3Callback},
-                   {.name = "Time           ",
-                    .control = 1,
-                    .increment = 1,
-                    .rawValue = 0,
-                    .getParameterDisplay = &fxProgram6Param1Display,
-                    .getParameterValue = 0,
-                    .setParameter = &fxProgram6Param1Callback},
-                   {.name = "Feedback       ",
-                    .control = 2,
-                    .increment = 1,
-                    .rawValue = 0,
-                    .getParameterDisplay = &fxProgram6Param2Display,
-                    .getParameterValue = 0,
-                    .setParameter = &fxProgram6Param2Callback},
-                   {.name = "Freeze",
-                    .control = 0xff,
-                    .increment = 1,
-                    .rawValue = 0,
-                    .setParameter = fxProgram6ParamFreezeCallback,
-                    .getParameterValue = 0,
-                    .getParameterDisplay = 0},
-                   {.name = "Volume",
-                    .control = 0xff,
-                    .increment = 1,
-                    .rawValue = 0x3ff,
-                    .setParameter = fxProgramPresetVolumeCallback,
-                    .getParameterValue = 0,
-                    .getParameterDisplay = fxProgramPresetVolumeDisplay}},
+    .parameters = {
+        {
+            .name = "Mix            ",
+            .control = 0,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgram6Param3Display,
+            .setParameter = &fxProgram6Param3Callback
+        },
+        {
+            .name = "Time           ",
+            .control = 1,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgram6Param1Display,
+            .setParameter = &fxProgram6Param1Callback
+        },
+        {
+            .name = "Feedback       ",
+            .control = 2,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgram6Param2Display,
+            .setParameter = &fxProgram6Param2Callback
+        },
+        {
+            .name = "Freeze",
+            .control = 0xff,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = fxProgram6ParamFreezeCallback
+        },
+        {
+            .name = "Volume",
+            .control = 0xff,
+            .rawValue = 0x3ff,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxProgramPresetVolumeDisplay,
+            .setParameter = fxProgramPresetVolumeCallback
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        }
+    },
     .processSample = &fxProgram6processSample,
     .processSampleStereo = &fxProgram6processSampleStereo,
     .setup = &fxProgram6SetupStereoTape,
     .reset = 0,
+    .nParameters = 5,
     .isStereo = 1,
-    .data = (void *)&fxProgram6data};
+    .data = (void *)&fxProgram6data
+};
 
 FxProgramType fxProgramLofiDelay = {
     .name = "Tape Loop",
-    .nParameters = 5,
-    .parameters = {{.name = "Mix            ",
-                    .control = 0,
-                    .increment = 1,
-                    .rawValue = 0,
-                    .getParameterDisplay = &fxProgram6Param3Display,
-                    .getParameterValue = 0,
-                    .setParameter = &fxProgram6Param3Callback},
-                   {.name = "Time           ",
-                    .control = 1,
-                    .increment = 1,
-                    .rawValue = 0,
-                    .getParameterDisplay = &fxProgram6Param1Display,
-                    .getParameterValue = 0,
-                    .setParameter = &fxProgram6Param1Callback},
-                   {.name = "Feedback       ",
-                    .control = 2,
-                    .increment = 1,
-                    .rawValue = 0,
-                    .getParameterDisplay = &fxProgram6Param2Display,
-                    .getParameterValue = 0,
-                    .setParameter = &fxProgram6Param2Callback},
-                   {.name = "Freeze",
-                    .control = 0xff,
-                    .increment = 1,
-                    .rawValue = 0,
-                    .setParameter = fxProgram6ParamFreezeCallback,
-                    .getParameterValue = 0,
-                    .getParameterDisplay = 0},
-                   {.name = "Volume",
-                    .control = 0xff,
-                    .increment = 1,
-                    .rawValue = 0x3ff,
-                    .setParameter = fxProgramPresetVolumeCallback,
-                    .getParameterValue = 0,
-                    .getParameterDisplay = fxProgramPresetVolumeDisplay}},
+    .parameters = {
+        {
+            .name = "Mix            ",
+            .control = 0,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgram6Param3Display,
+            .setParameter = &fxProgram6Param3Callback
+        },
+        {
+            .name = "Time           ",
+            .control = 1,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgram6Param1Display,
+            .setParameter = &fxProgram6Param1Callback
+        },
+        {
+            .name = "Feedback       ",
+            .control = 2,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgram6Param2Display,
+            .setParameter = &fxProgram6Param2Callback
+        },
+        {
+            .name = "Freeze",
+            .control = 0xff,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = fxProgram6ParamFreezeCallback
+        },
+        {
+            .name = "Volume",
+            .control = 0xff,
+            .rawValue = 0x3ff,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxProgramPresetVolumeDisplay,
+            .setParameter = fxProgramPresetVolumeCallback
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        }
+    },
     .processSample = &fxProgram6processSample,
     .processSampleStereo = &fxProgram6processSampleStereo,
     .setup = &fxProgram6SetupStereoLofi,
     .reset = 0,
+    .nParameters = 5,
     .isStereo = 1,
-    .data = (void *)&fxProgram6data};
+    .data = (void *)&fxProgram6data
+};
 } // namespace Card_Flux

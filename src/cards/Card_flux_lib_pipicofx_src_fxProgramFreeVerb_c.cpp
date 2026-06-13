@@ -263,6 +263,14 @@ FxProgram19StereoDataType fxProgram19data = {
         {.delayInSamples = 1316, .delayBufferLength = 2048},
         {.delayInSamples = 1238, .delayBufferLength = 2048}
     },
+    .feedbackFiltersL = {
+        {.alpha = 6554}, {.alpha = 6554}, {.alpha = 6554}, {.alpha = 6554},
+        {.alpha = 6554}, {.alpha = 6554}, {.alpha = 6554}, {.alpha = 6554}
+    },
+    .feedbackFiltersR = {
+        {.alpha = 6554}, {.alpha = 6554}, {.alpha = 6554}, {.alpha = 6554},
+        {.alpha = 6554}, {.alpha = 6554}, {.alpha = 6554}, {.alpha = 6554}
+    },
     .allpassesL = {
         {.delayInSamples = 245, .coefficient = 16384, .bufferSize = 1023},
         {.delayInSamples = 605, .coefficient = 16384, .bufferSize = 1023},
@@ -274,14 +282,6 @@ FxProgram19StereoDataType fxProgram19data = {
         {.delayInSamples = 628, .coefficient = 16384, .bufferSize = 1023},
         {.delayInSamples = 503, .coefficient = 16384, .bufferSize = 1023},
         {.delayInSamples = 394, .coefficient = 16384, .bufferSize = 1023}
-    },
-    .feedbackFiltersL = {
-        {.alpha = 6554}, {.alpha = 6554}, {.alpha = 6554}, {.alpha = 6554},
-        {.alpha = 6554}, {.alpha = 6554}, {.alpha = 6554}, {.alpha = 6554}
-    },
-    .feedbackFiltersR = {
-        {.alpha = 6554}, {.alpha = 6554}, {.alpha = 6554}, {.alpha = 6554},
-        {.alpha = 6554}, {.alpha = 6554}, {.alpha = 6554}, {.alpha = 6554}
     },
     .presetVolume = {.gain = 0xff},
     .mix = 16384,
@@ -345,23 +345,85 @@ void fxProgram19Setup(void*data)
 
 FxProgramType fxProgramFreeVerb = {
     .name = "FreeVerb",
-    .nParameters = 5,
     .parameters = {
-        {.name = "Mix", .control = 0, .increment = 1, .rawValue = 0,
-         .getParameterDisplay = fxProgramParam3Display, .setParameter = fxProgramParam3Callback},
-        {.name = "Decay", .control = 1, .increment = 1, .rawValue = 0,
-         .getParameterDisplay = fxProgramParameter1Display, .setParameter = fxProgramParameter1Callback},
-        {.name = "Damping", .control = 2, .increment = 1, .rawValue = 0,
-         .getParameterDisplay = fxProgramParameter2Display, .setParameter = fxProgramParameter2Callback},
-        {.name = "Freeze", .control = 0xff, .increment = 1, .rawValue = 0,
-         .setParameter = fxProgramParamFreezeCallback, .getParameterDisplay = 0},
-        {.name = "Volume", .control = 0xff, .increment = 1, .rawValue = 0x3ff,
-         .setParameter = fxProgramPresetVolumeCallback, .getParameterDisplay = fxProgramPresetVolumeDisplay}
+        {
+            .name = "Mix",
+            .control = 0,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxProgramParam3Display,
+            .setParameter = fxProgramParam3Callback
+        },
+        {
+            .name = "Decay",
+            .control = 1,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxProgramParameter1Display,
+            .setParameter = fxProgramParameter1Callback
+        },
+        {
+            .name = "Damping",
+            .control = 2,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxProgramParameter2Display,
+            .setParameter = fxProgramParameter2Callback
+        },
+        {
+            .name = "Freeze",
+            .control = 0xff,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = fxProgramParamFreezeCallback
+        },
+        {
+            .name = "Volume",
+            .control = 0xff,
+            .rawValue = 0x3ff,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxProgramPresetVolumeDisplay,
+            .setParameter = fxProgramPresetVolumeCallback
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        }
     },
     .processSample = 0,
     .processSampleStereo = fxProgram19processSampleStereo,
     .setup = fxProgram19Setup,
     .reset = 0,
+    .nParameters = 5,
     .isStereo = 1,
     .data = (void*)&fxProgram19data
 };

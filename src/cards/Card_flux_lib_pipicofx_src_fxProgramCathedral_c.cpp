@@ -245,13 +245,13 @@ static void fxProgram24Setup(void* data) {
 }
 
 FxProgram24DataType fxProgram24data = {
-    .presetVolume = { .gain = 0xFF },
-    .decay = 16000, 
-    .bandwidth = 32000, 
-    .damping = 10000, 
-    .mix = 16384,
     .lfoDepth = 300,
-    .freeze = 0
+    .decay = 16000,
+    .bandwidth = 32000,
+    .damping = 10000,
+    .mix = 16384,
+    .freeze = 0,
+    .presetVolume = { .gain = 0xFF }
 };
 
 // Callbacks
@@ -278,16 +278,83 @@ static void fxProgram24VolumeDisplay(void*data,char*res) { decimalInt16ToChar(((
 
 FxProgramType fxProgramCathedral = {
     .name = "Deep Cathedral",
-    .nParameters = 5,
     .parameters = {
-        { .name="Mix", .control=0, .increment=1, .rawValue=0, .setParameter=fxProgram24Param1Callback, .getParameterDisplay=fxProgram24Param1Display },
-        { .name="Decay", .control=1, .increment=1, .rawValue=0, .setParameter=fxProgram24Param2Callback, .getParameterDisplay=fxProgram24Param2Display },
-        { .name="Tone", .control=2, .increment=1, .rawValue=0, .setParameter=fxProgram24Param3Callback, .getParameterDisplay=fxProgram24Param3Display },
-        { .name="Freeze", .control=0xff, .increment=1, .rawValue=0, .setParameter=fxProgram24ParamFreezeCallback, .getParameterDisplay=0 },
-        { .name="Volume", .control=0xff, .increment=1, .rawValue=0x3ff, .setParameter=fxProgram24VolumeCallback, .getParameterDisplay=fxProgram24VolumeDisplay }
+        {
+            .name = "Mix",
+            .control = 0,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxProgram24Param1Display,
+            .setParameter = fxProgram24Param1Callback
+        },
+        {
+            .name = "Decay",
+            .control = 1,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxProgram24Param2Display,
+            .setParameter = fxProgram24Param2Callback
+        },
+        {
+            .name = "Tone",
+            .control = 2,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxProgram24Param3Display,
+            .setParameter = fxProgram24Param3Callback
+        },
+        {
+            .name = "Freeze",
+            .control = 0xff,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = fxProgram24ParamFreezeCallback
+        },
+        {
+            .name = "Volume",
+            .control = 0xff,
+            .rawValue = 0x3ff,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxProgram24VolumeDisplay,
+            .setParameter = fxProgram24VolumeCallback
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        }
     },
     .processSampleStereo = &fxProgram24processSampleStereo,
     .setup = &fxProgram24Setup,
+    .nParameters = 5,
     .isStereo = 1,
     .data = (void*)&fxProgram24data
 };

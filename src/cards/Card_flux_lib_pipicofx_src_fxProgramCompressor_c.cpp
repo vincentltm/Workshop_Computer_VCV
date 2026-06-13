@@ -200,15 +200,23 @@ static void fxProgramP6Display(void*data,char*res)
 
 FxProgram8DataType fxProgram8Data =
 {
-    .compressor.avgLowpass.alphaFalling = 32703,
-    .compressor.avgLowpass.alphaRising = 32703,
-    .compressor.avgLowpass.oldVal = 0,
-    .compressor.avgLowpass.oldXVal = 0,
-    .compressor.currentAvg = 0,
-    .compressor.gainFunction.gainReduction = 1,
-    .compressor.gainFunction.threshhold = 32767,
-    .presetVolume.gain = 0xff,
-    .presetVolume.offset = 0
+    .compressor = {
+        .gainFunction = {
+            .threshhold = 32767,
+            .gainReduction = 1
+        },
+        .avgLowpass = {
+            .oldVal = 0,
+            .oldXVal = 0,
+            .alphaRising = 32703,
+            .alphaFalling = 32703
+        },
+        .currentAvg = 0
+    },
+    .presetVolume = {
+        .gain = 0xff,
+        .offset = 0
+    }
 };
 
 static void fxProgramReset(void*data)
@@ -218,64 +226,86 @@ static void fxProgramReset(void*data)
 } 
 
 FxProgramType fxProgramCompressor = {
-    .data = (void*)&fxProgram8Data,
     .name = "Compressor",
-    .nParameters=6,
     .parameters = {
         {
-            .name="Threshhold     ",
-            .control=0x0,
-            .getParameterDisplay=&fxProgramP4Display,
-            .setParameter=&fxProgramP4Callback,
-            .increment=1,
-            .rawValue=0
+            .name = "Threshhold     ",
+            .control = 0x0,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgramP4Display,
+            .setParameter = &fxProgramP4Callback
         },
         {
-            .name="Ratio          ",
-            .control=1,
-            .getParameterDisplay=&fxProgramP3Display,
-            .setParameter=&fxProgramP3Callback,
-            .increment=512,
-            .rawValue=0
+            .name = "Ratio          ",
+            .control = 1,
+            .rawValue = 0,
+            .increment = 512,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgramP3Display,
+            .setParameter = &fxProgramP3Callback
         },
         {
-            .name="Makeup Gain    ",
-            .control=2,
-            .getParameterDisplay=&fxProgramP5Display,
-            .setParameter=&fxProgramP5Callback,
-            .increment=1,
-            .rawValue=0,
+            .name = "Makeup Gain    ",
+            .control = 2,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgramP5Display,
+            .setParameter = &fxProgramP5Callback
         },
         {
-            .name="Attack         ",
-            .control=0xff,
-            .getParameterDisplay=&fxProgramP1Display,
-            .setParameter=&fxProgramP1Callback,
-            .increment=1,
-            .rawValue=4095,
+            .name = "Attack         ",
+            .control = 0xff,
+            .rawValue = 4095,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgramP1Display,
+            .setParameter = &fxProgramP1Callback
         },
         {
-            .name="Release        ",
-            .control=0xff,
-            .getParameterDisplay=&fxProgramP2Display,
-            .setParameter=&fxProgramP2Callback,
-            .increment=1,
-            .rawValue=4095,
+            .name = "Release        ",
+            .control = 0xff,
+            .rawValue = 4095,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgramP2Display,
+            .setParameter = &fxProgramP2Callback
         },
         {
-            .name="Flavor        ",
-            .control=0xff,
-            .getParameterDisplay=&fxProgramP6Display,
-            .setParameter=&fxProgramP6Callback,
-            .increment=1024,
-            .rawValue=0
+            .name = "Flavor        ",
+            .control = 0xff,
+            .rawValue = 0,
+            .increment = 1024,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgramP6Display,
+            .setParameter = &fxProgramP6Callback
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
         }
-
-
     },
-    .processSample=&fxProgramProcessSample,
+    .processSample = &fxProgramProcessSample,
+    .setup = 0,
     .reset = &fxProgramReset,
-    .setup=0
+    .nParameters = 6,
+    .data = (void*)&fxProgram8Data
 };
 
 } // namespace Card_Flux

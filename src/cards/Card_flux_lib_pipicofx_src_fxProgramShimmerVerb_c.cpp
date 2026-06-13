@@ -437,42 +437,87 @@ static int16_t shimmerProcessMono(int16_t sampleIn, void *data) {
 
 FxProgramType fxProgramShimmerVerb = {
     .name = "ShimmerVerb",
-    .nParameters = 5,
-    .parameters = {{.name = "Mix",
-                    .control = 0,
-                    .increment = 1,
-                    .rawValue = 2048,
-                    .setParameter = paramMixCallback,
-                    .getParameterDisplay = paramMixDisplay},
-                   {.name = "Shimmer",
-                    .control = 1,
-                    .increment = 1,
-                    .rawValue = 2048,
-                    .setParameter = paramShimmerCallback,
-                    .getParameterDisplay = paramShimmerDisplay},
-                   {.name = "Decay",
-                    .control = 2,
-                    .increment = 1,
-                    .rawValue = 2048,
-                    .setParameter = paramDecayCallback,
-                    .getParameterDisplay = paramDecayDisplay},
-                   {.name = "Freeze",
-                    .control = 0xff,
-                    .increment = 1,
-                    .rawValue = 0,
-                    .setParameter = paramFreezeCallback,
-                    .getParameterDisplay = 0},
-                   {.name = "Volume",
-                    .control = 0xff,
-                    .increment = 1,
-                    .rawValue = 0x3ff,
-                    .setParameter = paramVolumeCallback,
-                    .getParameterDisplay = paramVolumeDisplay}},
+    .parameters = {
+        {
+            .name = "Mix",
+            .control = 0,
+            .rawValue = 2048,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = paramMixDisplay,
+            .setParameter = paramMixCallback
+        },
+        {
+            .name = "Shimmer",
+            .control = 1,
+            .rawValue = 2048,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = paramShimmerDisplay,
+            .setParameter = paramShimmerCallback
+        },
+        {
+            .name = "Decay",
+            .control = 2,
+            .rawValue = 2048,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = paramDecayDisplay,
+            .setParameter = paramDecayCallback
+        },
+        {
+            .name = "Freeze",
+            .control = 0xff,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = paramFreezeCallback
+        },
+        {
+            .name = "Volume",
+            .control = 0xff,
+            .rawValue = 0x3ff,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = paramVolumeDisplay,
+            .setParameter = paramVolumeCallback
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        }
+    },
     .processSample = shimmerProcessMono,
     .processSampleStereo = shimmerProcessStereo,
     .setup = shimmerSetup,
     .reset = 0,
+    .nParameters = 5,
     .isStereo = 1,
-    .data = (void *)&shimmerData};
+    .data = (void *)&shimmerData
+};
 
 } // namespace Card_Flux

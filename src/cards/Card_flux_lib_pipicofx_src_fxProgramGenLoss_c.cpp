@@ -330,15 +330,83 @@ static void fxDisplayVol(void* data, char* res) { decimalInt16ToChar(((FxProgram
 
 FxProgramType fxProgramGenLoss = {
     .name = "Tape Machine",
-    .nParameters = 4,
     .parameters = {
-        {.name="Quality", .control=0, .increment=1, .rawValue=0, .setParameter=fxParamQuality, .getParameterDisplay=fxDisplayQuality},
-        {.name="Mechanics", .control=1, .increment=1, .rawValue=0, .setParameter=fxParamTransport, .getParameterDisplay=fxDisplayTransport},
-        {.name="Drive", .control=2, .increment=1, .rawValue=2048, .setParameter=fxParamDrive, .getParameterDisplay=fxDisplayDrive},
-        {.name="Volume", .control=0xff, .increment=1, .rawValue=0x400, .setParameter=fxParamVol, .getParameterDisplay=fxDisplayVol}
+        {
+            .name = "Quality",
+            .control = 0,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxDisplayQuality,
+            .setParameter = fxParamQuality
+        },
+        {
+            .name = "Mechanics",
+            .control = 1,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxDisplayTransport,
+            .setParameter = fxParamTransport
+        },
+        {
+            .name = "Drive",
+            .control = 2,
+            .rawValue = 2048,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxDisplayDrive,
+            .setParameter = fxParamDrive
+        },
+        {
+            .name = "Volume",
+            .control = 0xff,
+            .rawValue = 0x400,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxDisplayVol,
+            .setParameter = fxParamVol
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        }
     },
     .processSampleStereo = fxProgram26ProcessSampleStereo,
     .setup = fxProgram26Setup,
+    .nParameters = 4,
     .isStereo = 1,
     .data = &progData
 };

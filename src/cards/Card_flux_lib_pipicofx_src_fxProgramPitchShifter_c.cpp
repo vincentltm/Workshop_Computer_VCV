@@ -168,10 +168,12 @@ static void fxProgramReset(void*data)
 
 FxProgram16DataType fxProgram16data=
 {
-    .pitchShifter.currentDelayPosition=0,
-    .pitchShifter.delayIncrement=0x4,
-    .pitchShifter.crossFadeWidthPwr2=8,
-    .mix=16384,
+    .pitchShifter = {
+        .currentDelayPosition = 0,
+        .delayIncrement = 0x4,
+        .crossFadeWidthPwr2 = 8
+    },
+    .mix = 16384,
     .presetVolume = {
         .gain =0xff,
         .offset = 0
@@ -180,48 +182,84 @@ FxProgram16DataType fxProgram16data=
 
 FxProgramType fxProgramPitchShifter = {
     .name = "Pitchshifter",
-    .nParameters=4,
     .parameters = {
         {
             .name = "Mix",
-            .control=0,
-            .increment=1,
-            .rawValue=0,
-            .getParameterDisplay=&fxProgramParam2Display,
-            .getParameterValue=0,
-            .setParameter=&fxProgramParam2Callback
+            .control = 0,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgramParam2Display,
+            .setParameter = &fxProgramParam2Callback
         },
         {
             .name = "ShiftAmt",
-            .control=1,
-            .increment=512,
-            .rawValue=0,
-            .getParameterDisplay=&fxProgramParam1Display,
-            .getParameterValue=0,
-            .setParameter=&fxProgramParam1Callback
+            .control = 1,
+            .rawValue = 0,
+            .increment = 512,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgramParam1Display,
+            .setParameter = &fxProgramParam1Callback
         },
         {
             .name = "AvgDelay",
-            .control=2,
-            .increment=512,
-            .rawValue=0,
-            .getParameterDisplay=&fxProgramParam3Display,
-            .getParameterValue=0,
-            .setParameter=&fxProgramParam3Callback
+            .control = 2,
+            .rawValue = 0,
+            .increment = 512,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgramParam3Display,
+            .setParameter = &fxProgramParam3Callback
         },
         {
-            .name="Volume",
-            .control=0xff,
-            .increment=1,
-            .rawValue=0x3FF,
-            .setParameter=fxProgramPresetVolumeCallback,
-            .getParameterValue=0,
-            .getParameterDisplay=fxProgramPresetVolumeDisplay
+            .name = "Volume",
+            .control = 0xff,
+            .rawValue = 0x3FF,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxProgramPresetVolumeDisplay,
+            .setParameter = fxProgramPresetVolumeCallback
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
         }
     },
     .processSample = &fxProgramProcessSample,
     .setup = &fxProgramSetup,
     .reset = &fxProgramReset,
+    .nParameters = 4,
     .data = (void*)&fxProgram16data
 };
 } // namespace Card_Flux
