@@ -5,7 +5,44 @@
 #include <set>
 #include <map>
 #include <stdint.h>
+#ifdef _WIN32
+#include <windows.h>
+#define RTLD_LAZY 0
+#define RTLD_LOCAL 0
+#define RTLD_DEFAULT ((void*)0)
+#define RTLD_NOLOAD 0
+
+inline void* dlopen(const char* filename, int flags) {
+    (void)flags;
+    return (void*)LoadLibraryA(filename);
+}
+
+inline int dlclose(void* handle) {
+    return FreeLibrary((HMODULE)handle) ? 0 : -1;
+}
+
+inline void* dlsym(void* handle, const char* symbol) {
+    if (handle == nullptr) {
+        HMODULE hModule = GetModuleHandleA(NULL);
+        void* sym = (void*)GetProcAddress(hModule, symbol);
+        if (sym) return sym;
+        hModule = GetModuleHandleA("plugin.dll");
+        if (hModule) {
+            sym = (void*)GetProcAddress(hModule, symbol);
+            if (sym) return sym;
+        }
+        return nullptr;
+    }
+    return (void*)GetProcAddress((HMODULE)handle, symbol);
+}
+
+inline const char* dlerror() {
+    return "Dynamic linking error on Windows";
+}
+#else
 #include <dlfcn.h>
+#endif
+
 
 // ── Monome SDK Structures (matching monome-rack layout) ─────────────────────
 
@@ -88,8 +125,20 @@ struct MonomeBridge {
         // via RTLD_DEFAULT. We must open the monome plugin dylib directly using
         // RTLD_NOLOAD (to avoid re-mapping) and resolve symbols from that handle.
 
-        // Build candidate paths for the monome plugin
+        // Build candidate paths for the monome plugin based on host OS
         std::vector<std::string> candidates;
+#ifdef _WIN32
+        const char* userprofile = getenv("USERPROFILE");
+        if (userprofile) {
+            std::string up = userprofile;
+            candidates.push_back(up + "/Documents/Rack2/plugins/monome/plugin.dll");
+        }
+        const char* localappdata = getenv("LOCALAPPDATA");
+        if (localappdata) {
+            std::string la = localappdata;
+            candidates.push_back(la + "/Rack2/plugins/monome/plugin.dll");
+        }
+#elif defined(__APPLE__)
         const char* home = getenv("HOME");
         if (home) {
             std::string h = home;
@@ -101,6 +150,13 @@ struct MonomeBridge {
         // App-bundle paths
         candidates.push_back("/Applications/VCV Rack 2 Pro.app/Contents/Resources/plugins/monome/plugin.dylib");
         candidates.push_back("/Applications/VCV Rack 2 Free.app/Contents/Resources/plugins/monome/plugin.dylib");
+#else // Linux
+        const char* home = getenv("HOME");
+        if (home) {
+            std::string h = home;
+            candidates.push_back(h + "/.local/share/Rack2/plugins/monome/plugin.so");
+        }
+#endif
 
         // Also try RTLD_DEFAULT first in case the host uses RTLD_GLOBAL
         {

@@ -6,7 +6,9 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#ifndef _WIN32
 #include <dlfcn.h>
+#endif
 #include <algorithm>
 
 const int ima_index_table[16] = {

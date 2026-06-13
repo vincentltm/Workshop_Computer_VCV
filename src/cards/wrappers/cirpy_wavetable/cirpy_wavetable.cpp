@@ -6,7 +6,9 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#ifndef _WIN32
 #include <dlfcn.h>
+#endif
 
 struct WavData {
     uint16_t channels = 0;

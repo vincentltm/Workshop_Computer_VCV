@@ -9,7 +9,9 @@
 #include <string>
 #include <atomic>
 #include <thread>
+#ifndef _WIN32
 #include <dlfcn.h>
+#endif
 #include <fstream>
 #include <iostream>
 #include <sstream>
