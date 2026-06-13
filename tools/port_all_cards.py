@@ -5,8 +5,9 @@ import importlib
 import sys
 
 # Source workspace paths
-WORKSPACE_DIR = "/Users/vmaurer/Music/Workshop_Computer"
-VCV_PROJECT_DIR = "/Users/vmaurer/Music/Workshop_Computer_VCV"
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+VCV_PROJECT_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, ".."))
+WORKSPACE_DIR = os.path.join(VCV_PROJECT_DIR, "deps", "Workshop_Computer")
 CARDS_SRC_DIR = os.path.join(VCV_PROJECT_DIR, "src", "cards")
 
 # Add tools directory to sys.path so we can import porting modules
@@ -72,7 +73,7 @@ CARD_WHITELIST = [
     },
     {
         "id": "utility_pair",
-        "dir": "releases/25_utility_pair/utility_pair_singlecard",
+        "dir": os.path.join(VCV_PROJECT_DIR, "deps", "external", "utility_pair_singlecard"),
         "ns": "Card_UtilityPair",
         "num": "25",
         "sources": ["src/main.cpp"]
@@ -114,7 +115,7 @@ CARD_WHITELIST = [
     },
     {
         "id": "flux",
-        "dir": "/Users/vmaurer/Music/WorkshopSystem/multifx/50_flux",
+        "dir": os.path.join(VCV_PROJECT_DIR, "deps", "external", "multifx", "50_flux"),
         "ns": "Card_Flux",
         "num": "50",
         "sources": [
@@ -353,7 +354,7 @@ CARD_WHITELIST = [
     },
     {
         "id": "divcom",
-        "dir": "/Users/vmaurer/Music/WorkshopComputerExternal/divcom",
+        "dir": os.path.join(VCV_PROJECT_DIR, "deps", "external", "divcom"),
         "ns": "Card_DivCom",
         "num": "09",
         "sources": ["divcom.cpp"]
@@ -367,49 +368,49 @@ CARD_WHITELIST = [
     },
     {
         "id": "slowmod",
-        "dir": "/Users/vmaurer/Music/WorkshopComputerExternal/slowmod",
+        "dir": os.path.join(VCV_PROJECT_DIR, "deps", "external", "slowmod"),
         "ns": "Card_SlowMod",
         "num": "23",
         "sources": ["main.cpp"]
     },
     {
         "id": "nzt",
-        "dir": "/Users/vmaurer/Music/WorkshopComputerExternal/ws",
+        "dir": os.path.join(VCV_PROJECT_DIR, "deps", "external", "ws"),
         "ns": "Card_NZT",
         "num": "47",
         "sources": ["nzt/main.cpp"]
     },
     {
         "id": "glitter",
-        "dir": "/Users/vmaurer/Music/WorkshopComputerExternal/mtws/53_glitter",
+        "dir": os.path.join(VCV_PROJECT_DIR, "deps", "external", "mtws", "53_glitter"),
         "ns": "Card_Glitter",
         "num": "53",
         "sources": ["main.cpp", "src/Glitter.cpp", "src/Utils.cpp"]
     },
     {
         "id": "degenerator",
-        "dir": "/Users/vmaurer/Music/WorkshopComputerExternal/Degenerator",
+        "dir": os.path.join(VCV_PROJECT_DIR, "deps", "external", "Degenerator"),
         "ns": "Card_Degenerator",
         "num": "71",
         "sources": ["main.cpp"]
     },
     {
         "id": "motorik",
-        "dir": "/Users/vmaurer/Music/WorkshopComputerExternal/motorik",
+        "dir": os.path.join(VCV_PROJECT_DIR, "deps", "external", "motorik"),
         "ns": "Card_Motorik",
         "num": "72",
         "sources": ["main.cpp"]
     },
     {
         "id": "tesserae",
-        "dir": "/Users/vmaurer/Music/WorkshopComputerExternal/Tesserae",
+        "dir": os.path.join(VCV_PROJECT_DIR, "deps", "external", "Tesserae"),
         "ns": "Card_Tesserae",
         "num": "86",
         "sources": ["main.cpp"]
     },
     {
         "id": "toolbox",
-        "dir": "/Users/vmaurer/Music/WorkshopComputerExternal/toolbox",
+        "dir": os.path.join(VCV_PROJECT_DIR, "deps", "external", "toolbox"),
         "ns": "Card_Toolbox",
         "num": "99",
         "sources": ["toolbox.cpp"]
@@ -705,6 +706,10 @@ def main():
             vcv_wrapper_path = os.path.join(VCV_PROJECT_DIR, "src", "cards", "wrappers", card["id"], s)
             if os.path.exists(vcv_wrapper_path):
                 return vcv_wrapper_path
+            if s.startswith("lua/"):
+                lua_path = os.path.join(VCV_PROJECT_DIR, "deps", "external", "blackbird_lua", s)
+                if os.path.exists(lua_path):
+                    return lua_path
             return os.path.join(card_dir_abs, s)
 
         for s in card["sources"]:
@@ -791,6 +796,14 @@ def main():
                     if d in ("inc", "include"):
                         card_include_flags.append(f"-I{os.path.join(root, d)}")
                         
+        # Convert include paths to relative paths
+        def to_rel(path):
+            if os.path.isabs(path):
+                if path.startswith(VCV_PROJECT_DIR):
+                    return os.path.relpath(path, VCV_PROJECT_DIR)
+            return path
+        card_include_flags = [f"-I{to_rel(flag[2:])}" if flag.startswith("-I") else flag for flag in card_include_flags]
+
         # Track sources for Makefile compilation
         sources_to_compile = [os.path.join("src", "cards", wrapper_filename)]
             
@@ -807,12 +820,13 @@ def main():
             out_f.write("#include <string>\n")
             out_f.write("#include <atomic>\n")
             out_f.write("#include <thread>\n")
-            out_f.write("#include <dlfcn.h>\n")
+            out_f.write("#ifndef _WIN32\n#include <dlfcn.h>\n#endif\n")
             out_f.write("#include <fstream>\n")
             out_f.write("#include <iostream>\n")
             out_f.write("#include <sstream>\n")
             out_f.write("#include <stdio.h>\n")
             out_f.write("#include <string.h>\n")
+            out_f.write("#include <cstring>\n")
             out_f.write("#include <stdarg.h>\n")
             out_f.write("#include <limits.h>\n")
             out_f.write("#include <float.h>\n")
@@ -938,7 +952,7 @@ def main():
         for sep_src in separate_sources:
             sep_filename = f"Card_{card['id']}_" + sep_src.replace("/", "_").replace(".", "_") + ".cpp"
             sep_path = os.path.join(CARDS_SRC_DIR, sep_filename)
-            sep_path_abs = os.path.join(card_dir_abs, sep_src)
+            sep_path_abs = get_source_path(sep_src)
             
             if not os.path.exists(sep_path_abs):
                 print(f"Error: Separate source file {sep_path_abs} not found!")
@@ -985,6 +999,7 @@ def main():
                     sep_f.write("#include <thread>\n")
                     sep_f.write("#include <stdio.h>\n")
                     sep_f.write("#include <string.h>\n")
+                    sep_f.write("#include <cstring>\n")
                     sep_f.write("#include <stdarg.h>\n")
                     sep_f.write("#include <limits.h>\n")
                     sep_f.write("#include <float.h>\n")

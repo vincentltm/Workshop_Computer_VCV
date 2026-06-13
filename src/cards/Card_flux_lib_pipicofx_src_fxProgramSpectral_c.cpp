@@ -10,6 +10,7 @@
 #include <thread>
 #include <stdio.h>
 #include <string.h>
+#include <cstring>
 #include <stdarg.h>
 #include <limits.h>
 #include <float.h>

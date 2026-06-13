@@ -12,7 +12,7 @@ def get_extra_include_dirs(card_dir_abs):
     convert_lua_files(card_dir_abs, wrapper_dir)
     
     return [
-        os.path.join(card_dir_abs, "lua", "src"),
+        os.path.join(vcv_project_dir, "deps", "external", "blackbird_lua", "lua", "src"),
         os.path.join(card_dir_abs, "lib"),
         wrapper_dir
     ]

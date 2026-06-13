@@ -148,8 +148,8 @@ void register_all_cards() {
         "utility_pair",
         "Utility Pair",
         "25",
-        "25 small utilities, which can be combined in pairs",
-        "Chris Johnson"
+        "Workshop Computer Card",
+        "Music Thing Modular"
     });
     g_card_registry.push_back({
         "siren",

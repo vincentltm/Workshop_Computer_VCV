@@ -17,6 +17,7 @@
 #include <sstream>
 #include <stdio.h>
 #include <string.h>
+#include <cstring>
 #include <stdarg.h>
 #include <limits.h>
 #include <float.h>
@@ -53,7 +54,9 @@ namespace Card_CirpyWavetable {
 /* stripped system include */
 /* stripped system include */
 /* stripped system include */
+#ifndef _WIN32
 /* stripped system include */
+#endif
 
 struct WavData {
     uint16_t channels = 0;

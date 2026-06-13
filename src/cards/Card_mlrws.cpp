@@ -17,6 +17,7 @@
 #include <sstream>
 #include <stdio.h>
 #include <string.h>
+#include <cstring>
 #include <stdarg.h>
 #include <limits.h>
 #include <float.h>
@@ -4255,14 +4256,12 @@ void monome_ws_task(void)
 		if (n > 0)
 			monome_ws_rx_feed(buf, n);
 	} else {
-#ifndef VCV_PORT
 		if (tud_mounted()) {
 			uint8_t buf[64];
 			uint32_t n = tud_cdc_n_read(g_monome_ws.device_cdc_itf, buf, sizeof(buf));
 			if (n > 0)
 				monome_ws_rx_feed(buf, n);
 		}
-#endif
 	}
 
 	if (g_monome_ws.protocol == MONOME_WS_PROTOCOL_UNKNOWN && g_monome_ws.grid_x == 0 && g_monome_ws.arc_enc_count == 0) {
@@ -8633,14 +8632,6 @@ static void __attribute__((section(".flashdata.devmode"))) sample_mgr_drain_reje
 
 void __attribute__((section(".flashdata.devmode"))) device_mode_init(void)
 {
-    /* Drain serial RX queue to flush any size queries or stale bytes */
-    uint8_t dummy;
-    while (tud_cdc_n_available(SAMPLE_CDC_ITF) > 0) {
-        tud_cdc_n_read(SAMPLE_CDC_ITF, &dummy, 1);
-    }
-
-    if (t_instance) t_instance->sample_mgr_active = true;
-
     memset(&g_sample_mgr, 0, sizeof(g_sample_mgr));
     sample_mgr_reset_session();
 }
@@ -8657,7 +8648,6 @@ void __attribute__((section(".flashdata.devmode"))) device_mode_task(void)
     if (!connected) {
         g_sample_mgr.was_connected = false;
         sample_mgr_reset_session();
-        if (t_instance) t_instance->sample_mgr_active = false;
         return;
     }
 

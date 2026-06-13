@@ -17,6 +17,7 @@
 #include <sstream>
 #include <stdio.h>
 #include <string.h>
+#include <cstring>
 #include <stdarg.h>
 #include <limits.h>
 #include <float.h>
@@ -1478,7 +1479,6 @@ void mext_task(void)
 			mext_rx_feed(buf, n);
 		}
 	} else {
-#ifndef VCV_PORT
 #if MEXT_HAVE_DEVICE_CDC
 		if (tud_mounted()) {
 			uint8_t buf[64];
@@ -1487,7 +1487,6 @@ void mext_task(void)
 				mext_rx_feed(buf, n);
 			}
 		}
-#endif
 #endif
 	}
 

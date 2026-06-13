@@ -17,6 +17,7 @@
 #include <sstream>
 #include <stdio.h>
 #include <string.h>
+#include <cstring>
 #include <stdarg.h>
 #include <limits.h>
 #include <float.h>
@@ -53,7 +54,9 @@ namespace Card_BackyardRain {
 /* stripped system include */
 /* stripped system include */
 /* stripped system include */
+#ifndef _WIN32
 /* stripped system include */
+#endif
 /* stripped system include */
 
 const int ima_index_table[16] = {
