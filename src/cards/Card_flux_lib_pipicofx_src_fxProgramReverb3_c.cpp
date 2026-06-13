@@ -104,7 +104,10 @@ static void fxProgram13SetupStereo(void*data) {
 FxProgram13StereoDataType fxProgram13data= {
     .mixL = 16384,
     .mixR = 16384,
-    .presetVolume = { .gain =0xff, .offset = 0 },
+    .presetVolume = {
+        .gain = 0xff,
+        .offset = 0
+    },
     .freeze = 0
 };
 

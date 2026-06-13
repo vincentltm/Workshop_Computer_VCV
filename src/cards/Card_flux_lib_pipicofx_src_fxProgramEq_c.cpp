@@ -126,7 +126,7 @@ static void fxProgramPresetVolumeDisplay(void*data,char*res)
 
 FxProgram14DataType fxProgram14data ={
     .presetVolume = {
-        .gain =0xff,
+        .gain = 0xff,
         .offset = 0
     }
 };

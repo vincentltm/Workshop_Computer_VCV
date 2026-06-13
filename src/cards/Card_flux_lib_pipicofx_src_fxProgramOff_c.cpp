@@ -63,7 +63,7 @@ void fxProgram3Setup(void*data)
 
 FxProgram3DataType fxProgram3data = {
     .presetVolume = {
-        .gain = 256, // Default to Full Volume
+        .gain = 256,
         .offset = 0
     }
 };

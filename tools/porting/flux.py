@@ -55,12 +55,14 @@ def parse_all_structs(inc_dir):
                         fields_block = m.group(1)
                         struct_name = m.group(2)
                         fields, types = parse_statements_for_fields_and_types(fields_block)
-                        s_map[struct_name] = { "fields": fields, "types": types }
+                        if struct_name not in s_map or len(fields) > len(s_map[struct_name]["fields"]):
+                            s_map[struct_name] = { "fields": fields, "types": types }
                     for m in re.finditer(r'struct\s+([A-Za-z0-9_]+)\s*\{([\s\S]*?)\}\s*;', content):
                         struct_name = m.group(1)
                         fields_block = m.group(2)
                         fields, types = parse_statements_for_fields_and_types(fields_block)
-                        s_map[struct_name] = { "fields": fields, "types": types }
+                        if struct_name not in s_map or len(fields) > len(s_map[struct_name]["fields"]):
+                            s_map[struct_name] = { "fields": fields, "types": types }
                 except Exception as e:
                     print(f"Warning: Error parsing header {path}: {e}")
     return s_map
@@ -72,12 +74,14 @@ def parse_structs_from_text(content, s_map):
         fields_block = m.group(1)
         struct_name = m.group(2)
         fields, types = parse_statements_for_fields_and_types(fields_block)
-        s_map[struct_name] = { "fields": fields, "types": types }
+        if struct_name not in s_map or len(fields) > len(s_map[struct_name]["fields"]):
+            s_map[struct_name] = { "fields": fields, "types": types }
     for m in re.finditer(r'struct\s+([A-Za-z0-9_]+)\s*\{([\s\S]*?)\}\s*;', content):
         struct_name = m.group(1)
         fields_block = m.group(2)
         fields, types = parse_statements_for_fields_and_types(fields_block)
-        s_map[struct_name] = { "fields": fields, "types": types }
+        if struct_name not in s_map or len(fields) > len(s_map[struct_name]["fields"]):
+            s_map[struct_name] = { "fields": fields, "types": types }
 
 def get_struct_map():
     global struct_map
@@ -98,6 +102,17 @@ def parse_braces(content, start_pos):
                 return pos
         pos += 1
     return -1
+
+def is_array_initializer(inner_text):
+    depth = 0
+    for c in inner_text:
+        if c == '{':
+            if depth == 0:
+                return True
+            depth += 1
+        elif c == '}':
+            depth -= 1
+    return False
 
 def parse_assignments(inside_text):
     assignments = {}
@@ -120,7 +135,15 @@ def parse_assignments(inside_text):
             pos += 1
         elif depth == 0 and c == '.':
             if current_field:
-                assignments[current_field] = "".join(current_val).strip().rstrip(',')
+                val_str = "".join(current_val).strip().rstrip(',')
+                if val_str.startswith('{') and val_str.endswith('}'):
+                    inner = val_str[1:-1].strip()
+                    if '.' in inner and '=' in inner and not is_array_initializer(inner):
+                        assignments[current_field] = parse_assignments(inner)
+                    else:
+                        assignments[current_field] = val_str
+                else:
+                    assignments[current_field] = val_str
                 current_val = []
             pos += 1
             field_match = re.match(r'^([A-Za-z0-9_.]+)', inside_text[pos:])
@@ -133,7 +156,15 @@ def parse_assignments(inside_text):
                 current_field = None
         elif depth == 0 and c == ',':
             if current_field:
-                assignments[current_field] = "".join(current_val).strip()
+                val_str = "".join(current_val).strip()
+                if val_str.startswith('{') and val_str.endswith('}'):
+                    inner = val_str[1:-1].strip()
+                    if '.' in inner and '=' in inner and not is_array_initializer(inner):
+                        assignments[current_field] = parse_assignments(inner)
+                    else:
+                        assignments[current_field] = val_str
+                else:
+                    assignments[current_field] = val_str
                 current_field = None
                 current_val = []
             pos += 1
@@ -142,7 +173,15 @@ def parse_assignments(inside_text):
                 current_val.append(c)
             pos += 1
     if current_field:
-        assignments[current_field] = "".join(current_val).strip().rstrip(',')
+        val_str = "".join(current_val).strip().rstrip(',')
+        if val_str.startswith('{') and val_str.endswith('}'):
+            inner = val_str[1:-1].strip()
+            if '.' in inner and '=' in inner and not is_array_initializer(inner):
+                assignments[current_field] = parse_assignments(inner)
+            else:
+                assignments[current_field] = val_str
+        else:
+            assignments[current_field] = val_str
     return assignments
 
 def parse_parameter_array(params_text):

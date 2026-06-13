@@ -100,7 +100,10 @@ FxProgram12StereoDataType fxProgram12data= {
     .reverbR = {
         .mix = 16384
     },
-    .presetVolume = { .gain =0xff, .offset=0 },
+    .presetVolume = {
+        .gain = 0xff,
+        .offset = 0
+    },
     .freeze = 0
 };
 

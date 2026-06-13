@@ -277,7 +277,9 @@ FxProgram21DataType fxProgram21data = {
     .damping = 10000,
     .mix = 16384,
     .freeze = 0,
-    .presetVolume = { .gain = 0xFF }
+    .presetVolume = {
+        .gain = 0xFF
+    }
 };
 
 // Callbacks

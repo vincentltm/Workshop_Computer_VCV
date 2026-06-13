@@ -175,7 +175,7 @@ FxProgram16DataType fxProgram16data=
     },
     .mix = 16384,
     .presetVolume = {
-        .gain =0xff,
+        .gain = 0xff,
         .offset = 0
     }
 };

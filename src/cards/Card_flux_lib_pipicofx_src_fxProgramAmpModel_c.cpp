@@ -205,9 +205,9 @@ FxProgram1DataType fxProgram1data = {
         .feedbackFunction = &analogDelayFeedbackFunction
     },
     .feedbackFilter = {
-        .alpha = 14000,
+        .oldVal = 0,
         .oldXVal = 0,
-        .oldVal = 0
+        .alpha = 14000
     },
     .presetVolume = {
         .gain = 0xff,

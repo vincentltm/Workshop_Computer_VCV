@@ -94,8 +94,8 @@ FxProgram5DataType fxProgram5data = {
         .bitmask = 0x8000
     },
     .presetVolume = {
-        .gain=0xFF,
-        .offset=0
+        .gain = 0xFF,
+        .offset = 0
     }
 };
 

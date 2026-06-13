@@ -854,6 +854,8 @@ def main():
             out_f.write("#include \"tusb.h\"\n")
             out_f.write("#define while(...) while((__VA_ARGS__) && !g_cancellation_requested.load(std::memory_order_relaxed))\n\n")
             out_f.write("#include \"ComputerCard.h\"\n\n")
+            out_f.write("#define _Static_assert static_assert\n")
+            out_f.write("namespace std { using ::sinf; using ::cosf; using ::tanf; using ::asinf; using ::acosf; using ::atanf; using ::atan2f; using ::sqrtf; using ::expf; using ::logf; using ::log10f; using ::powf; }\n\n")
             
             out_f.write("// DSO-local thread-local variables definition\n")
             out_f.write("thread_local CardGlobals* t_instance = nullptr;\n")

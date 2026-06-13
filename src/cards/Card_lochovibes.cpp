@@ -47,6 +47,9 @@
 
 #include "ComputerCard.h"
 
+#define _Static_assert static_assert
+namespace std { using ::sinf; using ::cosf; using ::tanf; using ::asinf; using ::acosf; using ::atanf; using ::atan2f; using ::sqrtf; using ::expf; using ::logf; using ::log10f; using ::powf; }
+
 // DSO-local thread-local variables definition
 thread_local CardGlobals* t_instance = nullptr;
 thread_local bool is_core1_thread = false;

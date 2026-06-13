@@ -283,7 +283,9 @@ FxProgram19StereoDataType fxProgram19data = {
         {.delayInSamples = 503, .coefficient = 16384, .bufferSize = 1023},
         {.delayInSamples = 394, .coefficient = 16384, .bufferSize = 1023}
     },
-    .presetVolume = {.gain = 0xff},
+    .presetVolume = {
+        .gain = 0xff
+    },
     .mix = 16384,
     .freeze = 0,
     .lfoPhase = 0,

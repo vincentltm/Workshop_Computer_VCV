@@ -207,22 +207,22 @@ static void fxProgramSetupStereo(void*data)
 
 FxProgram11StereoDataType fxProgram11data = {
     .sineChorusL = {
-        .mix = 16384,
         .frequency = 500,
         .depth = 10,
-        .feedback = 0,
+        .mix = 16384,
         .offset = 49,
+        .feedback = 0
     },
     .sineChorusR = {
-        .mix = 16384,
         .frequency = 500,
         .depth = 10,
-        .feedback = 0,
+        .mix = 16384,
         .offset = 49,
+        .feedback = 0
     },
     .presetVolume = {
-        .gain=0xff,
-        .offset=0
+        .gain = 0xff,
+        .offset = 0
     }
 };
 

@@ -545,7 +545,10 @@ FxProgram6StereoDataType fxProgram6data = {
     .delayR = {
         .mix = 16384
     },
-    .presetVolume = {.gain = 0xff, .offset = 0},
+    .presetVolume = {
+        .gain = 0xff,
+        .offset = 0
+    },
     .mode = 0,
     .tapeL_old = 0,
     .tapeR_old = 0,

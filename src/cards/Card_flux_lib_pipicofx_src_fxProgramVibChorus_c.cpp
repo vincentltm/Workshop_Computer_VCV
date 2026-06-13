@@ -163,18 +163,18 @@ static void fxProgram2SetupStereo(void*data)
 
 FxProgram2StereoDataType fxProgram2data = {
     .chorusL = {
-        .mix = 128,
         .frequency = 500,
-        .depth = 10
+        .depth = 10,
+        .mix = 128
     },
     .chorusR = {
-        .mix = 128,
         .frequency = 500,
-        .depth = 10
+        .depth = 10,
+        .mix = 128
     },
     .presetVolume = {
-        .gain=0xFF,
-        .offset=0
+        .gain = 0xFF,
+        .offset = 0
     }
 };
 
