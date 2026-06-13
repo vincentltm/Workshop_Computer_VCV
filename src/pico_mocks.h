@@ -2,6 +2,8 @@
 
 #include <stdint.h>
 
+typedef unsigned int uint;
+
 namespace rack {
 namespace audio {
 struct Port;
