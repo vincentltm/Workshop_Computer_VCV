@@ -60,8 +60,8 @@ public:
             return;
         }
 
-        int num_in = audio_port->getNumInputs();
-        int num_out = audio_port->getNumOutputs();
+        int num_in = audio_port->num_inputs.load(std::memory_order_relaxed);
+        int num_out = audio_port->num_outputs.load(std::memory_order_relaxed);
 
         // 1. VCV to Physical DAC: push to dac_buffer
         float dac_inputs[6];
@@ -106,7 +106,7 @@ public:
 
     void processFallbackMidiInput() {
         if (!audio_port) return;
-        int num_in = audio_port->getNumInputs();
+        int num_in = audio_port->num_inputs.load(std::memory_order_relaxed);
         
         uint8_t packet[4];
         while (g_midi_rx_packet_queue.pop(packet)) {
@@ -164,7 +164,7 @@ public:
 
     void processFallbackMidiOutput() {
         if (!audio_port) return;
-        int num_out = audio_port->getNumOutputs();
+        int num_out = audio_port->num_outputs.load(std::memory_order_relaxed);
 
         // 1. CV 1 & Pulse 1 (channel 2 & 4) -> MIDI Note
         if (4 >= num_out) {
@@ -218,7 +218,7 @@ public:
     void BackgroundLoop() override {
         // Keep actual hardware sample rate synced to expected VCV rate
         if (audio_port) {
-            float sr = audio_port->getSampleRate();
+            float sr = audio_port->sample_rate.load(std::memory_order_relaxed);
             if (sr > 0.f && t_instance && t_instance->expected_sample_rate != (double)sr) {
                 t_instance->expected_sample_rate = (double)sr;
             }

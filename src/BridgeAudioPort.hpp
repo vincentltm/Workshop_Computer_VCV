@@ -9,8 +9,16 @@ struct BridgeAudioPort : rack::audio::Port {
     rack::dsp::RingBuffer<float, 8192> adc_buffer;
     float last_dac_vals[6] = {0.f};
 
+    // Stored stats to avoid card DLL linking against rack::audio::Port member functions
+    std::atomic<int> num_inputs{0};
+    std::atomic<int> num_outputs{0};
+    std::atomic<float> sample_rate{0.f};
+
     void onStartStream() override {
         stream_active = true;
+        num_inputs = getNumInputs();
+        num_outputs = getNumOutputs();
+        sample_rate = getSampleRate();
     }
 
     void onStopStream() override {
@@ -24,6 +32,9 @@ struct BridgeAudioPort : rack::audio::Port {
 
         int num_in = getNumInputs();
         int num_out = getNumOutputs();
+        num_inputs = num_in;
+        num_outputs = num_out;
+        sample_rate = getSampleRate();
 
         for (int f = 0; f < frames; f++) {
             // Read inputs from physical ADC and push to adc_buffer
