@@ -1,12 +1,11 @@
 # Auto-generated makefile configuration for card sources
 
 # Card libraries target definitions
-ifeq ($(OS), Windows_NT)
+ifdef ARCH_WIN
 	CARD_LIB_EXT := dll
 	CARD_LDFLAGS_SHARED := -shared
 else
-	UNAME_S := $(shell uname -s)
-	ifeq ($(UNAME_S), Darwin)
+	ifdef ARCH_MAC
 		CARD_LIB_EXT := dylib
 		CARD_LDFLAGS_SHARED := -dynamiclib -undefined dynamic_lookup
 	else

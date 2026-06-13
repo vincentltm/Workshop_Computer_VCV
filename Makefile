@@ -12,6 +12,9 @@ SOURCES += src/WorkshopComputer.cpp
 DISTRIBUTABLES += res
 DISTRIBUTABLES += plugin.json
 
+# Include arch.mk explicitly to get target OS/CPU variables before Makefile.cards
+include $(RACK_DIR)/arch.mk
+
 # Include card sources and include paths
 include Makefile.cards
 
