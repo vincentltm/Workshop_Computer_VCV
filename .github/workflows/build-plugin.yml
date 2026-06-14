@@ -54,7 +54,15 @@ jobs:
         run: |
           export PLUGIN_DIR=$GITHUB_WORKSPACE
           pushd ${{ env.rack-plugin-toolchain-dir }}
-          make plugin-build-${{ matrix.platform }}
+          if ! make plugin-build-${{ matrix.platform }} > build.log 2>&1; then
+            echo "### Build Failed - ${{ matrix.platform }}" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            tail -n 150 build.log >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            cat build.log
+            exit 2
+          fi
+          cat build.log
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
