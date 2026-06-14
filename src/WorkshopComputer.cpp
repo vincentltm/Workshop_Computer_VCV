@@ -1,4 +1,5 @@
 #ifdef _WIN32
+    #include <winsock2.h>
     #include <windows.h>
     #include <direct.h>
 #else
@@ -1005,7 +1006,7 @@ struct WorkshopComputer : Module, IGridConsumer, IComputerModule {
 
         // Determine library suffix and get plugin-relative path
         #ifdef _WIN32
-            std::string lib_name = "card_" + g_active_card_id + ".dll";
+            std::string lib_name = "libcard_" + g_active_card_id + ".dll";
         #elif defined(__APPLE__)
             std::string lib_name = "libcard_" + g_active_card_id + ".dylib";
         #else
@@ -1023,7 +1024,7 @@ struct WorkshopComputer : Module, IGridConsumer, IComputerModule {
 
         char temp_name[512];
         #ifdef _WIN32
-            snprintf(temp_name, sizeof(temp_name), "%s\\card_%s_%p.dll", 
+            snprintf(temp_name, sizeof(temp_name), "%s\\libcard_%s_%p.dll", 
                      tmp_dir.c_str(), g_active_card_id.c_str(), this);
         #elif defined(__APPLE__)
             snprintf(temp_name, sizeof(temp_name), "%s/libcard_%s_%p.dylib", 

@@ -132,6 +132,7 @@ struct MonomeBridge {
         if (userprofile) {
             std::string up = userprofile;
             candidates.push_back(up + "/Documents/Rack2/plugins/monome/plugin.dll");
+            candidates.push_back(up + "/OneDrive/Documents/Rack2/plugins/monome/plugin.dll");
         }
         const char* localappdata = getenv("LOCALAPPDATA");
         if (localappdata) {
@@ -154,6 +155,7 @@ struct MonomeBridge {
         const char* home = getenv("HOME");
         if (home) {
             std::string h = home;
+            candidates.push_back(h + "/.Rack2/plugins/monome/plugin.so");
             candidates.push_back(h + "/.local/share/Rack2/plugins/monome/plugin.so");
         }
 #endif

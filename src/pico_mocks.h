@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-typedef unsigned int uint;
+
 
 namespace rack {
 namespace audio {
@@ -35,7 +35,7 @@ struct Port;
 #endif
 #define __dmb() asm volatile("" : : : "memory")
 
-typedef void (*gpio_irq_callback_t)(uint gpio, uint32_t events);
+typedef void (*gpio_irq_callback_t)(unsigned int gpio, uint32_t events);
 
 // Thread cancellation exception
 class ThreadExitException : public std::exception {
@@ -222,7 +222,7 @@ struct CardGlobals {
 
     // ── GPIO and ADC mock states for raw SDK usage ──
     bool g_gpio_pins[32] = {false};
-    uint g_adc_selected_input = 0;
+    unsigned int g_adc_selected_input = 0;
     gpio_irq_callback_t g_gpio_callbacks[32] = {nullptr};
     bool g_last_pulse_state[2] = {false, false};
 
@@ -373,7 +373,7 @@ inline uint32_t to_ms_since_boot(absolute_time_t t) {
             bool last = t_instance->g_last_pulse_state[i];
             if (current != last) {
                 t_instance->g_last_pulse_state[i] = current;
-                uint gpio = i + 2; // PIN_PULSE1_IN is 2
+                unsigned int gpio = i + 2; // PIN_PULSE1_IN is 2
                 if (current && !last && t_instance->g_gpio_callbacks[gpio]) {
                     t_instance->g_gpio_callbacks[gpio](gpio, 2); // 2 = GPIO_IRQ_EDGE_FALL
                 }
@@ -490,7 +490,7 @@ inline void multicore_reset_core1() {
         t_instance->g_core1_cancellation_requested_val = true;
     }
 }
-inline bool multicore_lockout_victim_is_initialized(uint) { return true; }
+inline bool multicore_lockout_victim_is_initialized(unsigned int) { return true; }
 
 // Forward-declare so ComputerCard.h can use it
 inline void multicore_launch_core1(void (*entry)()) {
@@ -566,12 +566,12 @@ struct bus_ctrl_hw_t { uint32_t priority; };
 inline bus_ctrl_hw_t* get_bus_ctrl_hw() { static bus_ctrl_hw_t v; return &v; }
 #define bus_ctrl_hw get_bus_ctrl_hw()
 
-inline void gpio_init(uint) {}
-inline void gpio_pull_up(uint) {}
-inline void gpio_disable_pulls(uint) {}
-inline void gpio_set_pulls(uint, bool, bool) {}
-inline void gpio_set_dir(uint, bool) {}
-inline void gpio_set_function(uint, uint) {}
+inline void gpio_init(unsigned int) {}
+inline void gpio_pull_up(unsigned int) {}
+inline void gpio_disable_pulls(unsigned int) {}
+inline void gpio_set_pulls(unsigned int, bool, bool) {}
+inline void gpio_set_dir(unsigned int, bool) {}
+inline void gpio_set_function(unsigned int, unsigned int) {}
 #define GPIO_OUT true
 #define GPIO_IN false
 #define GPIO_FUNC_SIO 0
@@ -579,14 +579,14 @@ inline void gpio_set_function(uint, uint) {}
 #define GPIO_FUNC_SPI 2
 #define GPIO_FUNC_I2C 3
 
-inline bool gpio_get(uint gpio) {
+inline bool gpio_get(unsigned int gpio) {
     if (gpio == 2) return g_pulse_in[0];
     if (gpio == 3) return g_pulse_in[1];
     if (gpio == 20) return true; // USB_HOST_STATUS (upstream device mode) is always true in VCV Rack
     if (gpio < 32) return get_safe_instance()->g_gpio_pins[gpio];
     return false;
 }
-inline void gpio_put(uint gpio, bool val) {
+inline void gpio_put(unsigned int gpio, bool val) {
     if (gpio < 32) {
         get_safe_instance()->g_gpio_pins[gpio] = val;
     }
@@ -602,9 +602,9 @@ inline void gpio_put(uint gpio, bool val) {
 struct pwm_config { uint32_t dummy; };
 inline pwm_config pwm_get_default_config() { pwm_config c; return c; }
 inline void pwm_config_set_wrap(pwm_config*, uint16_t) {}
-inline uint pwm_gpio_to_slice_num(uint gpio) { return gpio; }
-inline void pwm_init(uint, const pwm_config*, bool) {}
-inline void pwm_set_gpio_level(uint gpio, uint16_t level) {
+inline unsigned int pwm_gpio_to_slice_num(unsigned int gpio) { return gpio; }
+inline void pwm_init(unsigned int, const pwm_config*, bool) {}
+inline void pwm_set_gpio_level(unsigned int gpio, uint16_t level) {
     if      (gpio == 23) g_cv_out[0] = ((float)level - 1024.f) * (5.f / 1024.f);
     else if (gpio == 22) g_cv_out[1] = ((float)level - 1024.f) * (5.f / 1024.f);
 }
@@ -616,15 +616,15 @@ struct adc_hw_t { uint32_t fifo; };
 inline adc_hw_t* get_adc_hw() { static adc_hw_t v; return &v; }
 #define adc_hw get_adc_hw()
 inline void adc_init() {}
-inline void adc_gpio_init(uint) {}
-inline void adc_select_input(uint input) {
+inline void adc_gpio_init(unsigned int) {}
+inline void adc_select_input(unsigned int input) {
     if (t_instance) {
         t_instance->g_adc_selected_input = input;
     }
 }
 inline uint16_t adc_read() {
     CardGlobals* inst = get_safe_instance();
-    uint input = inst->g_adc_selected_input;
+    unsigned int input = inst->g_adc_selected_input;
     if (input == 0) {
         float v = g_audio_in[0];
         if (v < -6.f) v = -6.f;
@@ -638,7 +638,7 @@ inline uint16_t adc_read() {
     } else if (input == 2) {
         bool logic_a = inst->g_gpio_pins[24];
         bool logic_b = inst->g_gpio_pins[25];
-        uint chan = (logic_b ? 2 : 0) | (logic_a ? 1 : 0);
+        unsigned int chan = (logic_b ? 2 : 0) | (logic_a ? 1 : 0);
         if (chan == 0) {
             return (uint16_t)(g_knobs[0] * 4095.f);
         } else if (chan == 1) {
@@ -654,7 +654,7 @@ inline uint16_t adc_read() {
     } else if (input == 3) {
         bool logic_a = inst->g_gpio_pins[24];
         bool logic_b = inst->g_gpio_pins[25];
-        uint chan = (logic_b ? 2 : 0) | (logic_a ? 1 : 0);
+        unsigned int chan = (logic_b ? 2 : 0) | (logic_a ? 1 : 0);
         if (chan == 0) {
             float v = g_cv_in[0];
             if (v < -6.f) v = -6.f;
@@ -669,8 +669,8 @@ inline uint16_t adc_read() {
     }
     return 0;
 }
-inline void adc_set_round_robin(uint) {}
-inline void adc_fifo_setup(bool, bool, uint, bool, bool) {}
+inline void adc_set_round_robin(unsigned int) {}
+inline void adc_fifo_setup(bool, bool, unsigned int, bool, bool) {}
 inline void adc_set_clkdiv(float div) {
     if (t_instance) {
         double rate = 6000000.0 / (div + 1.0);
@@ -682,7 +682,7 @@ inline void adc_set_clkdiv(float div) {
 }
 inline void adc_run(bool) {}
 inline uint16_t adc_fifo_get_blocking() { return 0; }
-inline uint adc_get_selected_input() { return 0; }
+inline unsigned int adc_get_selected_input() { return 0; }
 inline void flash_get_unique_id(uint8_t* unique_id) { memset(unique_id, 0, 8); }
 #define PICO_UNIQUE_BOARD_ID_SIZE_BYTES 8
 struct pico_unique_board_id_t {
@@ -696,16 +696,16 @@ inline void pico_get_unique_board_id(pico_unique_board_id_t* id_out) {
 // DMA (dma_hw macro already defined via t_instance->dma_hw above)
 // ──────────────────────────────────────────────────────────────────────────────
 struct dma_channel_config { uint32_t dummy; };
-inline dma_channel_config dma_channel_get_default_config(uint) { dma_channel_config c; return c; }
+inline dma_channel_config dma_channel_get_default_config(unsigned int) { dma_channel_config c; return c; }
 inline void channel_config_set_transfer_data_size(dma_channel_config*, int) {}
 inline void channel_config_set_read_increment(dma_channel_config*, bool) {}
 inline void channel_config_set_write_increment(dma_channel_config*, bool) {}
 inline void channel_config_set_dreq(dma_channel_config*, int) {}
-inline uint dma_claim_unused_channel(bool) { return 0; }
-inline void dma_channel_configure(uint, const dma_channel_config*, void*, const void*, uint, bool) {}
-inline void dma_channel_set_irq0_enabled(uint, bool) {}
-inline void dma_channel_set_write_addr(uint, void*, bool) {}
-inline void dma_channel_set_read_addr(uint, const void*, bool) {}
+inline unsigned int dma_claim_unused_channel(bool) { return 0; }
+inline void dma_channel_configure(unsigned int, const dma_channel_config*, void*, const void*, unsigned int, bool) {}
+inline void dma_channel_set_irq0_enabled(unsigned int, bool) {}
+inline void dma_channel_set_write_addr(unsigned int, void*, bool) {}
+inline void dma_channel_set_read_addr(unsigned int, const void*, bool) {}
 
 inline void channel_config_set_chain_to(dma_channel_config*, int) {}
 inline void dma_start_channel_mask(uint32_t) {}
@@ -730,43 +730,43 @@ struct spi_hw_t { uint32_t dr; };
 typedef void* spi_inst_t;
 #define spi0 ((spi_inst_t)0)
 inline spi_hw_t* spi_get_hw(spi_inst_t) { static spi_hw_t d; return &d; }
-inline void spi_init(spi_inst_t, uint) {}
+inline void spi_init(spi_inst_t, unsigned int) {}
 #define SPI_CPOL_0 0
 #define SPI_CPHA_0 0
 #define SPI_MSB_FIRST 0
 #define SPI_LSB_FIRST 0
-inline void spi_set_format(spi_inst_t, uint, int, int, int) {}
+inline void spi_set_format(spi_inst_t, unsigned int, int, int, int) {}
 inline int spi_write16_blocking(spi_inst_t, const uint16_t*, size_t len) { return (int)len; }
 
 typedef void* i2c_inst_t;
 #define i2c0 ((i2c_inst_t)0)
 #define i2c_default ((i2c_inst_t)0)
-inline uint  i2c_init(i2c_inst_t, uint baudrate) { return baudrate; }
+inline unsigned int  i2c_init(i2c_inst_t, unsigned int baudrate) { return baudrate; }
 inline int   i2c_write_blocking(i2c_inst_t, uint8_t, const uint8_t*, size_t len, bool) { return (int)len; }
 inline int   i2c_read_blocking(i2c_inst_t, uint8_t, uint8_t*, size_t len, bool) { return (int)len; }
 
-inline void irq_set_enabled(uint, bool) {}
-inline void irq_set_exclusive_handler(uint, void(*)()) {}
+inline void irq_set_enabled(unsigned int, bool) {}
+inline void irq_set_exclusive_handler(unsigned int, void(*)()) {}
 
 #define GPIO_IRQ_EDGE_FALL 2
-inline void gpio_set_irq_enabled_with_callback(uint gpio, uint32_t events, bool enabled, gpio_irq_callback_t callback) {
+inline void gpio_set_irq_enabled_with_callback(unsigned int gpio, uint32_t events, bool enabled, gpio_irq_callback_t callback) {
     if (t_instance && gpio < 32) {
         t_instance->g_gpio_callbacks[gpio] = enabled ? callback : nullptr;
     }
 }
 
 inline void gpio_put_masked(uint32_t mask, uint32_t value) {
-    for (uint i = 0; i < 32; i++) {
+    for (unsigned int i = 0; i < 32; i++) {
         if ((mask >> i) & 1) {
             gpio_put(i, (value >> i) & 1);
         }
     }
 }
 
-inline uint pwm_gpio_to_channel(uint) { return 0; }
-inline void pwm_set_wrap(uint, uint16_t) {}
-inline void pwm_set_enabled(uint, bool) {}
-inline void pwm_set_chan_level(uint slice_num, uint chan, uint16_t level) {
+inline unsigned int pwm_gpio_to_channel(unsigned int) { return 0; }
+inline void pwm_set_wrap(unsigned int, uint16_t) {}
+inline void pwm_set_enabled(unsigned int, bool) {}
+inline void pwm_set_chan_level(unsigned int slice_num, unsigned int chan, uint16_t level) {
     if (slice_num == 23) g_cv_out[0] = ((float)level - 1024.f) / 1024.f;
     else if (slice_num == 22) g_cv_out[1] = ((float)level - 1024.f) / 1024.f;
 }
@@ -781,14 +781,14 @@ inline void pwm_set_chan_level(uint slice_num, uint chan, uint16_t level) {
 struct queue_t {
     std::mutex mutex;
     std::vector<uint8_t> buffer;
-    uint element_size = 0;
-    uint element_count = 0;
-    uint head = 0;
-    uint tail = 0;
-    uint size = 0;
+    unsigned int element_size = 0;
+    unsigned int element_count = 0;
+    unsigned int head = 0;
+    unsigned int tail = 0;
+    unsigned int size = 0;
 };
 
-inline void queue_init(queue_t* q, uint element_size, uint element_count) {
+inline void queue_init(queue_t* q, unsigned int element_size, unsigned int element_count) {
     std::lock_guard<std::mutex> lock(q->mutex);
     q->element_size = element_size;
     q->element_count = element_count;
@@ -816,7 +816,7 @@ inline bool queue_try_remove(queue_t* q, void* element) {
     return true;
 }
 
-inline uint get_core_num() {
+inline unsigned int get_core_num() {
     return is_core1_thread ? 1 : 0;
 }
 
@@ -839,7 +839,7 @@ inline void watchdog_disable() {}
 
 // Spin Lock Mocks
 typedef struct spin_lock spin_lock_t;
-inline spin_lock_t* spin_lock_instance(uint num) { return (spin_lock_t*)(uintptr_t)(num + 1); }
+inline spin_lock_t* spin_lock_instance(unsigned int num) { return (spin_lock_t*)(uintptr_t)(num + 1); }
 inline uint32_t spin_lock_blocking(spin_lock_t* lock) { (void)lock; return 0; }
 inline void spin_unlock(spin_lock_t* lock, uint32_t irq_state) { (void)lock; (void)irq_state; }
 
@@ -856,3 +856,6 @@ inline bool add_repeating_timer_us(int32_t delay_us, bool (*callback)(struct rep
 
 
 
+
+// Export global uint typedef for cards/wrappers
+typedef unsigned int uint;
