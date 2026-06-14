@@ -103,11 +103,9 @@ def parse_braces(content, start_pos):
         pos += 1
     return -1
 
-def is_array_initializer(inner_text):
-    # Clean up comments first to avoid false positives
+def is_designated_struct_initializer(inner_text):
     inner_clean = re.sub(r'/\*[\s\S]*?\*/', '', inner_text)
     inner_clean = re.sub(r'//.*', '', inner_clean)
-    
     depth = 0
     has_dot = False
     has_equal = False
@@ -131,10 +129,55 @@ def is_array_initializer(inner_text):
             pos += 1
         else:
             pos += 1
-    return not (has_dot and has_equal)
+    return has_dot and has_equal
+
+def parse_array_initializer(inner_text):
+    elements = []
+    pos = 0
+    n = len(inner_text)
+    current_element = []
+    depth = 0
+    while pos < n:
+        c = inner_text[pos]
+        if c == '{':
+            depth += 1
+            current_element.append(c)
+            pos += 1
+        elif c == '}':
+            depth -= 1
+            current_element.append(c)
+            pos += 1
+            if depth == 0:
+                elements.append("".join(current_element).strip())
+                current_element = []
+        elif depth == 0 and c == ',':
+            elem_str = "".join(current_element).strip()
+            if elem_str:
+                elements.append(elem_str)
+            current_element = []
+            pos += 1
+        else:
+            current_element.append(c)
+            pos += 1
+    elem_str = "".join(current_element).strip()
+    if elem_str:
+        elements.append(elem_str)
+    return elements
+
+def is_array_of_designated_structs(inner_text):
+    elements = parse_array_initializer(inner_text)
+    if not elements:
+        return False
+    for e in elements:
+        if e.startswith('{') and e.endswith('}'):
+            if is_designated_struct_initializer(e[1:-1]):
+                return True
+    return False
+
+def is_array_initializer(inner_text):
+    return not is_designated_struct_initializer(inner_text)
 
 def parse_assignments(inside_text):
-    # Strip comments first
     inside_text = re.sub(r'/\*[\s\S]*?\*/', '', inside_text)
     inside_text = re.sub(r'//.*', '', inside_text)
     
@@ -161,8 +204,10 @@ def parse_assignments(inside_text):
                 val_str = "".join(current_val).strip().rstrip(',')
                 if val_str.startswith('{') and val_str.endswith('}'):
                     inner = val_str[1:-1].strip()
-                    if '.' in inner and '=' in inner and not is_array_initializer(inner):
+                    if is_designated_struct_initializer(inner):
                         assignments[current_field] = parse_assignments(inner)
+                    elif is_array_of_designated_structs(inner) and current_field != 'parameters':
+                        assignments[current_field] = [parse_assignments(e[1:-1]) for e in parse_array_initializer(inner)]
                     else:
                         assignments[current_field] = val_str
                 else:
@@ -182,8 +227,10 @@ def parse_assignments(inside_text):
                 val_str = "".join(current_val).strip()
                 if val_str.startswith('{') and val_str.endswith('}'):
                     inner = val_str[1:-1].strip()
-                    if '.' in inner and '=' in inner and not is_array_initializer(inner):
+                    if is_designated_struct_initializer(inner):
                         assignments[current_field] = parse_assignments(inner)
+                    elif is_array_of_designated_structs(inner) and current_field != 'parameters':
+                        assignments[current_field] = [parse_assignments(e[1:-1]) for e in parse_array_initializer(inner)]
                     else:
                         assignments[current_field] = val_str
                 else:
@@ -199,13 +246,17 @@ def parse_assignments(inside_text):
         val_str = "".join(current_val).strip().rstrip(',')
         if val_str.startswith('{') and val_str.endswith('}'):
             inner = val_str[1:-1].strip()
-            if '.' in inner and '=' in inner and not is_array_initializer(inner):
+            if is_designated_struct_initializer(inner):
                 assignments[current_field] = parse_assignments(inner)
+            elif is_array_of_designated_structs(inner) and current_field != 'parameters':
+                assignments[current_field] = [parse_assignments(e[1:-1]) for e in parse_array_initializer(inner)]
             else:
                 assignments[current_field] = val_str
         else:
             assignments[current_field] = val_str
     return assignments
+
+
 
 def parse_parameter_array(params_text):
     params_text = params_text.strip()
@@ -294,6 +345,14 @@ def format_nested_dict(d, type_name, local_struct_map, indent=4):
         if isinstance(val, dict):
             sub_str = format_nested_dict(val, member_type, local_struct_map, indent + 4)
             lines.append(f"{' ' * indent}.{key} = {sub_str}")
+        elif isinstance(val, list):
+            formatted_elements = []
+            for elem in val:
+                if isinstance(elem, dict):
+                    formatted_elements.append(format_nested_dict(elem, member_type, local_struct_map, indent + 8))
+                else:
+                    formatted_elements.append(str(elem))
+            lines.append(f"{' ' * indent}.{key} = {{\n" + ",\n".join([f"{' ' * (indent+4)}{elem}" for elem in formatted_elements]) + "\n" + ' ' * indent + "}")
         else:
             lines.append(f"{' ' * indent}.{key} = {val}")
     return "{\n" + ",\n".join(lines) + "\n" + " " * (indent - 4) + "}"

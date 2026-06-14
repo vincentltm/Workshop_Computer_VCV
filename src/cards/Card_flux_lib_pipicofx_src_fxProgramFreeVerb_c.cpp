@@ -244,44 +244,168 @@ static const int16_t combDelaysR[8] = {1718, 1783, 1646, 1571, 1413, 1499, 1316,
 
 FxProgram19StereoDataType fxProgram19data = {
     .delaysL = {
-        {.delayInSamples = 1695, .delayBufferLength = 2048},
-        {.delayInSamples = 1760, .delayBufferLength = 2048},
-        {.delayInSamples = 1623, .delayBufferLength = 2048},
-        {.delayInSamples = 1548, .delayBufferLength = 2048},
-        {.delayInSamples = 1390, .delayBufferLength = 2048},
-        {.delayInSamples = 1476, .delayBufferLength = 2048},
-        {.delayInSamples = 1293, .delayBufferLength = 2048},
-        {.delayInSamples = 1215, .delayBufferLength = 2048}
+        {
+            .delayInSamples = 1695,
+            .delayBufferLength = 2048
+        },
+        {
+            .delayInSamples = 1760,
+            .delayBufferLength = 2048
+        },
+        {
+            .delayInSamples = 1623,
+            .delayBufferLength = 2048
+        },
+        {
+            .delayInSamples = 1548,
+            .delayBufferLength = 2048
+        },
+        {
+            .delayInSamples = 1390,
+            .delayBufferLength = 2048
+        },
+        {
+            .delayInSamples = 1476,
+            .delayBufferLength = 2048
+        },
+        {
+            .delayInSamples = 1293,
+            .delayBufferLength = 2048
+        },
+        {
+            .delayInSamples = 1215,
+            .delayBufferLength = 2048
+        }
     },
     .delaysR = {
-        {.delayInSamples = 1718, .delayBufferLength = 2048},
-        {.delayInSamples = 1783, .delayBufferLength = 2048},
-        {.delayInSamples = 1646, .delayBufferLength = 2048},
-        {.delayInSamples = 1571, .delayBufferLength = 2048},
-        {.delayInSamples = 1413, .delayBufferLength = 2048},
-        {.delayInSamples = 1499, .delayBufferLength = 2048},
-        {.delayInSamples = 1316, .delayBufferLength = 2048},
-        {.delayInSamples = 1238, .delayBufferLength = 2048}
+        {
+            .delayInSamples = 1718,
+            .delayBufferLength = 2048
+        },
+        {
+            .delayInSamples = 1783,
+            .delayBufferLength = 2048
+        },
+        {
+            .delayInSamples = 1646,
+            .delayBufferLength = 2048
+        },
+        {
+            .delayInSamples = 1571,
+            .delayBufferLength = 2048
+        },
+        {
+            .delayInSamples = 1413,
+            .delayBufferLength = 2048
+        },
+        {
+            .delayInSamples = 1499,
+            .delayBufferLength = 2048
+        },
+        {
+            .delayInSamples = 1316,
+            .delayBufferLength = 2048
+        },
+        {
+            .delayInSamples = 1238,
+            .delayBufferLength = 2048
+        }
     },
     .feedbackFiltersL = {
-        {.alpha = 6554}, {.alpha = 6554}, {.alpha = 6554}, {.alpha = 6554},
-        {.alpha = 6554}, {.alpha = 6554}, {.alpha = 6554}, {.alpha = 6554}
+        {
+            .alpha = 6554
+        },
+        {
+            .alpha = 6554
+        },
+        {
+            .alpha = 6554
+        },
+        {
+            .alpha = 6554
+        },
+        {
+            .alpha = 6554
+        },
+        {
+            .alpha = 6554
+        },
+        {
+            .alpha = 6554
+        },
+        {
+            .alpha = 6554
+        }
     },
     .feedbackFiltersR = {
-        {.alpha = 6554}, {.alpha = 6554}, {.alpha = 6554}, {.alpha = 6554},
-        {.alpha = 6554}, {.alpha = 6554}, {.alpha = 6554}, {.alpha = 6554}
+        {
+            .alpha = 6554
+        },
+        {
+            .alpha = 6554
+        },
+        {
+            .alpha = 6554
+        },
+        {
+            .alpha = 6554
+        },
+        {
+            .alpha = 6554
+        },
+        {
+            .alpha = 6554
+        },
+        {
+            .alpha = 6554
+        },
+        {
+            .alpha = 6554
+        }
     },
     .allpassesL = {
-        {.delayInSamples = 245, .coefficient = 16384, .bufferSize = 1023},
-        {.delayInSamples = 605, .coefficient = 16384, .bufferSize = 1023},
-        {.delayInSamples = 480, .coefficient = 16384, .bufferSize = 1023},
-        {.delayInSamples = 371, .coefficient = 16384, .bufferSize = 1023}
+        {
+            .coefficient = 16384,
+            .delayInSamples = 245,
+            .bufferSize = 1023
+        },
+        {
+            .coefficient = 16384,
+            .delayInSamples = 605,
+            .bufferSize = 1023
+        },
+        {
+            .coefficient = 16384,
+            .delayInSamples = 480,
+            .bufferSize = 1023
+        },
+        {
+            .coefficient = 16384,
+            .delayInSamples = 371,
+            .bufferSize = 1023
+        }
     },
     .allpassesR = {
-        {.delayInSamples = 268, .coefficient = 16384, .bufferSize = 1023},
-        {.delayInSamples = 628, .coefficient = 16384, .bufferSize = 1023},
-        {.delayInSamples = 503, .coefficient = 16384, .bufferSize = 1023},
-        {.delayInSamples = 394, .coefficient = 16384, .bufferSize = 1023}
+        {
+            .coefficient = 16384,
+            .delayInSamples = 268,
+            .bufferSize = 1023
+        },
+        {
+            .coefficient = 16384,
+            .delayInSamples = 628,
+            .bufferSize = 1023
+        },
+        {
+            .coefficient = 16384,
+            .delayInSamples = 503,
+            .bufferSize = 1023
+        },
+        {
+            .coefficient = 16384,
+            .delayInSamples = 394,
+            .bufferSize = 1023
+        }
     },
     .presetVolume = {
         .gain = 0xff
