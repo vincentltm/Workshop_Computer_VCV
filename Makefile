@@ -25,7 +25,7 @@ include $(RACK_DIR)/plugin.mk
 CXXFLAGS += -std=c++17 -Wno-narrowing -Wno-c++11-narrowing
 
 # Link ws2_32 on Windows for the web server
-ifeq ($(ARCH), win)
+ifdef ARCH_WIN
     LDFLAGS += -lws2_32
 endif
 
