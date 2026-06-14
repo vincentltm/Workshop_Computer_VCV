@@ -571,6 +571,10 @@ struct WorkshopComputer : Module, IGridConsumer, IComputerModule {
     int  get_active_card_idx() const override { return active_card_idx; }
     std::string get_active_card_id() const override { return card_globals.active_card_id_str; }
     int  get_utility_index(int slot) const override { return utility_indices[slot & 1]; }
+    void set_utility_index(int slot, int index) override {
+        utility_indices[slot & 1] = index;
+        change_card(active_card_idx);
+    }
     void set_pending_page_direction(int dir) override { pending_page_direction = dir; }
 
 
@@ -1664,61 +1668,7 @@ struct WorkshopComputerWidget : ModuleWidget {
 
         // Card selection is now only shown when clicking directly on the cartridge slot.
 
-        // Submenus for Left & Right utility pair channels
-        if (module->active_card_idx >= 0 && module->active_card_idx < (int)g_card_registry.size() && g_card_registry[module->active_card_idx].id == "utility_pair") {
-            menu->addChild(new MenuSeparator());
-            menu->addChild(createMenuLabel("Utility Pair Selection"));
 
-            struct UtilitySubmenuItem : MenuItem {
-                WorkshopComputer* module;
-                int channel; // 0 = Left, 1 = Right
-
-                Menu* createChildMenu() override {
-                    Menu* menu = new Menu();
-                    static const std::string UTILITIES[24] = {
-                        "Attenuverter", "Bernoulli Gate", "Bitcrusher", "Chords",
-                        "Chorus", "Clock Divider", "Cross Switch", "CV Mixer",
-                        "Delay", "Euclidean Rhythms", "Glitch", "Karplus-Strong",
-                        "Low Pass Gate", "Max/Rectify", "Quantiser", "Sample & Hold",
-                        "Slopes Plus", "Slow LFO", "Super Saw", "Turing 185",
-                        "VCA", "VCO", "Wavefolder", "Window Comparator"
-                    };
-
-                    struct UtilItem : MenuItem {
-                        WorkshopComputer* module;
-                        int channel;
-                        int index;
-                        void onAction(const event::Action& e) override {
-                            module->utility_indices[channel] = index;
-                            module->change_card(module->active_card_idx); // Reload card to engage the new utility
-                        }
-                    };
-
-                    for (int i = 0; i < 24; i++) {
-                        UtilItem* item = new UtilItem();
-                        item->text = UTILITIES[i];
-                        item->module = module;
-                        item->channel = channel;
-                        item->index = i;
-                        item->rightText = (module->utility_indices[channel] == i) ? "✔" : "";
-                        menu->addChild(item);
-                    }
-                    return menu;
-                }
-            };
-
-            UtilitySubmenuItem* leftItem = new UtilitySubmenuItem();
-            leftItem->text = "Left Utility Channel";
-            leftItem->module = module;
-            leftItem->channel = 0;
-            menu->addChild(leftItem);
-
-            UtilitySubmenuItem* rightItem = new UtilitySubmenuItem();
-            rightItem->text = "Right Utility Channel";
-            rightItem->module = module;
-            rightItem->channel = 1;
-            menu->addChild(rightItem);
-        }
 
         // Flash Memory actions
         menu->addChild(new MenuSeparator());

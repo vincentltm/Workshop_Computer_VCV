@@ -26,6 +26,7 @@ struct IComputerModule {
     virtual int  get_active_card_idx() const = 0;
     virtual std::string get_active_card_id() const = 0;
     virtual int  get_utility_index(int slot) const = 0;  // slot 0 or 1
+    virtual void set_utility_index(int slot, int index) = 0;
     virtual void set_pending_page_direction(int dir) = 0;
 };
 
@@ -279,6 +280,61 @@ struct ProgramCardWidget : Widget {
         make_group("Cards #20 - #39", 20, 39);
         make_group("Cards #40 - #59", 40, 59);
         make_group("Cards #60 - #99", 60, 99);
+
+        int active_idx = computerModule->get_active_card_idx();
+        if (active_idx >= 0 && active_idx < (int)g_card_registry.size() && g_card_registry[active_idx].id == "utility_pair") {
+            menu->addChild(new MenuSeparator());
+            menu->addChild(createMenuLabel("Utility Pair Selection"));
+
+            struct UtilitySubmenuItem : MenuItem {
+                IComputerModule* computerModule;
+                int channel; // 0 = Left, 1 = Right
+
+                Menu* createChildMenu() override {
+                    Menu* menu = new Menu();
+                    static const std::string UTILITIES[24] = {
+                        "Attenuverter", "Bernoulli Gate", "Bitcrusher", "Chords",
+                        "Chorus", "Clock Divider", "Cross Switch", "CV Mixer",
+                        "Delay", "Euclidean Rhythms", "Glitch", "Karplus-Strong",
+                        "Low Pass Gate", "Max/Rectify", "Quantiser", "Sample & Hold",
+                        "Slopes Plus", "Slow LFO", "Super Saw", "Turing 185",
+                        "VCA", "VCO", "Wavefolder", "Window Comparator"
+                    };
+
+                    struct UtilItem : MenuItem {
+                        IComputerModule* computerModule;
+                        int channel;
+                        int index;
+                        void onAction(const event::Action& e) override {
+                            computerModule->set_utility_index(channel, index);
+                        }
+                    };
+
+                    for (int i = 0; i < 24; i++) {
+                        UtilItem* item = new UtilItem();
+                        item->text = UTILITIES[i];
+                        item->computerModule = computerModule;
+                        item->channel = channel;
+                        item->index = i;
+                        item->rightText = (computerModule->get_utility_index(channel) == i) ? "✔" : "";
+                        menu->addChild(item);
+                    }
+                    return menu;
+                }
+            };
+
+            UtilitySubmenuItem* leftItem = new UtilitySubmenuItem();
+            leftItem->text = "Left Utility Channel";
+            leftItem->computerModule = computerModule;
+            leftItem->channel = 0;
+            menu->addChild(leftItem);
+
+            UtilitySubmenuItem* rightItem = new UtilitySubmenuItem();
+            rightItem->text = "Right Utility Channel";
+            rightItem->computerModule = computerModule;
+            rightItem->channel = 1;
+            menu->addChild(rightItem);
+        }
     }
 
     void draw(const DrawArgs& args) override {
