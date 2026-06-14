@@ -200,73 +200,83 @@ static void fxDisplayVol(void* data, char* res) { decimalInt16ToChar(((FxProgram
 
 FxProgramType fxProgramStrings = {
     .name = "Resonator",
-    .nParameters = 6, // Wait, 0..3 + Freeze + Vol = 6?
-    // Mix, Decay, Tune, Tone (4 normal params) + Freeze + Volume = 6 parameters.
-    // Index 0: Mix
-    // Index 1: Decay
-    // Index 2: Tune
-    // Index 3: FREEZE (mapped from Switch in main.cpp)
-    // Index 4: Volume? No, Tone was there.
-    // Wait.
-    // Main.cpp maps (0 -> Knob 1), (1 -> Knob 2), (2 -> Knob 3), (3 -> Switch).
-    // Original Params: Mix(0), Decay(1), Tune(2), Tone(0xff), Vol(0xff).
-    // Tone control was 0xff (last).
-    // Now I want Freeze to be at Index 3.
-    // So:
-    // 0: Mix
-    // 1: Decay
-    // 2: Tune
-    // 3: Freeze (Switch)
-    // 4: Tone (Knob ? No, Tone is 4th parameter, usually accessed via Page mechanism? Or just Volume/Tone sharing?)
-    // In original code: `{.name="Tone", .control=0xff`.
-    // It seems Tone wasn't mapped to a knob directly (0,1,2). It was "0xff".
-    // 0xff usually means "Parameter accessible via Menu/Edit mode" or just hidden/preset.
-    // But `main.cpp` only controls 0, 1, 2.
-    // If Tone control index is 0xff, it is NOT controllable via knobs unless user enters "Select" mode?
-    // Wait, `main.cpp` has NO menu for params > 2.
-    // So Tone was effectively fixed?
-    // Ah, `fxProgram4_ampmodel2.c` and others use `control=0xff`.
-    // Actually, `main.cpp` ONLY sends setParameter to indices 0, 1, 2 (and 3 for switch).
-    // So any param with `control=0xff` at index 3... wait.
-    // Index 3 is the ARRAY INDEX `parameters[3]`.
-    // If I put Freeze at `parameters[3]`, `main.cpp` will drive it with the switch.
-    // Correct.
-    // So I must place Freeze at Index 3.
-    // What was at Index 3 before?
-    // Old: Mix(0), Decay(1), Tune(2), Tone(3), Volume(4).
-    // So Tone was at index 3.
-    // Was Tone controlled by switch?
-    // In `main.cpp`:
-    // `if (currentEffectIndex == 21 ... parameters[3].setParameter ...)`
-    // ONLY Granular had param 3 driven by switch.
-    // For Resonator (29), `parameters[3]` (Tone) was NOT driven by switch.
-    // And NOT driven by knobs (0,1,2).
-    // So Tone was fixed/dead?
-    // Or maybe I missed something.
-    // So putting Freeze at Index 3 is safe and enables it on Switch.
-    // Tone moves to Index 4. Volume Index 5.
-    // They are still accessible if I add menu support later, but for now they are fixed.
-    // Wait, Tone should be accesssible.
-    // Maybe mapped to Knob 3 (Y)?
-    // Param 2 is Tune. Knob 3 -> Tune.
-    // Param 1 is Decay. Knob 2 -> Decay.
-    // Param 0 is Mix. Knob 1 -> Mix.
-    // Tone is lost?
-    // Yes, Tone was likely static or I misread the struct.
-    // Original: 5 parameters.
-    // {.name="Tone", .control=0xff...}
-    // Yes.
-    // Okay, so moving Tone to 4 doesn't hurt.
     .parameters = {
-        {.name="Mix", .control=0, .increment=1, .rawValue=0, .setParameter=fxParamMix, .getParameterDisplay=fxDisplayMix},
-        {.name="Decay", .control=1, .increment=1, .rawValue=0, .setParameter=fxParamDecay, .getParameterDisplay=fxDisplayDecay},
-        {.name="Tune", .control=2, .increment=1, .rawValue=0, .setParameter=fxParamSize, .getParameterDisplay=fxDisplaySize},
-        {.name="Freeze", .control=255, .increment=1, .rawValue=0, .setParameter=fxParamFreeze, .getParameterDisplay=0},
-        {.name="Tone", .control=0xff, .increment=1, .rawValue=2000, .setParameter=fxParamTone, .getParameterDisplay=fxDisplayTone},
-        {.name="Volume", .control=0xff, .increment=1, .rawValue=0x400, .setParameter=fxParamVol, .getParameterDisplay=fxDisplayVol}
+        {
+            .name = "Mix",
+            .control = 0,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxDisplayMix,
+            .setParameter = fxParamMix
+        },
+        {
+            .name = "Decay",
+            .control = 1,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxDisplayDecay,
+            .setParameter = fxParamDecay
+        },
+        {
+            .name = "Tune",
+            .control = 2,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxDisplaySize,
+            .setParameter = fxParamSize
+        },
+        {
+            .name = "Freeze",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = fxParamFreeze
+        },
+        {
+            .name = "Tone",
+            .control = 0xff,
+            .rawValue = 2000,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxDisplayTone,
+            .setParameter = fxParamTone
+        },
+        {
+            .name = "Volume",
+            .control = 0xff,
+            .rawValue = 0x400,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxDisplayVol,
+            .setParameter = fxParamVol
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        }
     },
     .processSampleStereo = fxProgram30ProcessStereo,
     .setup = fxProgram30Setup,
+    .nParameters = 6,
     .isStereo = 1,
     .data = &progData
 };

@@ -92,7 +92,36 @@ def get_struct_map():
 def parse_braces(content, start_pos):
     depth = 0
     pos = start_pos
-    while pos < len(content):
+    n = len(content)
+    while pos < n:
+        if pos + 1 < n and content[pos:pos+2] == '//':
+            while pos < n and content[pos] != '\n':
+                pos += 1
+            continue
+        elif pos + 1 < n and content[pos:pos+2] == '/*':
+            pos += 2
+            while pos + 1 < n and content[pos:pos+2] != '*/':
+                pos += 1
+            pos += 2
+            continue
+        elif content[pos] == '"':
+            pos += 1
+            while pos < n and content[pos] != '"':
+                if content[pos] == '\\':
+                    pos += 2
+                else:
+                    pos += 1
+            pos += 1
+            continue
+        elif content[pos] == "'":
+            pos += 1
+            while pos < n and content[pos] != "'":
+                if content[pos] == '\\':
+                    pos += 2
+                else:
+                    pos += 1
+            pos += 1
+            continue
         c = content[pos]
         if c == '{':
             depth += 1
@@ -102,6 +131,7 @@ def parse_braces(content, start_pos):
                 return pos
         pos += 1
     return -1
+
 
 def is_designated_struct_initializer(inner_text):
     inner_clean = re.sub(r'/\*[\s\S]*?\*/', '', inner_text)
