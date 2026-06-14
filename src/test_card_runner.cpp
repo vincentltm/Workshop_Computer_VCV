@@ -5,6 +5,45 @@
 #include "pico_mocks.h"
 #include "ComputerCard.h"
 
+namespace rack {
+struct Context;
+namespace audio {
+struct Driver;
+struct Device;
+struct Port {
+    int inputOffset = 0;
+    int outputOffset = 0;
+    int maxInputs = 8;
+    int maxOutputs = 8;
+    int driverId = -1;
+    int deviceId = -1;
+    Driver* driver = nullptr;
+    Device* device = nullptr;
+    Context* context = nullptr;
+
+    Port();
+    virtual ~Port();
+    int getNumInputs();
+    int getNumOutputs();
+    float getSampleRate();
+    virtual void processBuffer(const float* input, int inputStride, float* output, int outputStride, int frames) {}
+    virtual void processInput(const float* input, int inputStride, int frames) {}
+    virtual void processOutput(float* output, int outputStride, int frames) {}
+    virtual void onStartStream() {}
+    virtual void onStopStream() {}
+};
+
+volatile int g_port_dummy = 0;
+volatile float g_port_dummy_f = 0.f;
+
+__attribute__((visibility("default"))) Port::Port() { g_port_dummy = 1; }
+__attribute__((visibility("default"))) Port::~Port() { g_port_dummy = 2; }
+__attribute__((visibility("default"))) int Port::getNumInputs() { g_port_dummy = 3; return 2; }
+__attribute__((visibility("default"))) int Port::getNumOutputs() { g_port_dummy = 4; return 2; }
+__attribute__((visibility("default"))) float Port::getSampleRate() { g_port_dummy_f = 44100.f; return 44100.f; }
+}
+}
+
 // Define the thread_local symbols that the host defines
 thread_local CardGlobals* t_instance = nullptr;
 thread_local CardGlobals* dummy_instance_ptr = nullptr;
@@ -34,6 +73,13 @@ void test_multicore_launch_core1(void (*entry)()) {
 }
 
 int main(int argc, char* argv[]) {
+    // Prevent linker from dead-stripping rack::audio::Port stubs
+    if (argc == 9999) {
+        rack::audio::Port* volatile p = new rack::audio::Port();
+        rack::audio::g_port_dummy = p->getNumInputs() + p->getNumOutputs() + (int)p->getSampleRate();
+        delete p;
+    }
+
     if (argc < 2) {
         std::cerr << "Usage: " << argv[0] << " <path_to_card_library.dylib>" << std::endl;
         return 1;

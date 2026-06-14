@@ -115,6 +115,10 @@ def is_array_initializer(inner_text):
     return False
 
 def parse_assignments(inside_text):
+    # Strip comments first
+    inside_text = re.sub(r'/\*[\s\S]*?\*/', '', inside_text)
+    inside_text = re.sub(r'//.*', '', inside_text)
+    
     assignments = {}
     depth = 0
     current_field = None
@@ -286,7 +290,7 @@ def rewrite_inside(type_name, inside, local_struct_map):
         return format_nested_dict(grouped, type_name, local_struct_map, indent=4)
 
 def rewrite_initializers(content, local_struct_map):
-    pattern = re.compile(r'\b([A-Za-z0-9_]+DataType|[A-Za-z0-9_]+StereoDataType|FxProgramType|SineChorusType|SimpleChorusType)\s+([A-Za-z0-9_]+)\s*=\s*\{')
+    pattern = re.compile(r'\b([A-Za-z0-9_]+Type)\s+([A-Za-z0-9_]+)\s*=\s*\{')
     offset = 0
     while True:
         match = pattern.search(content, offset)

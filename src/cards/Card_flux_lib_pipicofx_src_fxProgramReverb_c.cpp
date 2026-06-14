@@ -248,7 +248,7 @@ FxProgram10StereoDataType fxProgram10data=
         .gain = 0xff,
         .offset = 0
     },
-    .freeze = 0 // Initialize freeze state in data struct
+    .freeze = 0
 };
 
 FxProgramType fxProgramReverb = {

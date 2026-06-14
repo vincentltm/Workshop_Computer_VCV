@@ -289,7 +289,7 @@ FxProgram19StereoDataType fxProgram19data = {
     .mix = 16384,
     .freeze = 0,
     .lfoPhase = 0,
-    .lfoDepth = 15  // ±15 samples modulation (subtle but effective)
+    .lfoDepth = 15
 };
 
 void fxProgram19Setup(void*data)

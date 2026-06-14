@@ -4,7 +4,8 @@ import subprocess
 import glob
 import sys
 
-VCV_PROJECT_DIR = "/Users/vmaurer/Music/Workshop_Computer_VCV"
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+VCV_PROJECT_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, ".."))
 
 def main():
     os.chdir(VCV_PROJECT_DIR)
@@ -12,7 +13,7 @@ def main():
     # 1. Compile test_card_runner
     print("Compiling test_card_runner harness...")
     compile_cmd = [
-        "c++", "-std=c++17", "-Isrc", "-g",
+        "c++", "-std=c++17", "-Isrc", "-g", "-rdynamic", "-Wl,-export_dynamic,-flat_namespace",
         "-o", "test_card_runner", "src/test_card_runner.cpp", "-ldl"
     ]
     try:
