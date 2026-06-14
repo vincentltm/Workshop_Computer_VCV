@@ -19,6 +19,8 @@
 #include "pico_mocks.h"
 #include "ComputerCard.h"
 
+thread_local CardGlobals* t_instance = nullptr;
+
 // Sample names and expected filenames for 16 tracks:
 // BD2550.WAV, RS.WAV, CP.WAV, SD0010.WAV, CY1000.WAV, MA.WAV, HT25.WAV, LT25.WAV,
 // OH00.WAV, OH25.WAV, CH.WAV, CY7525.WAV, CY1025.WAV, CY0025.WAV, CB.WAV, CY0000.WAV
