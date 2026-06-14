@@ -548,6 +548,14 @@ inline void flash_range_program(uint32_t flash_offs, const uint8_t* data, size_t
         }
     }
 }
+inline void flash_do_cmd(const uint8_t *txbuf, uint8_t *rxbuf, size_t count) {
+    if (count >= 4 && txbuf[0] == 0x9f) {
+        rxbuf[0] = 0;
+        rxbuf[1] = 0xef; // Winbond manufacturer ID
+        rxbuf[2] = 0x40;
+        rxbuf[3] = 21;   // 2MB size capacity code (1 << 21 bytes)
+    }
+}
 
 // ──────────────────────────────────────────────────────────────────────────────
 // GPIO

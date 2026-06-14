@@ -15,7 +15,7 @@ else
 	endif
 endif
 
-CARD_LIBS := res/cards/libcard_simple_midi.$(CARD_LIB_EXT) res/cards/libcard_turing_machine.$(CARD_LIB_EXT) res/cards/libcard_byo_benjolin.$(CARD_LIB_EXT) res/cards/libcard_chord_blimey.$(CARD_LIB_EXT) res/cards/libcard_usb_audio_bridge.$(CARD_LIB_EXT) res/cards/libcard_bumpers.$(CARD_LIB_EXT) res/cards/libcard_bytebeat.$(CARD_LIB_EXT) res/cards/libcard_divcom.$(CARD_LIB_EXT) res/cards/libcard_twists.$(CARD_LIB_EXT) res/cards/libcard_goldfish.$(CARD_LIB_EXT) res/cards/libcard_am_coupler.$(CARD_LIB_EXT) res/cards/libcard_noisebox.$(CARD_LIB_EXT) res/cards/libcard_cvmod.$(CARD_LIB_EXT) res/cards/libcard_mlrws.$(CARD_LIB_EXT) res/cards/libcard_chord_organ.$(CARD_LIB_EXT) res/cards/libcard_reverb.$(CARD_LIB_EXT) res/cards/libcard_resonator.$(CARD_LIB_EXT) res/cards/libcard_sheep.$(CARD_LIB_EXT) res/cards/libcard_slowmod.$(CARD_LIB_EXT) res/cards/libcard_crafted_volts.$(CARD_LIB_EXT) res/cards/libcard_utility_pair.$(CARD_LIB_EXT) res/cards/libcard_siren.$(CARD_LIB_EXT) res/cards/libcard_eighties_bass.$(CARD_LIB_EXT) res/cards/libcard_cirpy_wavetable.$(CARD_LIB_EXT) res/cards/libcard_esp.$(CARD_LIB_EXT) res/cards/libcard_vink.$(CARD_LIB_EXT) res/cards/libcard_drumdrum.$(CARD_LIB_EXT) res/cards/libcard_dual_quant.$(CARD_LIB_EXT) res/cards/libcard_od.$(CARD_LIB_EXT) res/cards/libcard_knots.$(CARD_LIB_EXT) res/cards/libcard_blackbird.$(CARD_LIB_EXT) res/cards/libcard_backyard_rain.$(CARD_LIB_EXT) res/cards/libcard_birds.$(CARD_LIB_EXT) res/cards/libcard_bends.$(CARD_LIB_EXT) res/cards/libcard_rompler.$(CARD_LIB_EXT) res/cards/libcard_nzt.$(CARD_LIB_EXT) res/cards/libcard_modes.$(CARD_LIB_EXT) res/cards/libcard_flux.$(CARD_LIB_EXT) res/cards/libcard_grains.$(CARD_LIB_EXT) res/cards/libcard_glitter.$(CARD_LIB_EXT) res/cards/libcard_tapegrade.$(CARD_LIB_EXT) res/cards/libcard_fifths.$(CARD_LIB_EXT) res/cards/libcard_krell.$(CARD_LIB_EXT) res/cards/libcard_glitch.$(CARD_LIB_EXT) res/cards/libcard_lochovibes.$(CARD_LIB_EXT) res/cards/libcard_markov.$(CARD_LIB_EXT) res/cards/libcard_stretchcore.$(CARD_LIB_EXT) res/cards/libcard_trace.$(CARD_LIB_EXT) res/cards/libcard_degenerator.$(CARD_LIB_EXT) res/cards/libcard_motorik.$(CARD_LIB_EXT) res/cards/libcard_wild_pebble.$(CARD_LIB_EXT) res/cards/libcard_talker.$(CARD_LIB_EXT) res/cards/libcard_computer_grids.$(CARD_LIB_EXT) res/cards/libcard_tesserae.$(CARD_LIB_EXT) res/cards/libcard_duo_midi.$(CARD_LIB_EXT) res/cards/libcard_toolbox.$(CARD_LIB_EXT)
+CARD_LIBS := res/cards/libcard_simple_midi.$(CARD_LIB_EXT) res/cards/libcard_turing_machine.$(CARD_LIB_EXT) res/cards/libcard_byo_benjolin.$(CARD_LIB_EXT) res/cards/libcard_chord_blimey.$(CARD_LIB_EXT) res/cards/libcard_usb_audio_bridge.$(CARD_LIB_EXT) res/cards/libcard_bumpers.$(CARD_LIB_EXT) res/cards/libcard_bytebeat.$(CARD_LIB_EXT) res/cards/libcard_divcom.$(CARD_LIB_EXT) res/cards/libcard_twists.$(CARD_LIB_EXT) res/cards/libcard_goldfish.$(CARD_LIB_EXT) res/cards/libcard_am_coupler.$(CARD_LIB_EXT) res/cards/libcard_noisebox.$(CARD_LIB_EXT) res/cards/libcard_cvmod.$(CARD_LIB_EXT) res/cards/libcard_mlrws.$(CARD_LIB_EXT) res/cards/libcard_chord_organ.$(CARD_LIB_EXT) res/cards/libcard_reverb.$(CARD_LIB_EXT) res/cards/libcard_resonator.$(CARD_LIB_EXT) res/cards/libcard_sheep.$(CARD_LIB_EXT) res/cards/libcard_slowmod.$(CARD_LIB_EXT) res/cards/libcard_crafted_volts.$(CARD_LIB_EXT) res/cards/libcard_utility_pair.$(CARD_LIB_EXT) res/cards/libcard_siren.$(CARD_LIB_EXT) res/cards/libcard_eighties_bass.$(CARD_LIB_EXT) res/cards/libcard_cirpy_wavetable.$(CARD_LIB_EXT) res/cards/libcard_esp.$(CARD_LIB_EXT) res/cards/libcard_vink.$(CARD_LIB_EXT) res/cards/libcard_drumdrum.$(CARD_LIB_EXT) res/cards/libcard_dual_quant.$(CARD_LIB_EXT) res/cards/libcard_compulidean.$(CARD_LIB_EXT) res/cards/libcard_od.$(CARD_LIB_EXT) res/cards/libcard_knots.$(CARD_LIB_EXT) res/cards/libcard_blackbird.$(CARD_LIB_EXT) res/cards/libcard_backyard_rain.$(CARD_LIB_EXT) res/cards/libcard_birds.$(CARD_LIB_EXT) res/cards/libcard_bends.$(CARD_LIB_EXT) res/cards/libcard_rompler.$(CARD_LIB_EXT) res/cards/libcard_nzt.$(CARD_LIB_EXT) res/cards/libcard_modes.$(CARD_LIB_EXT) res/cards/libcard_flux.$(CARD_LIB_EXT) res/cards/libcard_grains.$(CARD_LIB_EXT) res/cards/libcard_glitter.$(CARD_LIB_EXT) res/cards/libcard_tapegrade.$(CARD_LIB_EXT) res/cards/libcard_fifths.$(CARD_LIB_EXT) res/cards/libcard_krell.$(CARD_LIB_EXT) res/cards/libcard_glitch.$(CARD_LIB_EXT) res/cards/libcard_lochovibes.$(CARD_LIB_EXT) res/cards/libcard_bitphase.$(CARD_LIB_EXT) res/cards/libcard_markov.$(CARD_LIB_EXT) res/cards/libcard_voices_of_sid.$(CARD_LIB_EXT) res/cards/libcard_stretchcore.$(CARD_LIB_EXT) res/cards/libcard_trace.$(CARD_LIB_EXT) res/cards/libcard_degenerator.$(CARD_LIB_EXT) res/cards/libcard_motorik.$(CARD_LIB_EXT) res/cards/libcard_wild_pebble.$(CARD_LIB_EXT) res/cards/libcard_talker.$(CARD_LIB_EXT) res/cards/libcard_computer_grids.$(CARD_LIB_EXT) res/cards/libcard_tesserae.$(CARD_LIB_EXT) res/cards/libcard_duo_midi.$(CARD_LIB_EXT) res/cards/libcard_toolbox.$(CARD_LIB_EXT)
 
 res/cards/libcard_simple_midi.$(CARD_LIB_EXT): src/cards/Card_simple_midi.cpp
 	@mkdir -p res/cards
@@ -129,6 +129,10 @@ res/cards/libcard_dual_quant.$(CARD_LIB_EXT): src/cards/Card_dual_quant.cpp
 	@mkdir -p res/cards
 	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/34_dual_quant" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_dual_quant.cpp
 
+res/cards/libcard_compulidean.$(CARD_LIB_EXT): src/cards/Card_compulidean.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS)  $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_compulidean.cpp
+
 res/cards/libcard_od.$(CARD_LIB_EXT): src/cards/Card_od.cpp
 	@mkdir -p res/cards
 	$(CXX) $(CXXFLAGS) $(FLAGS) "-Isrc/cards/wrappers/od" "-Ideps/Workshop_Computer/releases/38_od" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_od.cpp
@@ -197,9 +201,17 @@ res/cards/libcard_lochovibes.$(CARD_LIB_EXT): src/cards/Card_lochovibes.cpp
 	@mkdir -p res/cards
 	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/58_LoChoVibes" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_lochovibes.cpp
 
+res/cards/libcard_bitphase.$(CARD_LIB_EXT): src/cards/Card_bitphase.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/59_BitPhase" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_bitphase.cpp
+
 res/cards/libcard_markov.$(CARD_LIB_EXT): src/cards/Card_markov.cpp
 	@mkdir -p res/cards
 	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/60_markov" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_markov.cpp
+
+res/cards/libcard_voices_of_sid.$(CARD_LIB_EXT): src/cards/Card_voices_of_sid.cpp src/cards/Card_voices_of_sid_reSID_envelope_cc.cpp src/cards/Card_voices_of_sid_reSID_extfilt_cc.cpp src/cards/Card_voices_of_sid_reSID_filter_cc.cpp src/cards/Card_voices_of_sid_reSID_pot_cc.cpp src/cards/Card_voices_of_sid_reSID_sid_cc.cpp src/cards/Card_voices_of_sid_reSID_voice_cc.cpp src/cards/Card_voices_of_sid_reSID_wave_cc.cpp
+	@mkdir -p res/cards
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/external/voices-of-sid" "-Ideps/external/voices-of-sid/reSID" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_voices_of_sid.cpp src/cards/Card_voices_of_sid_reSID_envelope_cc.cpp src/cards/Card_voices_of_sid_reSID_extfilt_cc.cpp src/cards/Card_voices_of_sid_reSID_filter_cc.cpp src/cards/Card_voices_of_sid_reSID_pot_cc.cpp src/cards/Card_voices_of_sid_reSID_sid_cc.cpp src/cards/Card_voices_of_sid_reSID_voice_cc.cpp src/cards/Card_voices_of_sid_reSID_wave_cc.cpp
 
 res/cards/libcard_stretchcore.$(CARD_LIB_EXT): src/cards/Card_stretchcore.cpp
 	@mkdir -p res/cards

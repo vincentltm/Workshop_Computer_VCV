@@ -23,6 +23,36 @@ CARD_WHITELIST = [
         "sources": ["simple_midi.cpp"]
     },
     {
+        "id": "bitphase",
+        "dir": "releases/59_BitPhase",
+        "ns": "Card_BitPhase",
+        "num": "59",
+        "sources": ["BitPhase.cpp"]
+    },
+    {
+        "id": "voices_of_sid",
+        "dir": os.path.join(VCV_PROJECT_DIR, "deps", "external", "voices-of-sid"),
+        "ns": "Card_VoicesOfSid",
+        "num": "64",
+        "sources": [
+            "main.cpp",
+            "reSID/envelope.cc",
+            "reSID/extfilt.cc",
+            "reSID/filter.cc",
+            "reSID/pot.cc",
+            "reSID/sid.cc",
+            "reSID/voice.cc",
+            "reSID/wave.cc"
+        ]
+    },
+    {
+        "id": "compulidean",
+        "dir": "releases/37_compulidean",
+        "ns": "Card_Compulidean",
+        "num": "37",
+        "sources": []
+    },
+    {
         "id": "usb_audio_bridge",
         "dir": "releases/06_usb_audio",
         "ns": "Card_UsbAudioBridge",
@@ -585,6 +615,20 @@ def main():
             })
             continue
 
+        if card["id"] == "compulidean":
+            card_data[card["id"]] = {
+                "sources": [os.path.join("src", "cards", "Card_compulidean.cpp")],
+                "flags": []
+            }
+            registry_entries.append({
+                "id": card["id"],
+                "name": "Compulidean",
+                "num": card["num"],
+                "desc": "Drum machine / Euclidean generated drum patterns + drum machine.",
+                "creator": "Tristan Rowley (semi-rewrite by Antigravity)"
+            })
+            continue
+
         if card["dir"].startswith("/"):
             card_dir_abs = card["dir"]
         else:
@@ -736,6 +780,7 @@ def main():
         for s in card["sources"]:
             if (card["id"] == "flux" and s.startswith("lib/pipicofx/src/")) or \
                (card["id"] == "twists" and s != "braids/twists.cc") or \
+               (card["id"] == "voices_of_sid" and s.startswith("reSID/")) or \
                (card["id"] in ("blackbird", "krell", "duo_midi") and s != "main.cpp"):
                 separate_sources.append(s)
             else:
@@ -1118,6 +1163,16 @@ def main():
             f.write(f"\t$(CXX) $(CXXFLAGS) $(FLAGS) {flags_str} $(CARD_LDFLAGS_SHARED) -o $@ {srcs}\n\n")
             
         f.write("SOURCES += src/cards/CardRegistry.cpp\n")
+        # Copy wav files for compulidean
+        comp_src_dir = os.path.join("/Users/vmaurer/Music/WorkshopComputerExternal/compulidian/include/audio/808samples")
+        comp_dst_dir = os.path.join(VCV_PROJECT_DIR, "res", "compulidean")
+        if os.path.exists(comp_src_dir):
+            os.makedirs(comp_dst_dir, exist_ok=True)
+            for f_name in os.listdir(comp_src_dir):
+                if f_name.upper().endswith(".WAV"):
+                    shutil.copy(os.path.join(comp_src_dir, f_name), os.path.join(comp_dst_dir, f_name))
+            print("Copied sample files for compulidean")
+
         # Copy wav files for cirpy_wavetable
         wav_src_dir = os.path.join(WORKSPACE_DIR, "releases/30_cirpy_wavetable/wav")
         wav_dst_dir = os.path.join(VCV_PROJECT_DIR, "res", "wav")

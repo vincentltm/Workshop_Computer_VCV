@@ -201,6 +201,13 @@ void register_all_cards() {
         "Adrian Vos - with Vibe code support"
     });
     g_card_registry.push_back({
+        "compulidean",
+        "Compulidean",
+        "37",
+        "Drum machine / Euclidean generated drum patterns + drum machine.",
+        "Tristan Rowley (semi-rewrite by Antigravity)"
+    });
+    g_card_registry.push_back({
         "od",
         "Od",
         "38",
@@ -320,11 +327,25 @@ void register_all_cards() {
         "Music Thing Modular"
     });
     g_card_registry.push_back({
+        "bitphase",
+        "BitPhase",
+        "59",
+        "experimental phaser/tremolo with bit destruction",
+        "Adrian Vos"
+    });
+    g_card_registry.push_back({
         "markov",
         "Markov",
         "60",
         "Dual generative Markov chain module — evolving melody (MarkoV) left side, rhythmic percussion patterns (MarkovPerc) right side, with internal synth voice",
         "Andy Jenkinson (uglifruit)"
+    });
+    g_card_registry.push_back({
+        "voices_of_sid",
+        "Voices Of Sid",
+        "64",
+        "Dual MOS 6581 SID emulation (reSID engine) with CV/gate control, stereo output, waveform selection, and randomize",
+        "Joep Vermaat"
     });
     g_card_registry.push_back({
         "stretchcore",

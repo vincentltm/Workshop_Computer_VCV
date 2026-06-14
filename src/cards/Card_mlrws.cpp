@@ -132,8 +132,8 @@ extern "C" {
 #define GRIDLESS_REC_HOLD_SAMPLES 96000u  /* 2 seconds at 48 kHz */
 #define RECORD_REARM_DELAY_SAMPLES 24000u /* 0.5 seconds at 48 kHz */
 #define FORCE_8X8_GRID_LAYOUT 0  /* for testing: force compact grid layout regardless of detected width */
-#define CUT_PULSE_TRIG_SAMPLES 960u  /* 20 ms at 48 kHz: PulseOut1 trigger width fired on every cut event (manual or pattern/recall playback) */
-#define EMPTY_KEYBOARD_LINGER_US 1000000ull  /* 1 second */
+#define CUT_PULSE_TRIG_SAMPLES 960u  /* 20 ms at 48 kHz: PulseOut1 trigger width fired on output-enabled cut events (manual or pattern/recall playback) */
+#define EMPTY_KEYBOARD_LINGER_US 3000000ull  /* 3 seconds */
 #define RECALL_KEY_GATE_US      100000u
 #define CV_ENV_PEAK            2047  /* CV2 envelope peak (matches CV full positive range) */
 #define CV2_FLOOR_OFFSET       341   /* raw DAC subtract: -1 V at rest (assuming +6 V = +2047 raw) */
@@ -147,6 +147,9 @@ extern "C" {
 #define DELETE_RESET_HOLD_SAMPLES 240000u  /* 5 seconds at 48 kHz */
 #define DELETE_RESET_FLASH_PERIOD_SAMPLES 4800u  /* 100 ms half-period */
 #define DELETE_RESET_FLASH_SAMPLES (DELETE_RESET_FLASH_PERIOD_SAMPLES * 6u)  /* three quick flashes */
+#define EXTRA_GUIDE_ENABLED 0x80u
+#define EXTRA_PATTERN_KEY_MASK 0x7Fu
+#define EXTRA_PATTERN_KEY_NONE 0x70u
 
 /* Monitor fade step per sample (Q8). 256/4 = 64 samples ≈ 1.3 ms fade. */
 #define MLR_MON_FADE_STEP 4
@@ -785,6 +788,9 @@ public:
 				} else if (mlr_patterns[p].state == MLR_PAT_IDLE) {
 					mlr_pattern_arm(p);
 				} else if (mlr_patterns[p].state == MLR_PAT_PLAYING) {
+					replay_gate_mask_ = 0;
+					if (!live_gate_high_ && env_gate_high_)
+						release_cv2_envelope();
 					mlr_pattern_play_stop(p);
 				} else if (mlr_patterns[p].state == MLR_PAT_STOPPED) {
 					mlr_pattern_play_start(p);
@@ -847,32 +853,30 @@ public:
 
 		/* ---- Cut-event-driven CV / pulse outputs ----
 		 *   CV1     = chromatic note (S&H) + live X-knob offset
-		 *   CV2     = exponential decay envelope, triggered on cut events
-		 *   Pulse1  = 20 ms trigger countdown, fires on each cut event
-		 *   Pulse2  = gate, high while any held CUT-page track-row key
-		 * CV1 / CV2 / Pulse1 all mirror through pattern/recall playback via
-		 * mlr_event_playback_hook. Pulse2 is live-only (grid key hold isn't
-		 * recorded). */
+		 *   CV2     = ASR envelope, gated by output-enabled cut keys
+		 *   Pulse1  = 20 ms trigger countdown, fires on output-enabled cut events
+		 *   Pulse2  = gate, high while any output-enabled CUT-page track row is held
+		 * CV1 / CV2 / Pulse1 / Pulse2 all mirror through pattern/recall playback
+		 * via mlr_event_playback_hook. */
 
 		/* Gate detection + CV1 refresh at UI-control rate (~3 kHz, 333 µs
 		 * latency). Gate drives PulseOut2 and LED 5; CV1 only needs UI-tick
 		 * rate since DAC holds the value between writes — saves the
 		 * per-sample MIDIToDAC math. */
 		if (run_ui_control) {
-			bool new_gate = false;
+			bool new_live_gate = false;
 			if (play_page == PAGE_CUT) {
-				/* Empty tracks count for gating too. */
 				for (int t = 0; t < MLR_NUM_TRACKS; t++) {
-					if (grid.heldRowMask((uint8_t)(t + 1))) {
-						new_gate = true;
+					if (track_outputs_enabled(t) && grid.heldRowMask((uint8_t)(t + 1))) {
+						new_live_gate = true;
 						break;
 					}
 				}
 			}
-			if (!new_gate) {
+			if (!new_live_gate) {
 				for (int t = 0; t < MLR_NUM_TRACKS; t++) {
-					if (mlr_gate_mode[t] && mlr_tracks[t].playing) {
-						new_gate = true;
+					if (track_outputs_enabled(t) && mlr_gate_mode[t] && mlr_tracks[t].playing) {
+						new_live_gate = true;
 						break;
 					}
 				}
@@ -880,8 +884,12 @@ public:
 			/* Held cut keys on bottom-half "extra" rows gate Pulse2 the
 			 * same as held cut keys on (empty) top-half track rows.
 			 * Page-agnostic: bottom-half is a free keyboard layer. */
-			if (!new_gate && extra_rows_any_held())
-				new_gate = true;
+			if (!new_live_gate && extra_rows_any_held())
+				new_live_gate = true;
+			live_gate_high_ = new_live_gate;
+			bool new_gate = live_gate_high_ || replay_gate_mask_ != 0;
+			if (!new_gate && env_gate_high_)
+				release_cv2_envelope();
 			gate_high_ = new_gate;
 
 			int x_knob = (int)x_knob_filtered_;  /* 0..4095, LPF'd */
@@ -1138,7 +1146,6 @@ private:
 	uint16_t   group_flash_period_ = GROUP_FLASH_CREATE_PERIOD;  /* current blink half-period */
 	int        copy_source_track_ = -1;           /* source for arm/channel copy gesture */
 	int        copy_source_column_ = 0;           /* arm/channel column where source press began */
-	int        copy_source_page_ = PAGE_REC;      /* page where source press began */
 	uint8_t    copy_participant_mask_ = 0;        /* arm/channel keys suppressed by copy gesture */
 	uint8_t    copy_target_mask_ = 0;             /* empty tracks selected as copy destinations */
 	bool       copy_gesture_committed_ = false;
@@ -1156,13 +1163,9 @@ private:
 	uint8_t    empty_pattern_key_col_[MLR_NUM_TRACKS] = {};
 	bool       empty_pattern_key_active_[MLR_NUM_TRACKS] = {};
 	uint32_t   empty_pattern_key_until_us_[MLR_NUM_TRACKS] = {};
-	/* Bottom-half rows on a 16-row grid: free-running "empty keyboard"
-	 * overlay. Pressing rows 8..15 fires CV1/CV2/Pulse1 and shows the
-	 * piano-key linger overlay just like an empty top-half track row,
-	 * but without any associated track, audio playback, or pattern
-	 * recording. Indexed by (row - 8). */
-	uint64_t   extra_keyboard_linger_until_us_[MONOME_WS_GRID_MAX_Y - 8] = {};
-	uint8_t    extra_keyboard_linger_col_[MONOME_WS_GRID_MAX_Y - 8] = {};
+	/* Bottom-half rows on a 16-row grid: free-running keyboard overlay,
+	 * without any associated track, audio playback, or pattern recording. */
+	uint8_t    extra_keyboard_state_ = (EXTRA_GUIDE_ENABLED | EXTRA_PATTERN_KEY_NONE);
 	/* Cut-event-driven CV / pulse outputs (fire on manual cuts and on
 	 * pattern/recall playback via mlr_event_playback_hook). */
 	uint32_t   cv_pulse1_remaining_ = 0;   /* PulseOut1 trigger countdown (samples) */
@@ -1170,21 +1173,25 @@ private:
 	int8_t     cv_step_base_midi_ = CV_NOTE_BASE_MIDI;  /* CV1 S&H base note from last cut col */
 	int32_t    x_knob_filtered_ = 2048;    /* one-pole LPF of Knob::X (sample-rate) to suppress
 	                                          ADC dither flicker at semitone/gain boundaries */
-	/* CV2 envelope: attack to peak, then linear decay to 0. env_val_q16_
-	 * holds the value in Q16. Steps are latched at trigger so knob changes
-	 * do not disturb an in-flight envelope. */
+	/* CV2 envelope: attack to peak, sustain while gated, then linear release
+	 * to 0. env_val_q16_ holds the value in Q16. Segment steps are latched
+	 * so knob changes do not disturb an in-flight segment. */
 	static constexpr uint8_t ENV_IDLE = 0;
 	static constexpr uint8_t ENV_ATTACK = 1;
-	static constexpr uint8_t ENV_DECAY = 2;
+	static constexpr uint8_t ENV_SUSTAIN = 2;
+	static constexpr uint8_t ENV_RELEASE = 3;
 	uint8_t    env_stage_ = ENV_IDLE;
 	int32_t    env_val_q16_ = 0;           /* 0 .. CV_ENV_PEAK << 16 */
 	int32_t    env_attack_step_q16_ = 0;   /* per-sample add, Q16 */
-	int32_t    env_decay_step_q16_ = 0;    /* per-sample subtract, Q16 */
+	int32_t    env_release_step_q16_ = 0;  /* per-sample subtract, Q16 */
 	uint32_t   cv_attack_samples_ = CV_ATTACK_MIN_SAMPLES;
+	bool       env_gate_high_ = false;
 	uint32_t   gl_turing_rng_state_ = 0x6D2B79F5u;
-	/* PulseOut2 / LED 5 gate: high while any CUT-page track-row key is held
-	 * (independent of envelope state — useful for VCA gates / mutes). */
+	/* PulseOut2 / LED 5 gate: high while any output-enabled CUT-page track
+	 * row key is held (independent of envelope state — useful for VCA gates / mutes). */
 	bool       gate_high_ = false;
+	bool       live_gate_high_ = false;
+	uint8_t    replay_gate_mask_ = 0;
 	uint32_t   delete_reset_hold_samples_ = 0;    /* continuous DELETE hold duration */
 	uint32_t   delete_reset_flash_samples_remaining_ = 0;  /* confirmation flash countdown */
 	bool       delete_reset_fired_ = false;       /* require DELETE release before another reset */
@@ -1299,6 +1306,41 @@ private:
 		return (internal_col * max_grid_col + ((MLR_GRID_COLS - 1) / 2)) / (MLR_GRID_COLS - 1);
 	}
 
+	static constexpr uint8_t KEY_GUIDE_LEVEL = 2;
+	static constexpr uint8_t KEY_OCTAVE_LEVEL = 6;
+	static constexpr uint8_t KEY_HELD_LEVEL = 12;
+
+	int keyboard_local_row(int row) const
+	{
+		return row & 7;
+	}
+
+	int keyboard_midi_from_internal(int internal_col, int row) const
+	{
+		if (internal_col < 0) internal_col = 0;
+		if (internal_col >= MLR_GRID_COLS) internal_col = MLR_GRID_COLS - 1;
+		int local_row = keyboard_local_row(row);
+		return 60 + (internal_col - 8) + 5 * (4 - local_row) + ((local_row + 5) >> 3) - 3;
+	}
+
+	uint8_t keyboard_guide_level(int internal_col, int row) const
+	{
+		int pitch_class = keyboard_midi_from_internal(internal_col, row) % 12;
+		if (pitch_class == 4) return KEY_OCTAVE_LEVEL;
+		return ((0xB5Au >> pitch_class) & 1u) ? KEY_GUIDE_LEVEL : 0;
+	}
+
+	bool extra_keyboard_guide_enabled() const
+	{
+		return (extra_keyboard_state_ & EXTRA_GUIDE_ENABLED) != 0;
+	}
+
+	bool track_outputs_enabled(int track) const
+	{
+		if (track < 0 || track >= MLR_NUM_TRACKS) return false;
+		return !mlr_tracks[track].has_content || mlr_tracks[track].cv1_pitch_enabled;
+	}
+
 	void grid_frame_led_max(int x, int y, uint8_t level)
 	{
 		if (x < 0 || y < 0 || x >= MONOME_WS_GRID_MAX_X || y >= MONOME_WS_GRID_MAX_Y) return;
@@ -1318,6 +1360,50 @@ private:
 			}
 		}
 		return false;
+	}
+
+	void draw_empty_track_keyboard_overlay()
+	{
+		uint64_t now64 = time_us_64();
+		uint32_t now32 = time_us_32();
+		int cs = cut_col_start();
+		int ce = cut_col_end();
+		uint16_t zone_mask = (uint16_t)(((1u << (ce - cs + 1)) - 1u) << cs);
+		bool show_guide = false;
+
+		for (int t = 0; t < MLR_NUM_TRACKS; t++) {
+			if (mlr_tracks[t].has_content) continue;
+			uint16_t held = (uint16_t)(grid.heldRowMask((uint8_t)(t + 1)) & zone_mask);
+			if (held)
+				empty_keyboard_linger_until_us_[t] = now64 + EMPTY_KEYBOARD_LINGER_US;
+
+			bool pattern_keyboard_active = pattern_playing_empty_track_pitch(t);
+			if (empty_pattern_key_active_[t] && empty_pattern_key_until_us_[t] != 0 &&
+				(int32_t)(now32 - empty_pattern_key_until_us_[t]) >= 0)
+				empty_pattern_key_active_[t] = false;
+			if (empty_pattern_key_active_[t] && empty_pattern_key_until_us_[t] == 0 && !pattern_keyboard_active)
+				empty_pattern_key_active_[t] = false;
+
+			if (now64 < empty_keyboard_linger_until_us_[t] || empty_pattern_key_active_[t])
+				show_guide = true;
+		}
+
+		for (int t = 0; t < MLR_NUM_TRACKS; t++) {
+			if (mlr_tracks[t].has_content) continue;
+			int row = t + 1;
+			if (show_guide) {
+				for (int internal = 0; internal < MLR_GRID_COLS; internal++) {
+					uint8_t level = keyboard_guide_level(internal, row);
+					if (level)
+						grid_frame_led_max(cut_internal_to_grid(internal), row, level);
+				}
+			}
+			int held_col = cut_internal_to_grid(empty_keyboard_linger_col_[t] & 0x0F);
+			if (grid.held((uint8_t)held_col, (uint8_t)row))
+				grid_frame_led_max(held_col, row, KEY_HELD_LEVEL);
+			if (empty_pattern_key_active_[t])
+				grid_frame_led_max(cut_internal_to_grid(empty_pattern_key_col_[t]), row, KEY_HELD_LEVEL);
+		}
 	}
 
 	/** Map 8x8 REC speed column (2-6) to speed_shift. */
@@ -1430,9 +1516,9 @@ private:
 		static const uint16_t kSlotFrac[MLR_NUM_VOL_SLOTS] = {
 			362,  /* slot 0: +3 dB */
 			256,  /* slot 1: unity */
-			181,  /* slot 2: -3 dB */
-			128,  /* slot 3: -6 dB */
-			45,   /* slot 4: -15 dB */
+			128,  /* slot 2: -6 dB */
+			64,   /* slot 3: -12 dB */
+			0,    /* slot 4: silent */
 		};
 
 		for (int t = 0; t < MLR_NUM_TRACKS; t++) {
@@ -1906,6 +1992,7 @@ private:
 			gl_pulse1_pending_ = false;
 			bool turing_clock = pulse_reset || gl_pulse2_pending_;
 			gl_pulse2_pending_ = false;
+			bool pulse_gate_now = PulseIn1() || PulseIn2() || turing_clock;
 
 			if (!gl_record_mode_ && !gl_recording_active_ && (switch_reset || pulse_reset) && gl_active_track_ >= 0)
 				gridless_restart_all_tracks_from_zero();
@@ -1913,6 +2000,8 @@ private:
 				gridless_step_turing();
 				trigger_cv2_envelope();
 			}
+			if (!pulse_gate_now && env_gate_high_)
+				release_cv2_envelope();
 
 			gl_prev_switch_mode_ = static_cast<Switch>(sw);
 		}
@@ -2063,6 +2152,15 @@ private:
 public:
 	void __not_in_flash_func(cut_trigger)(int track, int col)
 	{
+		if (track >= 8) {
+			if (col < 0) col = 0;
+			if (col > 15) col = 15;
+			cv_step_base_midi_ = (int8_t)keyboard_midi_from_internal(col, track);
+			trigger_cv2_envelope();
+			cv_pulse1_remaining_ = CUT_PULSE_TRIG_SAMPLES;
+			pulse1_led_latch_ = true;
+			return;
+		}
 		if (track < 0 || track >= MLR_NUM_TRACKS) return;
 		if (col < 0) col = 0;
 		if (col > 15) col = 15;
@@ -2070,30 +2168,40 @@ public:
 		 * as a playable mini-keyboard even before audio is recorded. */
 		if (!mlr_tracks[track].has_content) {
 			empty_keyboard_linger_until_us_[track] = time_us_64() + EMPTY_KEYBOARD_LINGER_US;
-			empty_keyboard_linger_col_[track] = (uint8_t)col;
+			empty_keyboard_linger_col_[track] = (uint8_t)((empty_keyboard_linger_col_[track] & 0x80u) | (uint8_t)col);
 		}
 
-		bool cv_outputs_enabled = !mlr_tracks[track].has_content || mlr_tracks[track].cv1_pitch_enabled;
+		bool cv_outputs_enabled = track_outputs_enabled(track);
 		if (cv_outputs_enabled) {
-			/* CV1 sample-and-hold: map the cut grid column directly to
-			 * chromatic semitones, root = C3 (MIDI 48). */
-			int midi = CV_NOTE_BASE_MIDI + col;
-			if (midi < 0)   midi = 0;
-			if (midi > 127) midi = 127;
+			/* CV1 sample-and-hold: row-aware keyboard pitch, with middle C
+			 * at (8,4) and the same map repeated on the bottom half. */
+			int midi = keyboard_midi_from_internal(col, track + 1);
 			cv_step_base_midi_ = (int8_t)midi;
 
 			trigger_cv2_envelope();
 		}
 
-		/* PulseOut1: 20 ms gate trigger. */
-		cv_pulse1_remaining_ = CUT_PULSE_TRIG_SAMPLES;
-		pulse1_led_latch_ = true;
+		if (cv_outputs_enabled) {
+			cv_pulse1_remaining_ = CUT_PULSE_TRIG_SAMPLES;
+			pulse1_led_latch_ = true;
+		}
 	}
 
 	void __not_in_flash_func(pattern_cut_trigger)(int track, int col, uint8_t source)
 	{
 		cut_trigger(track, col);
+		if (track >= 8 && source == MLR_PLAYBACK_SOURCE_PATTERN) {
+			replay_gate_mask_ |= (uint8_t)(1u << 6);
+			extra_keyboard_state_ = (uint8_t)((extra_keyboard_state_ & EXTRA_GUIDE_ENABLED) |
+				(((track - 8) << 4) | (col & 0x0F)));
+			gate_high_ = true;
+			return;
+		}
 		if (track < 0 || track >= MLR_NUM_TRACKS) return;
+		if (source == MLR_PLAYBACK_SOURCE_PATTERN && track_outputs_enabled(track)) {
+			replay_gate_mask_ |= (uint8_t)(1u << track);
+			gate_high_ = true;
+		}
 		if (!mlr_tracks[track].has_content) {
 			empty_pattern_key_col_[track] = (uint8_t)col;
 			empty_pattern_key_active_[track] = true;
@@ -2101,6 +2209,17 @@ public:
 				? time_us_32() + RECALL_KEY_GATE_US
 				: 0;
 		}
+	}
+
+	void __not_in_flash_func(cut_release_trigger)(int track)
+	{
+		if (track < 0) return;
+		uint8_t bit = (track < MLR_NUM_TRACKS) ? (uint8_t)(1u << track) : (uint8_t)(1u << 6);
+		replay_gate_mask_ &= (uint8_t)~bit;
+		bool new_gate = live_gate_high_ || replay_gate_mask_ != 0;
+		if (!new_gate && env_gate_high_)
+			release_cv2_envelope();
+		gate_high_ = new_gate;
 	}
 
 	void __not_in_flash_func(pattern_stop_trigger)(int track)
@@ -2169,10 +2288,12 @@ private:
 			env_val_q16_ += env_attack_step_q16_;
 			if (env_val_q16_ >= ((int32_t)CV_ENV_PEAK << 16)) {
 				env_val_q16_ = (int32_t)CV_ENV_PEAK << 16;
-				env_stage_ = ENV_DECAY;
+				env_stage_ = env_gate_high_ ? ENV_SUSTAIN : ENV_RELEASE;
 			}
-		} else if (env_stage_ == ENV_DECAY) {
-			env_val_q16_ -= env_decay_step_q16_;
+		} else if (env_stage_ == ENV_SUSTAIN) {
+			env_val_q16_ = (int32_t)CV_ENV_PEAK << 16;
+		} else if (env_stage_ == ENV_RELEASE) {
+			env_val_q16_ -= env_release_step_q16_;
 			if (env_val_q16_ <= 0) {
 				env_val_q16_ = 0;
 				env_stage_ = ENV_IDLE;
@@ -2186,6 +2307,22 @@ private:
 		return was_active && env_stage_ == ENV_IDLE;
 	}
 
+	void __not_in_flash_func(latch_cv2_release_from_raw)(uint16_t raw)
+	{
+		uint32_t y = raw;
+		if (y > 4095u) y = 4095u;
+		uint32_t y_sq = (y * y) / 4095u;  /* 0..4095, square-law for musical knob feel */
+		uint32_t T_rel = CV_DECAY_MIN_SAMPLES +
+			(uint32_t)(((uint64_t)(CV_DECAY_MAX_SAMPLES - CV_DECAY_MIN_SAMPLES) * y_sq) / 4095u);
+		if (T_rel < 1u) T_rel = 1u;
+		if (env_val_q16_ <= 0) {
+			env_release_step_q16_ = 1;
+			return;
+		}
+		env_release_step_q16_ = env_val_q16_ / (int32_t)T_rel;
+		if (env_release_step_q16_ < 1) env_release_step_q16_ = 1;
+	}
+
 	void __not_in_flash_func(set_cv2_attack_from_raw)(uint16_t raw)
 	{
 		uint32_t y = raw;
@@ -2197,26 +2334,32 @@ private:
 
 	void __not_in_flash_func(trigger_cv2_envelope)()
 	{
-		/* CV2 envelope: restart at 0, play attack to peak, then decay to 0.
-		 * Decay uses current Y knob at trigger; attack uses cv_attack_samples_;
-		 * both segment lengths are latched for the full envelope. */
-		uint32_t y = (uint32_t)KnobVal(Knob::Y);
-		if (y > 4095u) y = 4095u;
-		uint32_t y_sq = (y * y) / 4095u;  /* 0..4095, square-law for musical knob feel */
-		uint32_t T_dec = CV_DECAY_MIN_SAMPLES +
-			(uint32_t)(((uint64_t)(CV_DECAY_MAX_SAMPLES - CV_DECAY_MIN_SAMPLES) * y_sq) / 4095u);
-		if (T_dec < 1u) T_dec = 1u;
-		env_val_q16_ = 0;
-		env_decay_step_q16_ = (int32_t)(((uint32_t)CV_ENV_PEAK << 16) / T_dec);
-		if (env_decay_step_q16_ < 1) env_decay_step_q16_ = 1;
+		/* CV2 ASR envelope: attack from current value to peak, sustain while
+		 * gated, then release to 0 when the gate source drops. */
+		env_gate_high_ = true;
+		int32_t peak_q16 = (int32_t)CV_ENV_PEAK << 16;
 		if (cv_attack_samples_ == 0) {
-			env_val_q16_ = (int32_t)CV_ENV_PEAK << 16;
-			env_stage_ = ENV_DECAY;
+			env_val_q16_ = peak_q16;
+			env_stage_ = ENV_SUSTAIN;
 		} else {
-			env_attack_step_q16_ = (int32_t)(((uint32_t)CV_ENV_PEAK << 16) / cv_attack_samples_);
+			int32_t remaining_q16 = peak_q16 - env_val_q16_;
+			if (remaining_q16 <= 0) {
+				env_val_q16_ = peak_q16;
+				env_stage_ = ENV_SUSTAIN;
+				return;
+			}
+			env_attack_step_q16_ = remaining_q16 / (int32_t)cv_attack_samples_;
 			if (env_attack_step_q16_ < 1) env_attack_step_q16_ = 1;
 			env_stage_ = ENV_ATTACK;
 		}
+	}
+
+	void __not_in_flash_func(release_cv2_envelope)()
+	{
+		env_gate_high_ = false;
+		if (env_stage_ == ENV_IDLE) return;
+		latch_cv2_release_from_raw((uint16_t)KnobVal(Knob::Y));
+		env_stage_ = ENV_RELEASE;
 	}
 
 	void process_bottom_master_control()
@@ -2255,30 +2398,34 @@ private:
 	void __not_in_flash("process_extra_rows") process_extra_rows()
 	{
 		if (!grid.ready() || grid.rows() <= 8) return;
-		if (!grid.keyDown()) return;
+		if (!(grid.keyDown() || grid.keyUp())) return;
 		int y = grid.lastY();
-		if (y < 8 || y >= grid.rows()) return;
+		int col = grid.lastX();
+		if (grid.keyDown() && !small_grid_ && grid.rows() >= 16 && y == 15 &&
+		    ((col == 0 && grid.held(15, 15)) || (col == 15 && grid.held(0, 15)))) {
+			extra_keyboard_state_ ^= EXTRA_GUIDE_ENABLED;
+			return;
+		}
+		if (y <= 8 || y >= grid.rows() || y >= 15) return;
 		int cs = cut_col_start();
 		int ce = cut_col_end();
-		int col = grid.lastX();
 		if (col < cs || col > ce) return;
 
 		int internal = cut_grid_to_internal(col);
-		int idx = y - 8;
-		if (idx < 0 || idx >= (int)(sizeof(extra_keyboard_linger_col_) /
-		                            sizeof(extra_keyboard_linger_col_[0])))
+		uint8_t key = (uint8_t)(((y - 8) << 4) | (internal & 0x0F));
+		if (grid.keyUp()) {
+			if ((extra_keyboard_state_ & EXTRA_PATTERN_KEY_MASK) == key) {
+				extra_keyboard_state_ = (uint8_t)((extra_keyboard_state_ & EXTRA_GUIDE_ENABLED) | EXTRA_PATTERN_KEY_NONE);
+				dispatch_event(MLR_EVT_CUT_RELEASE, (uint8_t)y, 0, 0);
+			}
 			return;
+		}
 
-		extra_keyboard_linger_until_us_[idx] = time_us_64() + EMPTY_KEYBOARD_LINGER_US;
-		extra_keyboard_linger_col_[idx] = (uint8_t)internal;
-
-		int midi = CV_NOTE_BASE_MIDI + internal;
-		if (midi < 0)   midi = 0;
-		if (midi > 127) midi = 127;
-		cv_step_base_midi_ = (int8_t)midi;
-		trigger_cv2_envelope();
-		cv_pulse1_remaining_ = CUT_PULSE_TRIG_SAMPLES;
-		pulse1_led_latch_ = true;
+		uint8_t prev = (uint8_t)(extra_keyboard_state_ & EXTRA_PATTERN_KEY_MASK);
+		if (prev != EXTRA_PATTERN_KEY_NONE)
+			dispatch_event(MLR_EVT_CUT_RELEASE, (uint8_t)((prev >> 4) + 8), 0, 0);
+		extra_keyboard_state_ = (uint8_t)((extra_keyboard_state_ & EXTRA_GUIDE_ENABLED) | key);
+		dispatch_event(MLR_EVT_CUT, (uint8_t)y, (int8_t)internal, 0);
 	}
 
 	/* True if any cut-zone key on a bottom-half row is currently held. */
@@ -2290,39 +2437,11 @@ private:
 		int cs = cut_col_start();
 		int ce = cut_col_end();
 		uint16_t zone_mask = (uint16_t)(((1u << (ce - cs + 1)) - 1u) << cs);
-		for (int row = 8; row < rmax; row++) {
+		for (int row = 9; row < rmax && row < 15; row++) {
 			if (grid.heldRowMask((uint8_t)row) & zone_mask)
 				return true;
 		}
 		return false;
-	}
-
-	void __not_in_flash("handle_cut_col0_press") handle_cut_col0_press(int track)
-	{
-		if (delete_action_held()) {
-			mlr_clear_track(track);
-			if (rec_armed_track == track) {
-				rec_armed_track = -1;
-				if (resume_after_arm_track_ == track) resume_after_arm_track_ = -1;
-			}
-			return;
-		}
-
-		int sw_now = SwitchVal();
-		bool rec_pos = (sw_now == Switch::Up || sw_now == Switch::Down);
-		if (rec_pos && rec_armed_track < 0 && mlr_rec_track < 0 && !mlr_flushing && !rec_limit_latched && rec_start_lockout_samples_ == 0) {
-			mlr_start_record(track);
-			rec_speed_accum = 0;
-			rec_gated = true;
-		} else if (!rec_pos || rec_armed_track >= 0) {
-			if (rec_armed_track == track) {
-				set_armed_track(-1);
-				rec_limit_latched = false;
-			} else {
-				set_armed_track(track);
-				rec_limit_latched = false;
-			}
-		}
 	}
 
 	void __not_in_flash("handle_rec_arm_col_press") handle_rec_arm_col_press(int track, int column)
@@ -2699,7 +2818,6 @@ private:
 	{
 		copy_source_track_ = -1;
 		copy_source_column_ = 0;
-		copy_source_page_ = PAGE_REC;
 		copy_participant_mask_ = 0;
 		copy_target_mask_ = 0;
 		copy_gesture_committed_ = false;
@@ -2716,6 +2834,7 @@ private:
 	void __not_in_flash("process_copy_gesture") process_copy_gesture()
 	{
 		copy_arm_suppress_event_ = false;
+		if (play_page != PAGE_REC) return;
 		if (!(grid.keyDown() || grid.keyUp())) return;
 		int column = grid.lastX();
 		if (!copy_gesture_arm_col(column) || grid.lastY() < 1 || grid.lastY() > MLR_NUM_TRACKS) return;
@@ -2732,7 +2851,6 @@ private:
 				if (!mlr_tracks[track].has_content) return;
 				copy_source_track_ = track;
 				copy_source_column_ = column;
-				copy_source_page_ = play_page;
 				copy_participant_mask_ = bit;
 				copy_target_mask_ = 0;
 				copy_gesture_committed_ = false;
@@ -2768,12 +2886,8 @@ private:
 
 		copy_participant_mask_ &= (uint8_t)~bit;
 		if (copy_participant_mask_ == 0) {
-			if (!copy_gesture_committed_ && !copy_gesture_touched_other_ && track == copy_source_track_) {
-				if (copy_source_page_ == PAGE_REC)
-					handle_rec_arm_col_press(copy_source_track_, copy_source_column_);
-				else
-					handle_cut_col0_press(copy_source_track_);
-			}
+			if (!copy_gesture_committed_ && !copy_gesture_touched_other_ && track == copy_source_track_)
+				handle_rec_arm_col_press(copy_source_track_, copy_source_column_);
 			reset_copy_gesture();
 		}
 	}
@@ -2941,7 +3055,7 @@ private:
 		}
 
 		if (!grid.keyDown()) return;
-		if (grid.lastY() < 1 || grid.lastY() > 7) return;
+		if (grid.lastY() < 1 || grid.lastY() > MLR_NUM_TRACKS) return;
 
 		int track  = grid.lastY() - 1;
 		int column = grid.lastX();
@@ -3000,8 +3114,16 @@ private:
 		if (grid.keyUp() && grid.lastY() >= 1 && grid.lastY() <= MLR_NUM_TRACKS) {
 			int track = grid.lastY() - 1;
 			int column = grid.lastX();
-			if (column >= cs && column <= ce && !mlr_tracks[track].has_content)
-				dispatch_event(MLR_EVT_STOP, (uint8_t)track, 0, 0);
+			if (column >= cs && column <= ce && track_outputs_enabled(track)) {
+				int cut_col = cut_grid_to_internal(column);
+				if ((empty_keyboard_linger_col_[track] & 0x80u) &&
+				    (empty_keyboard_linger_col_[track] & 0x0Fu) == (uint8_t)cut_col) {
+					empty_keyboard_linger_col_[track] = (uint8_t)cut_col;
+					dispatch_event(MLR_EVT_CUT_RELEASE, (uint8_t)track, 0, 0);
+					if (!mlr_tracks[track].has_content)
+						dispatch_event(MLR_EVT_STOP, (uint8_t)track, 0, 0);
+				}
+			}
 		}
 
 		/* Gate-mode CUT playback remains momentary: cuts start on key-down,
@@ -3051,6 +3173,11 @@ private:
 
 			/* Remap grid col to internal col (0–15) */
 			int cut_col = cut_grid_to_internal(column);
+			if (track_outputs_enabled(track)) {
+				if (empty_keyboard_linger_col_[track] & 0x80u)
+					dispatch_event(MLR_EVT_CUT_RELEASE, (uint8_t)track, 0, 0);
+				empty_keyboard_linger_col_[track] = (uint8_t)(0x80u | (uint8_t)cut_col);
+			}
 
 			if (rec_armed_track == track) {
 				rec_armed_track = -1;
@@ -3177,10 +3304,8 @@ private:
 	}
 
 	/* Bottom-half "extra" rows on a tall grid (rows 8..grid.rows()-1).
-	 * Mirrors the empty-track keyboard overlay on top-half track rows:
-	 * held keys light at full brightness, and while a row's linger is
-	 * active the white-key positions are shown dim. No-op on grids with
-	 * 8 or fewer rows. */
+	 * A permanent free keyboard layer on 16-row grids. The pitch map repeats
+	 * the top half, so middle C is at both (8,4) and (8,12). */
 	void __not_in_flash("draw_extra_rows") draw_extra_rows()
 	{
 		if (!grid.ready() || grid.rows() <= 8) return;
@@ -3189,33 +3314,21 @@ private:
 		int cs = cut_col_start();
 		int ce = cut_col_end();
 		uint16_t zone_mask = (uint16_t)(((1u << (ce - cs + 1)) - 1u) << cs);
-		uint64_t now = time_us_64();
-		static const bool kWhiteKey[12] = {
-			true, false, true, false, true, true,
-			false, true, false, true, false, true
-		};
-		for (int row = 8; row < rmax; row++) {
-			int idx = row - 8;
+		bool show_guide = extra_keyboard_guide_enabled();
+		for (int row = 9; row < rmax && row < 15; row++) {
 			uint16_t held_in_zone = (uint16_t)(grid.heldRowMask((uint8_t)row) & zone_mask);
-			if (held_in_zone) {
-				/* Re-arm linger every frame while keys are held so the
-				 * overlay fades out 1 s after the last release. */
-				extra_keyboard_linger_until_us_[idx] = now + EMPTY_KEYBOARD_LINGER_US;
-				extra_keyboard_linger_col_[idx] =
-					(uint8_t)cut_grid_to_internal(__builtin_ctz(held_in_zone));
-			}
-			bool show = (now < extra_keyboard_linger_until_us_[idx]);
-			if (show) {
+			if (show_guide) {
 				for (int internal = 0; internal < MLR_GRID_COLS; internal++) {
-					if (kWhiteKey[(internal + 4) % 12])
-						grid_frame_led_max(cut_internal_to_grid(internal), row, 2);
+					uint8_t level = keyboard_guide_level(internal, row);
+					if (level)
+						grid_frame_led_max(cut_internal_to_grid(internal), row, level);
 				}
 			}
-			uint16_t m = held_in_zone;
-			while (m) {
-				int c = __builtin_ctz(m);
-				grid_frame_led_max(c, row, 12);
-				m &= (uint16_t)(m - 1);
+			uint8_t pat_key = (uint8_t)(extra_keyboard_state_ & EXTRA_PATTERN_KEY_MASK);
+			if ((int)(pat_key >> 4) == row - 8) {
+				int col = cut_internal_to_grid(pat_key & 0x0F);
+				if ((replay_gate_mask_ & (1u << 6)) || grid.held((uint8_t)col, (uint8_t)row))
+					grid_frame_led_max(col, row, KEY_HELD_LEVEL);
 			}
 		}
 	}
@@ -3395,6 +3508,7 @@ private:
 			return;
 		}
 		if (phase > MLR_NUM_TRACKS) {
+			draw_empty_track_keyboard_overlay();
 			draw_bottom_vu_row();
 			draw_extra_rows();
 			grid.submitFrame();
@@ -3435,42 +3549,6 @@ private:
 			}
 
 			if (!has) {
-				/* Empty track: no playhead to show, but the row is still
-				 * playable for CV/pulse output. Highlight held cut keys;
-				 * while held, dimly show white-key positions. */
-				int ce = cut_col_end();
-				uint16_t zone_mask = (uint16_t)(((1u << (ce - cs + 1)) - 1u) << cs);
-				uint16_t held_in_zone = (uint16_t)(grid.heldRowMask((uint8_t)row) & zone_mask);
-				if (held_in_zone) {
-					empty_keyboard_linger_until_us_[t] = time_us_64() + EMPTY_KEYBOARD_LINGER_US;
-					empty_keyboard_linger_col_[t] = (uint8_t)cut_grid_to_internal(__builtin_ctz(held_in_zone));
-				}
-				bool pattern_keyboard_active = pattern_playing_empty_track_pitch(t);
-				uint32_t now32 = time_us_32();
-				if (empty_pattern_key_active_[t] && empty_pattern_key_until_us_[t] != 0 &&
-					(int32_t)(now32 - empty_pattern_key_until_us_[t]) >= 0)
-					empty_pattern_key_active_[t] = false;
-				if (empty_pattern_key_active_[t] && empty_pattern_key_until_us_[t] == 0 && !pattern_keyboard_active)
-					empty_pattern_key_active_[t] = false;
-				bool show_empty_keyboard = pattern_keyboard_active ||
-					(time_us_64() < empty_keyboard_linger_until_us_[t]);
-				if (show_empty_keyboard) {
-					for (int internal = 0; internal < MLR_GRID_COLS; internal++) {
-						static const bool kWhiteKey[12] = {
-							true, false, true, false, true, true,
-							false, true, false, true, false, true
-						};
-						if (kWhiteKey[(internal + 4) % 12])
-							grid_frame_led_max(cut_internal_to_grid(internal), row, 2);
-					}
-				}
-				while (held_in_zone) {
-					int c = __builtin_ctz(held_in_zone);
-					grid_frame_led_max(c, row, 12);
-					held_in_zone &= (uint16_t)~(1u << c);
-				}
-				if (empty_pattern_key_active_[t])
-					grid_frame_led_max(cut_internal_to_grid(empty_pattern_key_col_[t]), row, 12);
 				return;
 			}
 
@@ -3556,6 +3634,8 @@ extern "C" void __not_in_flash_func(mlr_event_playback_hook)(const mlr_event_t *
 	if (!MLRCard::s_card_) return;
 	if (e->type == MLR_EVT_CUT || e->type == MLR_EVT_GROUP_CUT) {
 		MLRCard::s_card_->pattern_cut_trigger((int)e->track, (int)e->param_a, mlr_event_playback_source);
+	} else if (e->type == MLR_EVT_CUT_RELEASE) {
+		MLRCard::s_card_->cut_release_trigger((int)e->track);
 	} else if (e->type == MLR_EVT_STOP && mlr_event_playback_source == MLR_PLAYBACK_SOURCE_PATTERN) {
 		MLRCard::s_card_->pattern_stop_trigger((int)e->track);
 	}
@@ -4273,12 +4353,14 @@ void monome_ws_task(void)
 		if (n > 0)
 			monome_ws_rx_feed(buf, n);
 	} else {
+#ifndef VCV_PORT
 		if (tud_mounted()) {
 			uint8_t buf[64];
 			uint32_t n = tud_cdc_n_read(g_monome_ws.device_cdc_itf, buf, sizeof(buf));
 			if (n > 0)
 				monome_ws_rx_feed(buf, n);
 		}
+#endif
 	}
 
 	if (g_monome_ws.protocol == MONOME_WS_PROTOCOL_UNKNOWN && g_monome_ws.grid_x == 0 && g_monome_ws.arc_enc_count == 0) {
@@ -4743,9 +4825,9 @@ static inline uint16_t volume_slot_to_frac(uint8_t slot)
 	static uint16_t kVolFrac[MLR_NUM_VOL_SLOTS] = {
 		362,  /* 0: +3 dB  (boost) — grid col 2  */
 		256,  /* 1: unity  (0 dB)  — grid col 3  */
-		181,  /* 2:        (-3 dB) — grid col 4  */
-		128,  /* 3:        (-6 dB) — grid col 5  */
-		45,   /* 4:        (-15 dB)— grid col 6  */
+		128,  /* 2:        (-6 dB) — grid col 4  */
+		64,   /* 3:       (-12 dB) — grid col 5  */
+		0,    /* 4: silent         — grid col 6  */
 	};
 	if (slot >= MLR_NUM_VOL_SLOTS) slot = MLR_NUM_VOL_SLOTS - 1;
 	return kVolFrac[slot];
@@ -6193,6 +6275,8 @@ static void __not_in_flash_func(event_exec)(const mlr_event_t *e)
 	case MLR_EVT_START:
 		mlr_choke_group_resume(e->track, e->param_a);  /* start without CV cut trigger */
 		break;
+	case MLR_EVT_CUT_RELEASE:
+		break;  /* CV/pulse-only event handled by mlr_event_playback_hook */
 	case MLR_EVT_SPEED:
 		mlr_set_speed(e->track, e->param_a);
 		break;
@@ -8649,6 +8733,14 @@ static void __attribute__((section(".flashdata.devmode"))) sample_mgr_drain_reje
 
 void __attribute__((section(".flashdata.devmode"))) device_mode_init(void)
 {
+    /* Drain serial RX queue to flush any size queries or stale bytes */
+    uint8_t dummy;
+    while (tud_cdc_n_available(SAMPLE_CDC_ITF) > 0) {
+        tud_cdc_n_read(SAMPLE_CDC_ITF, &dummy, 1);
+    }
+
+    if (t_instance) t_instance->sample_mgr_active = true;
+
     memset(&g_sample_mgr, 0, sizeof(g_sample_mgr));
     sample_mgr_reset_session();
 }
@@ -8665,6 +8757,7 @@ void __attribute__((section(".flashdata.devmode"))) device_mode_task(void)
     if (!connected) {
         g_sample_mgr.was_connected = false;
         sample_mgr_reset_session();
+        if (t_instance) t_instance->sample_mgr_active = false;
         return;
     }
 

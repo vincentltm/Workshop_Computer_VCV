@@ -364,12 +364,12 @@ class Breaky : public ComputerCard {
     }
     stretch_update_divider_ = 0;
 
-    int32_t y = KnobVal(Y);
+    int32_t stretch_control = KnobVal(Main);
     if (Connected(Input::CV1)) {
-      y += CVIn1();
+      stretch_control += CVIn1();
     }
     const bool was_active = timestretch_active_;
-    const uint32_t target_stretch_q8 = stretch_from_y_knob_q8(clamp_knob(y));
+    const uint32_t target_stretch_q8 = stretch_from_knob_q8(clamp_knob(stretch_control));
     if (target_stretch_q8 < kStretchQ8Bypass) {
       timestretch_active_ = false;
       stretch_q8_ = kStretchQ8One;
@@ -388,7 +388,7 @@ class Breaky : public ComputerCard {
     }
   }
 
-  static uint32_t stretch_from_y_knob_q8(uint32_t knob) {
+  static uint32_t stretch_from_knob_q8(uint32_t knob) {
     const uint64_t eased_knob = static_cast<uint64_t>(knob) * knob * knob;
     const uint64_t eased_max = static_cast<uint64_t>(kKnobMax) * kKnobMax * kKnobMax;
     const uint64_t range = kStretchQ8Max - kStretchQ8One;
@@ -490,7 +490,7 @@ class Breaky : public ComputerCard {
     } else if (switch_jump_armed_) {
       trigger_switch_pulse1();
       if (has_audio) {
-        jump_to_main_knob_position();
+        jump_to_y_knob_position();
       }
       switch_jump_armed_ = false;
     }
@@ -503,7 +503,7 @@ class Breaky : public ComputerCard {
     } else if (switch_change_armed_) {
       trigger_switch_pulse2();
       if (has_audio) {
-        change_sample_from_main_knob_position();
+        change_sample_from_y_knob_position();
       }
       switch_change_armed_ = false;
     }
@@ -542,14 +542,17 @@ class Breaky : public ComputerCard {
     }
 
     if (Connected(Input::CV2)) {
-      jump_to_cv_position(clamp_cv(CVIn2()));
+      jump_to_knob_position(clamp_knob(KnobVal(Y) + CVIn2()));
     } else {
-      jump_to_start();
+      jump_to_y_knob_position();
     }
   }
 
-  void jump_to_main_knob_position() {
-    const uint32_t knob = static_cast<uint32_t>(KnobVal(Main));
+  void jump_to_y_knob_position() {
+    jump_to_knob_position(static_cast<uint32_t>(KnobVal(Y)));
+  }
+
+  void jump_to_knob_position(uint32_t knob) {
     const uint32_t frame_count = current_sample().frame_count;
     const uint32_t frame = static_cast<uint32_t>(
         (static_cast<uint64_t>(knob) * (frame_count - 1u)) / kKnobMax);
@@ -564,18 +567,8 @@ class Breaky : public ComputerCard {
     update_leds(true);
   }
 
-  void jump_to_cv_position(int16_t cv) {
-    const uint32_t normalized_cv = static_cast<uint32_t>(cv - kCvMin);
-    const uint32_t frame_count = current_sample().frame_count;
-    const uint32_t frame = static_cast<uint32_t>(
-        (static_cast<uint64_t>(normalized_cv) * (frame_count - 1u)) / kKnobMax);
-    phase_q32_ = static_cast<uint64_t>(frame) << 32u;
-    invalidate_timestretch_grains();
-    update_leds(true);
-  }
-
-  uint8_t sample_from_main_knob_position() {
-    const uint32_t knob = static_cast<uint32_t>(KnobVal(Main));
+  uint8_t sample_from_y_knob_position() {
+    const uint32_t knob = static_cast<uint32_t>(KnobVal(Y));
     const uint32_t count = breaky_audio_sample_count();
     if (count == 0) {
       return 0;
@@ -585,8 +578,8 @@ class Breaky : public ComputerCard {
     return static_cast<uint8_t>(scaled);
   }
 
-  void change_sample_from_main_knob_position() {
-    const uint8_t next_sample = sample_from_main_knob_position();
+  void change_sample_from_y_knob_position() {
+    const uint8_t next_sample = sample_from_y_knob_position();
     if (next_sample == active_sample_) {
       return;
     }
@@ -741,6 +734,8 @@ int main() {
 
 /* stripped system include */
 
+/* stripped hardware include */
+
 #ifndef XIP_BASE
 #define XIP_BASE 0x10000000u
 #endif
@@ -748,13 +743,36 @@ int main() {
 namespace {
 
 BreakyAudioSample samples[BREAKY_BANK_MAX_SAMPLES];
+BreakyAudioSample empty_sample = {0, 1, 120, 0, 0, "empty"};
 uint32_t sample_count = 0;
 uint32_t audio_bytes = 0;
+uint32_t flash_total_bytes = BREAKY_COMPILED_FLASH_TOTAL_BYTES;
+uint32_t audio_capacity_bytes = 0;
 bool bank_valid = false;
 volatile bool bank_mutating = false;
 
 const BreakyBankHeader* flash_header() {
   return reinterpret_cast<const BreakyBankHeader*>(XIP_BASE + BREAKY_AUDIO_FLASH_OFFSET);
+}
+
+uint32_t capacity_from_flash_size(uint32_t flash_bytes) {
+  if (flash_bytes <= BREAKY_AUDIO_FLASH_OFFSET + BREAKY_BANK_HEADER_SIZE) {
+    return 0u;
+  }
+  return flash_bytes - BREAKY_AUDIO_FLASH_OFFSET - BREAKY_BANK_HEADER_SIZE;
+}
+
+uint32_t detect_flash_total_bytes() {
+  uint8_t txbuf[4] = {0x9fu, 0u, 0u, 0u};
+  uint8_t rxbuf[4] = {0u, 0u, 0u, 0u};
+  flash_do_cmd(txbuf, rxbuf, sizeof(txbuf));
+
+  const uint8_t capacity_code = rxbuf[3];
+  if (rxbuf[1] == 0 || rxbuf[1] == 0xff || capacity_code < 16u ||
+      capacity_code > 31u) {
+    return BREAKY_COMPILED_FLASH_TOTAL_BYTES;
+  }
+  return 1u << capacity_code;
 }
 
 bool record_valid(const BreakyBankSampleRecord& record, uint32_t total_audio_bytes) {
@@ -770,9 +788,25 @@ bool record_valid(const BreakyBankSampleRecord& record, uint32_t total_audio_byt
   return record.frame_count <= total_audio_bytes - record.offset;
 }
 
+void sanitize_name(char* name, uint32_t len) {
+  name[len - 1u] = '\0';
+  for (uint32_t j = 0; j < len - 1u; ++j) {
+    unsigned char value = static_cast<unsigned char>(name[j]);
+    if (value == 0 || value == 0xff) {
+      name[j] = '\0';
+      break;
+    }
+    if (value < 0x20 || value > 0x7e) {
+      name[j] = '_';
+    }
+  }
+}
+
 }  // namespace
 
 void breaky_audio_bank_init() {
+  flash_total_bytes = detect_flash_total_bytes();
+  audio_capacity_bytes = capacity_from_flash_size(flash_total_bytes);
   breaky_audio_bank_rescan();
 }
 
@@ -788,7 +822,8 @@ void breaky_audio_bank_rescan() {
       header->header_size != BREAKY_BANK_HEADER_SIZE ||
       header->sample_rate != BREAKY_BANK_SAMPLE_RATE ||
       header->sample_count > BREAKY_BANK_MAX_SAMPLES ||
-      header->audio_bytes > BREAKY_AUDIO_CAPACITY_BYTES) {
+      header->audio_bytes > audio_capacity_bytes ||
+      header->capacity_bytes > audio_capacity_bytes) {
     return;
   }
 
@@ -804,17 +839,7 @@ void breaky_audio_bank_rescan() {
     samples[i].peak = record.peak;
     samples[i].flags = record.flags;
     memcpy(samples[i].name, record.name, sizeof(samples[i].name));
-    samples[i].name[sizeof(samples[i].name) - 1u] = '\0';
-    for (uint32_t j = 0; j < sizeof(samples[i].name) - 1u; ++j) {
-      unsigned char value = static_cast<unsigned char>(samples[i].name[j]);
-      if (value == 0 || value == 0xff) {
-        samples[i].name[j] = '\0';
-        break;
-      }
-      if (value < 0x20 || value > 0x7e) {
-        samples[i].name[j] = '_';
-      }
-    }
+    sanitize_name(samples[i].name, sizeof(samples[i].name));
   }
 
   sample_count = header->sample_count;
@@ -843,7 +868,22 @@ uint32_t breaky_audio_audio_bytes() {
   return bank_valid ? audio_bytes : 0u;
 }
 
+uint32_t breaky_audio_capacity_bytes() {
+  return audio_capacity_bytes;
+}
+
+uint32_t breaky_flash_total_bytes() {
+  return flash_total_bytes;
+}
+
+uint32_t breaky_audio_flash_offset() {
+  return BREAKY_AUDIO_FLASH_OFFSET;
+}
+
 const BreakyAudioSample& breaky_audio_sample(uint32_t index) {
+  if (!bank_valid || sample_count == 0 || index >= sample_count) {
+    return empty_sample;
+  }
   return samples[index];
 }
 
@@ -954,7 +994,8 @@ bool validate_header(const BreakyBankHeader& header, uint32_t total_len) {
       header.sample_rate != BREAKY_BANK_SAMPLE_RATE ||
       header.sample_count > BREAKY_BANK_MAX_SAMPLES ||
       header.audio_bytes != audio_bytes ||
-      header.audio_bytes > BREAKY_AUDIO_CAPACITY_BYTES) {
+      header.audio_bytes > breaky_audio_capacity_bytes() ||
+      header.capacity_bytes > breaky_audio_capacity_bytes()) {
     return false;
   }
 
@@ -970,37 +1011,17 @@ bool validate_header(const BreakyBankHeader& header, uint32_t total_len) {
 }
 
 void handle_info() {
-  char info[2048];
+  char info[256];
   uint32_t used = 0;
   int n = snprintf(info + used, sizeof(info) - used,
-                   "STRETCHCORE1 FW 1.0 RESERVE %lu CAPACITY %lu USED %lu RATE %lu COUNT %lu\n",
-                   static_cast<unsigned long>(BREAKY_AUDIO_FLASH_OFFSET),
-                   static_cast<unsigned long>(BREAKY_AUDIO_CAPACITY_BYTES),
+                   "STRETCHCORE1 FW 2.0 F %lu R %lu A %lu C %lu U %lu SR %lu N %lu\nEND\n",
+                   static_cast<unsigned long>(breaky_flash_total_bytes()),
+                   static_cast<unsigned long>(BREAKY_FIRMWARE_RESERVE),
+                   static_cast<unsigned long>(breaky_audio_flash_offset()),
+                   static_cast<unsigned long>(breaky_audio_capacity_bytes()),
                    static_cast<unsigned long>(breaky_audio_audio_bytes()),
                    static_cast<unsigned long>(BREAKY_BANK_SAMPLE_RATE),
                    static_cast<unsigned long>(breaky_audio_sample_count()));
-  if (n < 0 || static_cast<uint32_t>(n) >= sizeof(info) - used) {
-    return;
-  }
-  used += static_cast<uint32_t>(n);
-
-  for (uint32_t i = 0; i < breaky_audio_sample_count(); ++i) {
-    const BreakyAudioSample& sample = breaky_audio_sample(i);
-    n = snprintf(info + used, sizeof(info) - used,
-                 "S%lu %lu %lu %u %u %s\n",
-                 static_cast<unsigned long>(i),
-                 static_cast<unsigned long>(sample.offset),
-                 static_cast<unsigned long>(sample.frame_count),
-                 static_cast<unsigned>(sample.source_bpm),
-                 static_cast<unsigned>(sample.peak),
-                 sample.name);
-    if (n < 0 || static_cast<uint32_t>(n) >= sizeof(info) - used) {
-      return;
-    }
-    used += static_cast<uint32_t>(n);
-  }
-
-  n = snprintf(info + used, sizeof(info) - used, "END\n");
   if (n < 0 || static_cast<uint32_t>(n) >= sizeof(info) - used) {
     return;
   }
@@ -1071,7 +1092,7 @@ void handle_write() {
   memcpy(&total_len, len_buf, sizeof(total_len));
 
   if (total_len < BREAKY_BANK_HEADER_SIZE ||
-      total_len > BREAKY_BANK_HEADER_SIZE + BREAKY_AUDIO_CAPACITY_BYTES) {
+      total_len > BREAKY_BANK_HEADER_SIZE + breaky_audio_capacity_bytes()) {
     write_str("ERR\n");
     flush_serial();
     drain_rejected_write(total_len);

@@ -1496,6 +1496,7 @@ void mext_task(void)
 			mext_rx_feed(buf, n);
 		}
 	} else {
+#ifndef VCV_PORT
 #if MEXT_HAVE_DEVICE_CDC
 		if (tud_mounted()) {
 			uint8_t buf[64];
@@ -1504,6 +1505,7 @@ void mext_task(void)
 				mext_rx_feed(buf, n);
 			}
 		}
+#endif
 #endif
 	}
 
