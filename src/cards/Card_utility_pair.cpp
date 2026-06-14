@@ -1064,7 +1064,7 @@ public:
 		int32_t audio = AudioIn(I);
 		int32_t cv = CVIn(I);
 
-		if (PulseIn(I) || (I == 1 && SwitchVal() == Switch::Down))
+		if (PulseIn(I) || SwitchVal() == Switch::Down)
 		{
 			AudioOut(I, cv);
 			CVOut(I, audio);
@@ -2936,6 +2936,7 @@ public:
 					if (ind[i] != lastInd[i] && ind[i] != utilityIndex[i] && side == i)
 					{
 						utilityIndex[i] = ind[i];
+						g_flash_memory[2093056 + i] = ind[i];
 
 						voice.say(utility_names[side][utilityIndex[side]]);
 					}
@@ -3048,7 +3049,7 @@ int main()
 	// Run the selector program
 	{
 		Selector selector;
-		/* selector.Run(); bypassed in VCV */
+		if (g_switch == 0) { selector.Run(); }
 	}
 
 	// Save new configuation

@@ -366,8 +366,8 @@ struct ProgramCardWidget : Widget {
                 };
 
                 if (words.size() >= 2) {
-                    draw_rotated_word(words[0], 22.7f);
-                    draw_rotated_word(words[1], 13.7f);
+                    draw_rotated_word(words[0], 13.7f); // Left utility label on the left side of the card widget
+                    draw_rotated_word(words[1], 22.7f); // Right utility label on the right side of the card widget
                 } else if (words.size() == 1) {
                     draw_rotated_word(words[0], 18.2f);
                 }

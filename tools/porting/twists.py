@@ -40,6 +40,8 @@ def post_process(src_content, src_rel):
 // ─── VCV Rack bridge ──────────────────────────────────────────────────────────
 
 class TwistsComputerCard : public ComputerCard {
+private:
+    bool last_gate_state = false;
 public:
     TwistsComputerCard() : ComputerCard() {}
 
@@ -58,17 +60,39 @@ public:
             knobs[3] = 2048; // middle (rest)
         }
 
-        // 2. Map 1V/Oct CV using calibration slope/intercept
+        // 2. Map 1V/Oct CV using calibration slope/intercept (clamped to prevent wrap-around)
         if (slope != 0.0f) {
-            cv[0] = (uint16_t)((g_cv_in[0] - intercept) / slope);
+            float val = (g_cv_in[0] - intercept) / slope;
+            cv[0] = (uint16_t)std::max(0.0f, std::min(4095.0f, val));
         } else {
-            cv[0] = (uint16_t)(g_cv_in[0] * (4095.f / 10.f));
+            float val = g_cv_in[0] * (4095.f / 10.f);
+            cv[0] = (uint16_t)std::max(0.0f, std::min(4095.0f, val));
         }
-        cv[1] = (uint16_t)(g_cv_in[1] * (4095.f / 10.f));
+        float val1 = g_cv_in[1] * (4095.f / 10.f);
+        cv[1] = (uint16_t)std::max(0.0f, std::min(4095.0f, val1));
 
         // 3. Map Audio Inputs for FM / timbre modulation
-        audio_in[0] = (uint16_t)(g_audio_in[0] * (2048.f / 5.0f)) + 2048;
-        audio_in[1] = (uint16_t)(g_audio_in[1] * (2048.f / 5.0f)) + 2048;
+        audio_in[0] = (uint16_t)(g_audio_in[0] * (2048.f / 6.0f)) + 2048;
+        audio_in[1] = (uint16_t)(g_audio_in[1] * (2048.f / 6.0f)) + 2048;
+
+        // 3.5. Read gate trigger input at 48kHz audio rate
+        bool gate_high = gate_input.Read();
+        if (gate_high && !last_gate_state) {
+            trigger_detected_flag = true;
+        }
+        last_gate_state = gate_high;
+
+        if (trigger_detected_flag) {
+            trigger_delay = settings.trig_delay() ? (1 << settings.trig_delay()) : 0;
+            ++trigger_delay;
+            trigger_detected_flag = false;
+        }
+        if (trigger_delay) {
+            --trigger_delay;
+            if (trigger_delay == 0) {
+                trigger_flag = true;
+            }
+        }
 
         // 4. Read sample from background-rendered buffer.
         // Braids renders at 96kHz (hardware ADC rate), VCV runs at 48kHz.
@@ -81,7 +105,7 @@ public:
         int16_t s1 = audio_samples[next_pb][next_cs];
         int16_t raw_sample = (int16_t)((s0 + s1) / 2);
         // Braids renders: (-sample + 32768) >> 5 -> range 0..2048, center = 1024
-        float out_volts = ((float)raw_sample - 1024.f) / 1024.f * 5.0f;
+        float out_volts = ((float)raw_sample - 1024.f) / 1024.f * 6.0f;
         g_audio_out[0] = out_volts;
         g_audio_out[1] = out_volts;
 

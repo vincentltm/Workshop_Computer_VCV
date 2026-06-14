@@ -1253,6 +1253,12 @@ struct WorkshopComputer : Module, IGridConsumer, IComputerModule {
             }
         }
 
+        // Sync back utility pair indices from card mock flash to host
+        if (g_active_card_id == "utility_pair") {
+            utility_indices[0] = card_globals.g_flash_memory_val[2093056];
+            utility_indices[1] = card_globals.g_flash_memory_val[2093057];
+        }
+
         // 2.5. MIDI Output
         uint8_t tx_byte;
         std::vector<rack::midi::Message> tx_msgs;
