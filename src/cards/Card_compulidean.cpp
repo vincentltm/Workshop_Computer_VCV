@@ -7,6 +7,8 @@
 #include <fstream>
 #include <vector>
 #include <algorithm>
+#include <thread>
+#include <cmath>
 
 #ifndef _WIN32
 #include <dlfcn.h>
@@ -17,8 +19,9 @@
 #include "pico_mocks.h"
 #include "ComputerCard.h"
 
-// Sample names and expected filenames
-// BD2550.WAV, SD0010.WAV, CH.WAV, OH25.WAV, CP.WAV, CB.WAV
+// Sample names and expected filenames for 16 tracks:
+// BD2550.WAV, RS.WAV, CP.WAV, SD0010.WAV, CY1000.WAV, MA.WAV, HT25.WAV, LT25.WAV,
+// OH00.WAV, OH25.WAV, CH.WAV, CY7525.WAV, CY1025.WAV, CY0025.WAV, CB.WAV, CY0000.WAV
 
 struct WavData {
     uint16_t channels = 0;
@@ -39,7 +42,7 @@ struct SamplerVoice {
         volume = vol;
     }
     
-    int16_t next_sample() {
+    int16_t next_sample(float pitch_mod) {
         if (!playing || !wav || wav->samples.empty()) return 0;
         
         size_t idx = (size_t)pos;
@@ -54,48 +57,96 @@ struct SamplerVoice {
         int16_t s1 = wav->samples[idx + 1];
         int16_t out = (int16_t)((1.0 - frac) * s0 + frac * s1);
         
-        pos += 1.0; // Play at original rate (48000 Hz)
+        pos += pitch_mod; // play speed modulated by pitch_mod
         return (int16_t)(out * volume);
     }
 };
 
+class LCG {
+private:
+    uint32_t state = 1;
+public:
+    void seed(uint32_t s) {
+        state = s;
+    }
+    // Return a random number between min and max (exclusive of max)
+    int random(int min, int max) {
+        if (min >= max) return min;
+        state = state * 1103515245 + 12345;
+        return min + (int)(state % (max - min));
+    }
+    int random(int max) {
+        return random(0, max);
+    }
+};
+
+struct Track {
+    int steps = 16;
+    int pulses = 0;
+    int rotation = 0;
+    int duration = 2;
+    
+    int default_steps = 16;
+    int default_pulses = 0;
+    int default_rotation = 0;
+    int default_duration = 2;
+    
+    int group = 0; // 0 or 1
+    bool pattern[32] = {false};
+};
+
 class CompulideanCard : public ComputerCard {
 public:
-    static constexpr int NUM_VOICES = 6;
+    static constexpr int NUM_VOICES = 16;
     
     WavData drum_wavs[NUM_VOICES];
     SamplerVoice voices[NUM_VOICES];
+    Track tracks[NUM_VOICES];
     
-    // Densities for 6 channels (Kick, Snare, CHH, OHH, Clap, Cowbell)
-    int densities[NUM_VOICES] = {4, 0, 8, 0, 0, 0};
-    bool patterns[NUM_VOICES][16];
+    // Seed and phrase state
+    uint32_t base_seed = 12345;
+    uint32_t phrase_count = 0;
     
     // Clock variables
-    float bpm = 120.f;
-    float swing = 0.0f; // 0.0 to 0.75
-    float master_volume = 0.8f;
-    
     double clock_accumulator = 0.0;
-    double step_duration_samples = 0.0;
     int current_step = 0;
+    uint32_t samples_since_clock = 0;
     
     bool last_pulse1 = false;
     bool last_pulse2 = false;
     
-    float led_decays[6] = {0.f};
-    Switch last_sw = Switch::Middle;
+    // Gate triggers
+    bool kick_triggered = false;
+    bool snare_triggered = false;
+    bool closed_hat_triggered = false;
+    bool open_hat_triggered = false;
+    
+    float led_brightness[6] = {0.f};
+    
+    float last_density_0 = -1.0f;
+    float last_density_1 = -1.0f;
     
     CompulideanCard() {
         std::string res_dir = get_resource_dir();
         std::cout << "[CompulideanCard] Loading WAV assets from: " << res_dir << "compulidean/" << std::endl;
         
         std::string files[NUM_VOICES] = {
-            "BD2550.WAV",
-            "SD0010.WAV",
-            "CH.WAV",
-            "OH25.WAV",
-            "CP.WAV",
-            "CB.WAV"
+            "BD2550.WAV",   // Track 0: Kick
+            "RS.WAV",       // Track 1: Stick
+            "CP.WAV",       // Track 2: Clap
+            "SD0010.WAV",   // Track 3: Snare
+            "CY1000.WAV",   // Track 4: Cymbal 1
+            "MA.WAV",       // Track 5: Tamb
+            "HT25.WAV",     // Track 6: HiTom
+            "LT25.WAV",     // Track 7: LoTom
+            "OH00.WAV",     // Track 8: PHH
+            "OH25.WAV",     // Track 9: OHH
+            "CH.WAV",       // Track 10: CHH
+            "CY7525.WAV",   // Track 11: Cymbal 2
+            "CY1025.WAV",   // Track 12: Splash
+            "CY0025.WAV",   // Track 13: Vibra
+            "CB.WAV",       // Track 14: Ride Bell
+            "CY0000.WAV"    // Track 15: Ride Cymbal
         };
         
         for (int i = 0; i < NUM_VOICES; ++i) {
@@ -109,168 +160,256 @@ public:
             }
         }
         
+        init_tracks();
         recalculate_patterns();
-        update_clock_params();
     }
     
-    void generate_euclidean(bool* pattern, int k, int n) {
-        std::fill(pattern, pattern + n, false);
-        if (n <= 0) return;
-        if (k > n) k = n;
-        if (k <= 0) return;
+    void init_tracks() {
+        // Track settings: { default_steps, default_pulses, default_rotation, default_duration, group }
+        // First 8 tracks are in group 0. Last 8 tracks are in group 1.
         
-        int accumulator = 0;
-        for (int i = 0; i < n; i++) {
-            accumulator += k;
-            if (accumulator >= n) {
-                pattern[i] = true;
-                accumulator -= n;
+        // Group 0:
+        tracks[0] = { 16, 4, 1, 2, 16, 4, 1, 2, 0 }; // Kick
+        tracks[1] = { 16, 5, 1, 2, 16, 5, 1, 2, 0 }; // Stick
+        tracks[2] = { 16, 2, 5, 2, 16, 2, 5, 2, 0 }; // Clap
+        tracks[3] = { 16, 3, 5, 2, 16, 3, 5, 2, 0 }; // Snare
+        tracks[4] = { 32, 1, 1, 2, 32, 1, 1, 2, 0 }; // Cymbal 1
+        tracks[5] = { 16, 7, 1, 2, 16, 7, 1, 2, 0 }; // Tamb
+        tracks[6] = { 16, 9, 1, 2, 16, 9, 1, 2, 0 }; // HiTom
+        tracks[7] = { 4,  2, 3, 2, 4,  2, 3, 2, 0 }; // LoTom
+        
+        // Group 1:
+        tracks[8]  = { 8,  2, 3, 2, 8,  2, 3, 2, 1 }; // PHH
+        tracks[9]  = { 16, 4, 3, 2, 16, 4, 3, 2, 1 }; // OHH
+        tracks[10] = { 16, 16,1, 2, 16, 16,1, 2, 1 }; // CHH
+        tracks[11] = { 32, 1, 1, 8, 32, 1, 1, 8, 1 }; // Cymbal 2
+        tracks[12] = { 32, 1, 5, 8, 32, 1, 5, 8, 1 }; // Splash
+        tracks[13] = { 32, 1, 9, 8, 32, 1, 9, 8, 1 }; // Vibra
+        tracks[14] = { 32, 1, 13,8, 32, 1, 13,8, 1 }; // Ride Bell
+        tracks[15] = { 32, 5, 13,8, 32, 5, 13,8, 1 }; // Ride Cymbal
+    }
+    
+    void reset_patterns() {
+        for (int i = 0; i < NUM_VOICES; ++i) {
+            tracks[i].steps = tracks[i].default_steps;
+            tracks[i].pulses = tracks[i].default_pulses;
+            tracks[i].rotation = tracks[i].default_rotation;
+        }
+    }
+    
+    void generate_euclidean(Track& track, float density_val) {
+        std::fill(track.pattern, track.pattern + 32, false);
+        
+        if (track.steps <= 0) return;
+        int steps = std::clamp(track.steps, 1, 32);
+        
+        float multiplier = 1.5f * density_val;
+        int temp_pulses = (int)(0.5f + ((float)track.pulses) * multiplier);
+        temp_pulses = std::clamp(temp_pulses, 0, steps);
+        
+        int bucket = 0;
+        for (int i = 0; i < steps; i++) {
+            int new_i = (track.rotation + i) % steps;
+            bucket += temp_pulses;
+            if (bucket >= steps) {
+                bucket -= steps;
+                track.pattern[new_i] = true;
+            } else {
+                track.pattern[new_i] = false;
             }
         }
     }
     
     void recalculate_patterns() {
+        float density_0 = KnobVal(Knob::Main) + (Connected(Input::CV1) ? (g_cv_in[0] / 5.0f) : 0.0f);
+        float density_1 = KnobVal(Knob::X) + (Connected(Input::CV2) ? (g_cv_in[1] / 5.0f) : 0.0f);
+        
+        density_0 = std::clamp(density_0, 0.0f, 1.5f);
+        density_1 = std::clamp(density_1, 0.0f, 1.5f);
+        
         for (int i = 0; i < NUM_VOICES; ++i) {
-            generate_euclidean(patterns[i], densities[i], 16);
+            float d = (tracks[i].group == 0) ? density_0 : density_1;
+            generate_euclidean(tracks[i], d);
         }
     }
     
-    void update_clock_params() {
-        // Step duration (16th note) in samples = (60 / BPM) / 4 * 48000
-        step_duration_samples = (60.0 / bpm) / 4.0 * 48000.0;
-    }
-    
-    void trigger_step(int step) {
-        for (int i = 0; i < NUM_VOICES; ++i) {
-            if (patterns[i][step]) {
-                voices[i].trigger(1.0f);
-                led_decays[i] = 1.f;
-            }
+    void check_density_changes() {
+        float density_0 = KnobVal(Knob::Main) + (Connected(Input::CV1) ? (g_cv_in[0] / 5.0f) : 0.0f);
+        float density_1 = KnobVal(Knob::X) + (Connected(Input::CV2) ? (g_cv_in[1] / 5.0f) : 0.0f);
+        
+        density_0 = std::clamp(density_0, 0.0f, 1.5f);
+        density_1 = std::clamp(density_1, 0.0f, 1.5f);
+        
+        if (std::abs(density_0 - last_density_0) > 0.01f || std::abs(density_1 - last_density_1) > 0.01f) {
+            last_density_0 = density_0;
+            last_density_1 = density_1;
+            recalculate_patterns();
         }
     }
-
+    
     virtual void ProcessSample() override {
-        // Read controls and inputs
         Switch sw = SwitchVal();
         
-        // Bipolar CV inputs offset densities
-        int cv1_offset = Connected(Input::CV1) ? (int)(g_cv_in[0] * 8.f / 5.f) : 0;
-        int cv2_offset = Connected(Input::CV2) ? (int)(g_cv_in[1] * 8.f / 5.f) : 0;
+        check_density_changes();
         
-        // Handle Knob Editing depending on Switch mode
-        if (sw == Switch::Up) {
-            // Edit Kick, Snare, CHH densities
-            int k_dens = (KnobVal(Knob::Main) * 17) >> 12; // 0 to 16
-            int s_dens = (KnobVal(Knob::X) * 17) >> 12;    // 0 to 16
-            int c_dens = (KnobVal(Knob::Y) * 17) >> 12;    // 0 to 16
-            
-            k_dens = std::clamp(k_dens + cv1_offset, 0, 16);
-            s_dens = std::clamp(s_dens + cv2_offset, 0, 16);
-            
-            if (k_dens != densities[0] || s_dens != densities[1] || c_dens != densities[2]) {
-                densities[0] = k_dens;
-                densities[1] = s_dens;
-                densities[2] = c_dens;
-                recalculate_patterns();
-            }
-        } else if (sw == Switch::Middle) {
-            // Edit OHH, Clap, Cowbell densities
-            int o_dens = (KnobVal(Knob::Main) * 17) >> 12;
-            int cl_dens = (KnobVal(Knob::X) * 17) >> 12;
-            int co_dens = (KnobVal(Knob::Y) * 17) >> 12;
-            
-            o_dens = std::clamp(o_dens + cv1_offset, 0, 16);
-            cl_dens = std::clamp(cl_dens + cv2_offset, 0, 16);
-            
-            if (o_dens != densities[3] || cl_dens != densities[4] || co_dens != densities[5]) {
-                densities[3] = o_dens;
-                densities[4] = cl_dens;
-                densities[5] = co_dens;
-                recalculate_patterns();
-            }
-        } else if (sw == Switch::Down) {
-            // Global controls: BPM, Swing, Volume
-            float new_bpm = 60.f + ((float)KnobVal(Knob::Main) / 4095.f) * 180.f; // 60 to 240 BPM
-            float new_swing = ((float)KnobVal(Knob::X) / 4095.f) * 0.75f;        // 0 to 75% Swing
-            float new_vol = ((float)KnobVal(Knob::Y) / 4095.f);
-            
-            if (fabs(new_bpm - bpm) > 0.5f || fabs(new_swing - swing) > 0.01f || fabs(new_vol - master_volume) > 0.01f) {
-                bpm = new_bpm;
-                swing = new_swing;
-                master_volume = new_vol;
-                update_clock_params();
-            }
-        }
-        
-        // Handle Trigger/Clock inputs
-        bool p1 = PulseIn1(); // External clock trigger
-        bool p2 = PulseIn2(); // Reset trigger
+        bool p1 = PulseIn1();
+        bool p2 = PulseIn2();
         
         bool advance_step = false;
         
         if (p2 && !last_pulse2) {
             current_step = 0;
             clock_accumulator = 0.0;
-            trigger_step(current_step);
+            samples_since_clock = 0;
+            advance_step = true;
         }
         last_pulse2 = p2;
         
         if (Connected(Input::Pulse1)) {
-            // External clock mode
             if (p1 && !last_pulse1) {
-                current_step = (current_step + 1) % 16;
-                trigger_step(current_step);
+                current_step = (current_step + 1) % 64;
+                samples_since_clock = 0;
+                advance_step = true;
             }
             last_pulse1 = p1;
         } else {
-            // Internal clock mode
-            double current_step_dur = step_duration_samples;
-            if (current_step % 2 == 0) {
-                current_step_dur *= (1.0 + swing);
-            } else {
-                current_step_dur *= (1.0 - swing);
-            }
+            float knob_y = KnobVal(Knob::Y);
+            float bpm = 40.0f + knob_y * 200.0f; // 40 to 240 BPM
+            double step_duration_samples = (60.0 / bpm) / 4.0 * 48000.0;
             
             clock_accumulator += 1.0;
-            if (clock_accumulator >= current_step_dur) {
-                clock_accumulator -= current_step_dur;
-                current_step = (current_step + 1) % 16;
-                trigger_step(current_step);
+            if (clock_accumulator >= step_duration_samples) {
+                clock_accumulator -= step_duration_samples;
+                current_step = (current_step + 1) % 64;
+                samples_since_clock = 0;
+                advance_step = true;
             }
         }
         
-        // Generate stereo mix from active sampler voices
+        if (advance_step) {
+            kick_triggered = false;
+            snare_triggered = false;
+            closed_hat_triggered = false;
+            open_hat_triggered = false;
+            
+            // Phrase mutations
+            if (current_step == 0) {
+                if (sw != Switch::Down) {
+                    phrase_count++;
+                    uint32_t current_seed = base_seed + phrase_count;
+                    
+                    reset_patterns();
+                    
+                    LCG lcg;
+                    lcg.seed(current_seed);
+                    int num_mutations = lcg.random(1, 5);
+                    for (int m = 0; m < num_mutations; ++m) {
+                        int ran = lcg.random(0, 16);
+                        lcg.seed(current_seed + ran);
+                        
+                        int r = lcg.random(0, 100);
+                        if (r > 50) {
+                            if (r > 75) tracks[ran].pulses += 1;
+                            else        tracks[ran].pulses -= 1;
+                        } else if (r < 25) {
+                            tracks[ran].rotation += 1;
+                        } else if (r > 25) {
+                            tracks[ran].pulses *= 2;
+                        } else {
+                            tracks[ran].pulses /= 2;
+                        }
+                        if (tracks[ran].pulses >= tracks[ran].steps || tracks[ran].pulses <= 0) {
+                            tracks[ran].pulses = 1;
+                        }
+                    }
+                    
+                    recalculate_patterns();
+                }
+            }
+            
+            // Bar fills
+            if (current_step == 48) {
+                if (sw != Switch::Down) {
+                    uint32_t current_seed = base_seed + phrase_count;
+                    LCG lcg_fill;
+                    lcg_fill.seed(current_seed + 999);
+                    
+                    for (int i = 0; i < 3; ++i) {
+                        int ran = lcg_fill.random(0, 16);
+                        tracks[ran].rotation += 2;
+                    }
+                    for (int i = 0; i < 3; ++i) {
+                        int ran = lcg_fill.random(0, 16);
+                        tracks[ran].rotation *= 2;
+                        if (tracks[ran].pulses > tracks[ran].steps) {
+                            tracks[ran].pulses /= 8;
+                        }
+                        if (tracks[ran].pulses <= 0) tracks[ran].pulses = 1;
+                    }
+                    
+                    recalculate_patterns();
+                }
+            }
+            
+            // Trigger active tracks
+            for (int i = 0; i < NUM_VOICES; ++i) {
+                int track_step = current_step % tracks[i].steps;
+                if (tracks[i].pattern[track_step]) {
+                    voices[i].trigger(1.0f);
+                    led_brightness[i % 6] = 1.0f;
+                    
+                    if (i == 0) kick_triggered = true;
+                    if (i == 3) snare_triggered = true;
+                    if (i == 10) closed_hat_triggered = true;
+                    if (i == 9) open_hat_triggered = true;
+                }
+            }
+        }
+        
+        float pitch_mod = 1.0f;
+        if (Connected(Input::Audio2)) {
+            pitch_mod = 1.0f + (g_audio_in[1] / 5.0f);
+            pitch_mod = std::clamp(pitch_mod, 0.1f, 4.0f);
+        }
+        
         int32_t mix_l = 0;
         int32_t mix_r = 0;
         
         for (int i = 0; i < NUM_VOICES; ++i) {
-            int16_t s = voices[i].next_sample();
+            int16_t s = voices[i].next_sample(pitch_mod);
             mix_l += s;
             mix_r += s;
         }
         
-        mix_l = (int32_t)(mix_l * master_volume);
-        mix_r = (int32_t)(mix_r * master_volume);
+        float vol_scale = (sw == Switch::Up) ? 0.0f : 0.8f;
+        mix_l = (int32_t)(mix_l * vol_scale);
+        mix_r = (int32_t)(mix_r * vol_scale);
         
-        // Output audio scaled to 12-bit signed (-2048..2047)
         int16_t out_l = std::clamp(mix_l / 16, -2048, 2047);
         int16_t out_r = std::clamp(mix_r / 16, -2048, 2047);
         
         AudioOut1(out_l);
         AudioOut2(out_r);
         
-        // Echo current step status to CV out
-        CVOut1((int16_t)((current_step / 15.f) * 4095.f - 2048.f));
-        CVOut2(Connected(Input::Pulse1) ? (p1 ? 2047 : -2048) : (int16_t)(sinf(2.f * M_PI * clock_accumulator / step_duration_samples) * 2047.f));
+        samples_since_clock++;
+        bool trigger_active = (samples_since_clock < 1000);
         
-        // Set Pulse Out triggers
-        PulseOut1(patterns[0][current_step] && (clock_accumulator < 1000.0)); // Kick trigger out
-        PulseOut2(patterns[1][current_step] && (clock_accumulator < 1000.0)); // Snare trigger out
+        if (!trigger_active) {
+            kick_triggered = false;
+            snare_triggered = false;
+            closed_hat_triggered = false;
+            open_hat_triggered = false;
+        }
         
-        // LEDs decay/light up on trigger
+        bool mute_active = (sw == Switch::Up);
+        PulseOut1(kick_triggered && trigger_active && !mute_active);
+        PulseOut2(snare_triggered && trigger_active && !mute_active);
+        CVOut1((closed_hat_triggered && trigger_active && !mute_active) ? 2047 : -2048);
+        CVOut2((open_hat_triggered && trigger_active && !mute_active) ? 2047 : -2048);
+        
         for (int i = 0; i < 6; ++i) {
-            LedBrightness(i, (int)(led_decays[i] * 4095.f));
-            led_decays[i] = std::max(0.f, led_decays[i] - 0.0002f); // slow decay
+            LedBrightness(i, (int)(led_brightness[i] * 4095.f));
+            led_brightness[i] = std::max(0.f, led_brightness[i] - 0.0001f);
         }
     }
 
@@ -383,11 +522,6 @@ extern "C" {
             
             while (!g_cancellation_requested.load(std::memory_order_relaxed)) {
                 card.ProcessSample();
-                // Simulating sample tick clock
-                // In our VCV plugin, processSample is called by the DSP engine, but in standalone test runner, 
-                // we loop and sleep, or run_card is a loop calling process sample.
-                // However, the test runner just calls run_card or expects it to yield.
-                // Let's add a small yield to prevent 100% CPU lock in standalone runner if cancellation is checked.
                 std::this_thread::yield();
             }
         } catch (const ThreadExitException& e) {
