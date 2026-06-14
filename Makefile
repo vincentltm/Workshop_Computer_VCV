@@ -24,6 +24,11 @@ include $(RACK_DIR)/plugin.mk
 # Override standard to C++17 to support modern card features (std::clamp, generic lambdas)
 CXXFLAGS += -std=c++17 -Wno-narrowing -Wno-c++11-narrowing
 
+# Link ws2_32 on Windows for the web server
+ifeq ($(ARCH), win)
+    LDFLAGS += -lws2_32
+endif
+
 $(TARGET): | $(CARD_LIBS)
 
 # Custom clean target for card libraries
