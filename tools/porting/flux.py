@@ -104,15 +104,34 @@ def parse_braces(content, start_pos):
     return -1
 
 def is_array_initializer(inner_text):
+    # Clean up comments first to avoid false positives
+    inner_clean = re.sub(r'/\*[\s\S]*?\*/', '', inner_text)
+    inner_clean = re.sub(r'//.*', '', inner_clean)
+    
     depth = 0
-    for c in inner_text:
-        if c == '{':
-            if depth == 0:
-                return True
+    has_dot = False
+    has_equal = False
+    pos = 0
+    n = len(inner_clean)
+    while pos < n:
+        c = inner_clean[pos]
+        if c in ('{', '('):
             depth += 1
-        elif c == '}':
+            pos += 1
+        elif c in ('}', ')'):
             depth -= 1
-    return False
+            pos += 1
+        elif depth == 0 and c == '.':
+            if pos + 1 < n and inner_clean[pos+1].isalpha():
+                has_dot = True
+            pos += 1
+        elif depth == 0 and c == '=':
+            if has_dot:
+                has_equal = True
+            pos += 1
+        else:
+            pos += 1
+    return not (has_dot and has_equal)
 
 def parse_assignments(inside_text):
     # Strip comments first

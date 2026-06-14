@@ -73,6 +73,8 @@ namespace Card_BackyardRain {
 /* stripped system include */
 #ifndef _WIN32
 /* stripped system include */
+#else
+/* stripped system include */
 #endif
 /* stripped system include */
 
@@ -376,6 +378,29 @@ public:
 
 private:
     static std::string get_resource_dir() {
+#ifdef _WIN32
+        char path[MAX_PATH];
+        HMODULE hm = NULL;
+        if (GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, (LPCSTR)&get_resource_dir, &hm)) {
+            GetModuleFileNameA(hm, path, sizeof(path));
+            std::string path_str(path);
+            for (char &c : path_str) {
+                if (c == '\\') c = '/';
+            }
+            size_t pos = path_str.find_last_of('/');
+            if (pos != std::string::npos) {
+                std::string dir = path_str.substr(0, pos);
+                pos = dir.find_last_of('/');
+                if (pos != std::string::npos) {
+                    std::string res = dir.substr(0, pos + 1);
+                    if (res.length() >= 4 && res.substr(res.length() - 4) == "res/") {
+                        return res;
+                    }
+                    return res + "res/";
+                }
+            }
+        }
+#else
         Dl_info info;
         if (dladdr((void*)&get_resource_dir, &info)) {
             std::string path(info.dli_fname);
@@ -392,6 +417,7 @@ private:
                 }
             }
         }
+#endif
         return "./res/";
     }
 };
