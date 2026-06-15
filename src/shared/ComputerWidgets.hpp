@@ -28,6 +28,7 @@ struct IComputerModule {
     virtual int  get_utility_index(int slot) const = 0;  // slot 0 or 1
     virtual void set_utility_index(int slot, int index) = 0;
     virtual void set_pending_page_direction(int dir) = 0;
+    virtual float get_switch_z_val() const = 0;
 };
 
 // ── Knobs ─────────────────────────────────────────────────────────────────────
