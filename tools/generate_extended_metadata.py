@@ -86,6 +86,7 @@ def parse_info_yaml(content):
         "name": "",
         "description": "",
         "creator": "",
+        "editor": "",
         "inputs": [],
         "outputs": [],
         "knobs": [],
@@ -119,6 +120,8 @@ def parse_info_yaml(content):
                     result["description"] = v
                 elif k == "creator":
                     result["creator"] = v
+                elif k == "editor":
+                    result["editor"] = v
                 elif k in ["panel", "controls", "host"]:
                     current_section = k
                     current_subsection = None
@@ -265,6 +268,7 @@ struct CardMeta {
     std::string name;
     std::string description;
     std::string creator;
+    std::string editor;
 
     PortMeta inputs[6];
     PortMeta outputs[6];
@@ -294,6 +298,7 @@ for card in CARD_WHITELIST:
             "name": card_id.replace("_", " ").title(),
             "description": "Workshop Computer Card",
             "creator": "Music Thing Modular",
+            "editor": "",
             "inputs": [],
             "outputs": [],
             "knobs": [],
@@ -337,6 +342,7 @@ for card in CARD_WHITELIST:
     header += f"                {escape_cpp(data.get('name') or card_id.replace('_', ' ').title())},\n"
     header += f"                {escape_cpp(data.get('description') or 'Workshop Computer Card')},\n"
     header += f"                {escape_cpp(data.get('creator') or 'Music Thing Modular')},\n"
+    header += f"                {escape_cpp(data.get('editor') or '')},\n"
     
     # Write inputs array
     header += "                {\n"

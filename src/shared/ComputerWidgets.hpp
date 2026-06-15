@@ -14,6 +14,7 @@
 
 #include "rack.hpp"
 #include "cards/CardRegistry.hpp"
+#include "ExtendedMetadata.hpp"
 
 using namespace rack;
 
@@ -190,6 +191,7 @@ struct WorkshopResetButton : Widget {
 
 struct ProgramCardWidget : Widget {
     IComputerModule* computerModule = nullptr;
+    ui::Tooltip* tooltip = nullptr;
 
     std::shared_ptr<Svg> svgBlank;
     std::shared_ptr<Svg> svgTuring;
@@ -201,6 +203,52 @@ struct ProgramCardWidget : Widget {
         svgTuring = Svg::load(asset::plugin(pluginInstance, "res/card_turing.svg"));
         svgReverb = Svg::load(asset::plugin(pluginInstance, "res/card_reverb.svg"));
         svgMidi   = Svg::load(asset::plugin(pluginInstance, "res/card_midi.svg"));
+    }
+
+    ~ProgramCardWidget() override {
+        if (tooltip) {
+            if (APP && APP->scene) {
+                APP->scene->removeChild(tooltip);
+            }
+            delete tooltip;
+        }
+    }
+
+    void onEnter(const event::Enter& e) override {
+        Widget::onEnter(e);
+        if (!tooltip && computerModule && APP && APP->scene) {
+            std::string card_id = computerModule->get_active_card_id();
+            const auto* meta = ExtendedMetadata::get_card_metadata(card_id);
+            if (meta) {
+                tooltip = new ui::Tooltip();
+                tooltip->text = meta->name + ": " + meta->description;
+                APP->scene->addChild(tooltip);
+            }
+        }
+    }
+
+    void onLeave(const event::Leave& e) override {
+        Widget::onLeave(e);
+        if (tooltip) {
+            if (APP && APP->scene) {
+                APP->scene->removeChild(tooltip);
+            }
+            delete tooltip;
+            tooltip = nullptr;
+        }
+    }
+
+    void step() override {
+        Widget::step();
+        if (tooltip && computerModule) {
+            std::string card_id = computerModule->get_active_card_id();
+            const auto* meta = ExtendedMetadata::get_card_metadata(card_id);
+            if (meta) {
+                tooltip->text = meta->name + ": " + meta->description;
+            } else {
+                tooltip->text = "";
+            }
+        }
     }
 
     void setComputerModule(IComputerModule* m) { computerModule = m; }

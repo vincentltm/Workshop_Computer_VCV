@@ -37,6 +37,7 @@ struct CardMeta {
     std::string name;
     std::string description;
     std::string creator;
+    std::string editor;
 
     PortMeta inputs[6];
     PortMeta outputs[6];
@@ -55,6 +56,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Simple MIDI",
                 "Takes USB midi, sends it to pulse and CV outputs, also sends knob positions and CV inputs back to the computer as CC values.",
                 "Tom Whitwell",
+                "",
                 {
                     { "Audio 1 Input", "Audio input 1" },
                     { "Audio 2 Input", "Audio input 2" },
@@ -99,6 +101,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "BitPhase",
                 "experimental phaser/tremolo with bit destruction",
                 "Adrian Vos",
+                "",
                 {
                     { "Audio 1 Input", "Audio input 1" },
                     { "Audio 2 Input", "Audio input 2" },
@@ -139,6 +142,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Voices Of Sid",
                 "Dual MOS 6581 SID emulation (reSID engine) with CV/gate control, stereo output, waveform selection, and randomize",
                 "Joep Vermaat",
+                "",
                 {
                     { "Audio 1 Input", "Audio input 1" },
                     { "Audio 2 Input", "Audio input 2" },
@@ -179,6 +183,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Compulidean",
                 "Generative Euclidean drum + sample player.",
                 "Tristan Rowley",
+                "",
                 {
                     { "Audio 1 Input", "Audio input 1" },
                     { "Audio 2 Input", "Audio input 2" },
@@ -219,6 +224,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "USB Audio & MIDI",
                 "6-Channel USB Audio & MIDI firmware with CV/Gate support",
                 "Vincent Maurer (vincentmaurer.de)",
+                "https://vincentmaurer.de/usb-audio/midi_config.html",
                 {
                     { "Audio Input 1", "Physical input channel routable to USB audio and/or MIDI processing" },
                     { "Audio Input 2", "Physical input channel routable to USB audio and/or MIDI processing" },
@@ -262,6 +268,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Crafted Volts",
                 "Manually set control voltages (CV) with the input knobs and switch. It also attenuverts (attenuates and inverts) incoming voltages.",
                 "Brian Dorsey",
+                "",
                 {
                     { "Audio/CV Input A", "Mixed with AudioIn2 when present, then attenuverted by Main knob" },
                     { "Audio/CV Input B", "Mixed with AudioIn1 when present, then attenuverted by Main knob" },
@@ -307,6 +314,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Eighties Bass",
                 "Bass-oriented complete monosynth voice consisting of five detuned saw wave oscillators with mixable white noise and adjustable resonant filter.",
                 "Tod Kurt (@todbot)",
+                "",
                 {
                     { "Detune Modulation", "Controls oscillator detune spread amount" },
                     { "Noise Mix Modulation", "Controls amount of white noise mixed with oscillator signal" },
@@ -351,6 +359,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Cirpy Wavetable",
                 "Wavetable oscillator that using wavetables from Plaits, Braids, and Microwave,",
                 "Tod Kurt (@todbot)",
+                "",
                 {
                     { "Audio 1 Input", "Audio input 1" },
                     { "Audio 2 Input", "Audio input 2" },
@@ -396,6 +405,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Freq Shift",
                 "Dual Input Frequency Shifter for Feedback Experimentation",
                 "Ben Regnier",
+                "",
                 {
                     { "Audio 1 Input", "Audio input 1" },
                     { "Audio 2 Input", "Audio input 2" },
@@ -436,6 +446,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Od",
                 "Loopable chaotic Lorenz attractor trajectories and zero-crossings as CV and pulses, with sensitivity to initial conditions.",
                 "M. John Mills",
+                "",
                 {
                     { "Audio 1 Input", "Audio input 1" },
                     { "Audio 2 Input", "Audio input 2" },
@@ -476,6 +487,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Bends",
                 "Stereo Multi-FX, Glitch, and Codec Demolisher Card",
                 "Vincent Maurer (vincentmaurer.de) with Advanced Agentic Coding",
+                "",
                 {
                     { "Audio 1 Input", "Audio input 1" },
                     { "Audio 2 Input", "Audio input 2" },
@@ -516,6 +528,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Backyard Rain",
                 "Nature soundscape audio. A cozy rain ambience mix for background listening. You control the intensity. This card plays rain ambience which was recorded in my backyard.",
                 "Brian Dorsey",
+                "",
                 {
                     { "Audio 1 Input", "Audio input 1" },
                     { "Audio 2 Input", "Audio input 2" },
@@ -556,6 +569,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Utility Pair",
                 "25 small utilities, which can be combined in pairs",
                 "Chris Johnson",
+                "",
                 {
                     { "Left Utility Signal Input", "Left-side input routed according to selected left utility" },
                     { "Right Utility Signal Input", "Right-side input routed according to selected right utility" },
@@ -604,6 +618,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Turing Machine",
                 "Turing Machine with tap tempo clock, 2 x pulse outputs, 4 x CV outputs",
                 "Tom Whitwell",
+                "https://www.musicthing.co.uk/web_config/turing.html",
                 {
                     { "Reset", "Rising edge resets all sequence states to step 1" },
                     { "Preset Select CV", "Experimental CV control of the two-preset mode switch" },
@@ -648,6 +663,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Vink",
                 "Dual delay loops with sigmoid saturation for Jaap Vink / Roland Kayn style feedback patching",
                 "Ben Regnier",
+                "",
                 {
                     { "Audio Input 1", "Delay source input (or left source in split mode)" },
                     { "Audio Input 2", "Optional second source; summed in shared mode or routed to tap 2 in split mode" },
@@ -691,6 +707,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Siren",
                 "Multi-algorithm drone oscillator. Inspired by the Forge TME Vhikk X.",
                 "Moses Hoyt",
+                "",
                 {
                     { "Processor Input", "External audio processed by Siren's shaping path and summed with the drone # certainty: high (README + code)" },
                     { "Span Modulation", "External CV/audio modulation for oscillator spread (SPAN) # certainty: high (README + code)" },
@@ -738,6 +755,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Grains",
                 "Granular Sampler and Effect",
                 "Vincent Maurer",
+                "https://vincentmaurer.de/grains/grains_manager.html",
                 {
                     { "Audio Input Left / Mono", "Source audio for granular recording and processing" },
                     { "Audio Input Right", "CV/audio modulation for grain density behavior" },
@@ -790,6 +808,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Reverb+",
                 "Reverb effect, plus pulse/CV generators and MIDI-to-CV, configurable using web interface.",
                 "Chris Johnson",
+                "https://www.musicthing.co.uk/web_config/reverb.html",
                 {
                     { "Reverb Input Left", "Fixed reverb input; mixed with inverted AudioIn2 to mono reverb feed" },
                     { "Reverb Input Right (Inverted)", "Fixed reverb input contribution, summed into mono reverb input" },
@@ -836,6 +855,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Flux",
                 "Multi-FX and Synth Firmware",
                 "WorkshopSystem",
+                "",
                 {
                     { "Audio 1 Input", "Audio input 1" },
                     { "Audio 2 Input", "Audio input 2" },
@@ -876,6 +896,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Chord Organ-ish",
                 "Chord Organ-ish - 16 chords, 8 voices, 1V/oct root. Inspired by Music Thing Chord Organ.",
                 "jkeyworth",
+                "",
                 {
                     { "VCA CV", "Controls output level from 0 to full scale; defaults to full volume when unpatched" },
                     { "Audio 2 Input", "Audio input 2" },
@@ -928,6 +949,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Resonator",
                 "Karplus-Strong based sympathetic resonator. Can be used for resonant droning as well as plucking sounds.",
                 "Johan Eklund",
+                "https://johaneklund.io/resonator",
                 {
                     { "Excitation Input Left", "Mixed with AudioIn2 to excite resonator strings" },
                     { "Excitation Input Right", "Mixed with AudioIn1 to excite resonator strings" },
@@ -977,6 +999,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Fifths",
                 "A quantizer/sequencer that can create harmony and nimbly traverse the circle of fifths in attempts to make jazz",
                 "Dune Desormeaux",
+                "",
                 {
                     { "CV/Audio Source", "Main signal to be sampled/quantized (or internal random source when unpatched)" },
                     { "VCA Control", "Optional VCA/modulation control for input scaling" },
@@ -1022,6 +1045,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Computer Grids",
                 "Grids-inspired trigger sequencer with Web MIDI SysEx configuration.",
                 "Phil Miller",
+                "",
                 {
                     { "Audio 1 Input", "Audio input 1" },
                     { "Audio 2 Input", "Audio input 2" },
@@ -1073,6 +1097,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "BYO Benjolin",
                 "Rungler, Chaotic VCO, Noise Source, Turing Machine, Quantizer",
                 "Dune Desormeaux",
+                "",
                 {
                     { "External Data Source", "External signal source for shift-register data in middle switch mode" },
                     { "Probability Modulation", "Modulates Turing probability alongside the Main knob" },
@@ -1116,6 +1141,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Goldfish",
                 "Weird delay/looper for audio and CV",
                 "Dune Desormeaux",
+                "",
                 {
                     { "Audio Input", "Primary audio input for delay/record/play processing" },
                     { "Main Parameter Modulation", "Modulates Main control behavior in multiple modes" },
@@ -1161,6 +1187,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Bumpers",
                 "Bouncing ball' style delay and trigger generators",
                 "Chris Johnson",
+                "",
                 {
                     { "Delay Audio Input", "Enables multitap delay path when connected" },
                     { "Delay Time Modulation", "Modulates delay interpolation length when connected with Audio In 1" },
@@ -1205,6 +1232,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Sheep",
                 "A time-stretching and pitch-shifting granular processor and digital degradation playground with 2 fidelity options.",
                 "Dune Desormeaux",
+                "",
                 {
                     { "Granular Input Left", "Recorded into circular buffer when not frozen" },
                     { "Granular Input Right", "Recorded into circular buffer when not frozen" },
@@ -1254,6 +1282,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Knots",
                 "Six-engine oscillator firmware for the Music Thing Workshop System",
                 "Jeff Fletcher",
+                "",
                 {
                     { "X Modulation Input", "Bipolar modulation source for X macro; X knob becomes attenuation amount when patched" },
                     { "Y Modulation Input", "Bipolar modulation source for Y macro; Y knob becomes attenuation amount when patched" },
@@ -1302,6 +1331,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Chord Blimey!",
                 "Generates CV/Pulse arpeggios",
                 "Tom Waters",
+                "",
                 {
                     { "Audio 1 Input", "Audio input 1" },
                     { "Audio 2 Input", "Audio input 2" },
@@ -1347,6 +1377,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Noisebox",
                 "13-algorithm noise synth with CV modulation, sample-and-hold, and crusher mode",
                 "Eric Gao",
+                "",
                 {
                     { "Main Offset Modulation", "Offsets algorithm selection before wrapping" },
                     { "VCA Control", "Controls output level; normalled to full level when unpatched" },
@@ -1393,6 +1424,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "CVMod",
                 "Quad CV delay inspired by Make Noise Multimod",
                 "Chris Johnson",
+                "",
                 {
                     { "Record CV Input", "Source CV recorded into the loop (internal ramp used when unpatched)" },
                     { "Speed Modulation", "Modulates read-head speed around Main knob center" },
@@ -1437,6 +1469,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "ESP",
                 "A MS-20-style External Signal Processor that includes a preamp, bandpass filter, envelope follower, gate, and 1v/oct pitch outs.",
                 "Ben Regnier",
+                "",
                 {
                     { "Audio Input", "Source signal for all ESP analysis/processing stages" },
                     { "Audio 2 Input", "Audio input 2" },
@@ -1481,6 +1514,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Modes",
                 "Physical Modeling Voice (Mutable Instruments Elements port)",
                 "Vincent Maurer",
+                "",
                 {
                     { "Audio 1 Input", "Audio input 1" },
                     { "Audio 2 Input", "Audio input 2" },
@@ -1521,6 +1555,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Rompler",
                 "General MIDI SF2 Polyphonic Multisampler",
                 "Vincent Maurer & Antigravity",
+                "",
                 {
                     { "Audio 1 Input", "Audio input 1" },
                     { "Audio 2 Input", "Audio input 2" },
@@ -1561,6 +1596,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Trace",
                 "Oscillograph stereo oscillator",
                 "Ruiyang Wang",
+                "",
                 {
                     { "Modulation Input 1", "Modulates oscillator parameter 1 (Growth/depth-related role depending on active oscillator)" },
                     { "Modulation Input 2", "Modulates oscillator parameter 2 (Y-parameter role depending on active oscillator)" },
@@ -1608,6 +1644,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Talker",
                 "Proof of concept speech synthesizer, based on TalkiePCM, inspired by 1970s LPC speech synths.",
                 "Chris Johnson",
+                "",
                 {
                     { "Exciter Audio Replace", "When patched, replaces the pitched component of the LPC exciter path" },
                     { "Audio 2 Input", "Audio input 2" },
@@ -1653,6 +1690,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Bytebeat",
                 "Generates and mangles bytebeats",
                 "Matt Kuebrich",
+                "",
                 {
                     { "Parameter 1 Modulation", "Modulates bytebeat parameter 1" },
                     { "Parameter 2 Modulation", "Modulates bytebeat parameter 2" },
@@ -1700,6 +1738,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Twists",
                 "A port of Mutable Instruments Braids with a web editor",
                 "Random Works",
+                "",
                 {
                     { "Timbre Modulation", "Added to X control before timbre parameter mapping" },
                     { "Color Modulation", "Added to Y control before color parameter mapping" },
@@ -1743,6 +1782,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "DualQuant",
                 "Dual quantised granular pitch shifter with calibrated 1V/oct CV outputs",
                 "Adrian Vos",
+                "",
                 {
                     { "Audio Input", "Source audio written into the shared granular delay buffer" },
                     { "Audio 2 Input", "Audio input 2" },
@@ -1787,6 +1827,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Birds",
                 "Two birds sing to each other controlled by a Turing-style shift register sequencer with clock in and CV/pulse out.",
                 "Tom Whitwell",
+                "",
                 {
                     { "Audio 1 Input", "Audio input 1" },
                     { "Audio 2 Input", "Audio input 2" },
@@ -1834,6 +1875,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Tapegrade",
                 "Mono-input stereo cassette warble processor with wow, flutter, hiss, crackle, and tape wear morphing.",
                 "Adrian Vos",
+                "",
                 {
                     { "Mono Audio Input", "Primary mono source signal for tape processing" },
                     { "Tape Condition Mod Input", "Audio/CV modulation that morphs between cleaner and more degraded tape states" },
@@ -1877,6 +1919,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Glitch",
                 "Clock-synced beat-repeater with ratcheting, reversal and audio degradation",
                 "Andy Jenkinson (uglifruit)",
+                "",
                 {
                     { "Main Audio Input", "Source audio for buffering and processing" },
                     { "Audio 2 Input", "Audio input 2" },
@@ -1917,6 +1960,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "LoCho Vibes",
                 "Stereo chorus and vibrato effect featuring triangle, sine, and slow drift LFO modes, modulation-based delay movement, and tape-style saturation.",
                 "Adrian Vos",
+                "",
                 {
                     { "Audio Input Left", "Left input channel; summed with AudioIn2 to mono before stereo modulation processing" },
                     { "Audio Input Right", "Right input channel; summed with AudioIn1 to mono before stereo modulation processing" },
@@ -1964,6 +2008,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Markov",
                 "Dual generative Markov chain module — evolving melody (MarkoV) left side, rhythmic percussion patterns (MarkovPerc) right side, with internal synth voice",
                 "Andy Jenkinson (uglifruit)",
+                "",
                 {
                     { "Audio 1 Input", "Audio input 1" },
                     { "Audio 2 Input", "Audio input 2" },
@@ -2013,6 +2058,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Stretchcore",
                 "A card for playing and manipulating samples with tempo control, timestretch with browser-based audio loading (infinitedigits.com/stretchcore/)",
                 "Infinite Digits",
+                "https://infinitedigits.co/stretchcore/",
                 {
                     { "Audio 1 Input", "Audio input 1" },
                     { "Audio 2 Input", "Audio input 2" },
@@ -2058,6 +2104,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Wild Pebble",
                 "Playable generative rhythm and melody organism inspired by Pet Rock",
                 "Adrian Vos with Vibecode support",
+                "",
                 {
                     { "Audio 1 Input", "Audio input 1" },
                     { "Audio 2 Input", "Audio input 2" },
@@ -2107,6 +2154,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "DivCom",
                 "Comparator and VC clock divider, inspired by Serge NCOM",
                 "divmod",
+                "",
                 {
                     { "Comparator Signal", "Signal tested against scaled/offset reference" },
                     { "Comparator Reference", "Reference signal for comparator thresholding" },
@@ -2155,6 +2203,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "AM Coupler",
                 "AM radio transmitter / coupler",
                 "Chris Johnson",
+                "",
                 {
                     { "Modulator Audio 1", "Summed into AM modulation signal" },
                     { "Modulator Audio 2", "Summed into AM modulation signal" },
@@ -2200,6 +2249,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "SlowMod",
                 "Chaotic quad-LFO with VCAs",
                 "divmod",
+                "",
                 {
                     { "VCA Control A", "Controls amplitude of AudioOut1 modulation signal" },
                     { "VCA Control B", "Controls amplitude of AudioOut2 modulation signal" },
@@ -2245,6 +2295,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "NZT",
                 "Grain Noise and Noise Tools",
                 "@kjnilsson",
+                "",
                 {
                     { "Ring Mod Input", "Ring-modulates internal noise source" },
                     { "External Noise Source", "Replaces internal noise source when connected" },
@@ -2288,6 +2339,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Glitter",
                 "Granular Looping Sampler",
                 "Steve Jones",
+                "",
                 {
                     { "Audio 1 Input", "Audio input 1" },
                     { "Audio 2 Input", "Audio input 2" },
@@ -2328,6 +2380,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Degenerator",
                 "Degenerator — Disintegrating Looper. Capture audio loops and apply irreversible degradation with 6 algorithms (Saturation, Filter Drift, Tape Hiss, Oxide Shedding, Bit Crush, Bit Rot) via preview/apply workflow. Inspired by William Basinski's The Disintegration Loops.",
                 "Joep Vermaat",
+                "https://degenerator-web.netlify.app/",
                 {
                     { "Audio 1 Input", "Audio input 1" },
                     { "Audio 2 Input", "Audio input 2" },
@@ -2368,6 +2421,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Motorik",
                 "Motorik drum machine with kick/snare/hihat, bass and melody CV outputs and inputs. Classic Krautrock grooves.",
                 "Joep Vermaat",
+                "",
                 {
                     { "Audio 1 Input", "Audio input 1" },
                     { "Audio 2 Input", "Audio input 2" },
@@ -2408,6 +2462,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Tesserae",
                 "Tesserae — Variable-voice (2-8) arpeggiated chord generator with 5 patterns, 10 scales, tap tempo, CV/audio transpose inputs, and dual CV + audio pitch outputs. Inspired by Laurie Spiegel's Music Mouse and Patchwork.",
                 "MTM Community",
+                "",
                 {
                     { "Audio 1 Input", "Audio input 1" },
                     { "Audio 2 Input", "Audio input 2" },
@@ -2448,6 +2503,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Toolbox",
                 "Mixer, VCA, noise, S&H, clock generator, etc.",
                 "divmod",
+                "",
                 {
                     { "Audio 1 Input", "Audio input 1" },
                     { "Audio 2 Input", "Audio input 2" },
@@ -2488,6 +2544,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "MLRws",
                 "A remix of monome's classic MLR sample cutting platform (grid controller encouraged but optional)",
                 "Dune Desormeaux",
+                "https://dessertplanet.github.io/MLRws-web/",
                 {
                     { "Audio Input 1", "Recording source / modulation source depending on mode" },
                     { "Audio Input 2", "Secondary recording source / speed modulation depending on mode" },
@@ -2537,6 +2594,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "drumdrum",
                 "DFAM-style 8-step sequencer",
                 "Moses Hoyt",
+                "https://mohoyt.com/drumdrum.html",
                 {
                     { "Audio 1 Input", "Audio input 1" },
                     { "Audio 2 Input", "Audio input 2" },
@@ -2585,6 +2643,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Blackbird",
                 "A scriptable, live-codable, USB-serial-to-CV device implementing monome crow's protocol",
                 "Dune Desormeaux",
+                "https://dessertplanet.github.io/web-druid/",
                 {
                     { "bb.audioin[1]", "Audio input query source for Lua scripts" },
                     { "bb.audioin[2]", "Audio input query source for Lua scripts" },
@@ -2629,6 +2688,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Krell",
                 "Krell",
                 "Benjamin Reily",
+                "",
                 {
                     { "Audio 1 Input", "Audio input 1" },
                     { "Audio 2 Input", "Audio input 2" },
@@ -2672,6 +2732,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Duo MIDI",
                 "A duophonic midi device/host interface",
                 "Dune Desormeaux",
+                "",
                 {
                     { "Audio 1 Input", "Audio input 1" },
                     { "Audio 2 Input", "Audio input 2" },
