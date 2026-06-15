@@ -81,6 +81,13 @@ CARD_WHITELIST = [
         "sources": ["cirpy_wavetable.cpp"]
     },
     {
+        "id": "freq_shift",
+        "dir": "releases/35_FreqShift",
+        "ns": "Card_FreqShift",
+        "num": "35",
+        "sources": ["main.cpp"]
+    },
+    {
         "id": "od",
         "dir": "releases/38_od",
         "ns": "Card_Od",

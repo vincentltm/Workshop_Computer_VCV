@@ -369,6 +369,46 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             }
         },
         {
+            "freq_shift",
+            {
+                "freq_shift",
+                "Freq Shift",
+                "Dual Input Frequency Shifter for Feedback Experimentation",
+                "Ben Regnier",
+                {
+                    { "Audio 1 Input", "Audio input 1" },
+                    { "Audio 2 Input", "Audio input 2" },
+                    { "CV 1 Input", "CV input 1" },
+                    { "CV 2 Input", "CV input 2" },
+                    { "Pulse 1 Input", "Pulse input 1" },
+                    { "Pulse 2 Input", "Pulse input 2" },
+                },
+                {
+                    { "Audio 1 Output", "Audio output 1" },
+                    { "Audio 2 Output", "Audio output 2" },
+                    { "CV 1 Output", "CV output 1" },
+                    { "CV 2 Output", "CV output 2" },
+                    { "Pulse 1 Output", "Pulse output 1" },
+                    { "Pulse 2 Output", "Pulse output 2" },
+                },
+                {
+                    {
+                    },
+                    {
+                    },
+                    {
+                    },
+                },
+                {
+                    "Z",
+                    { "Up", "Switch position Up" },
+                    { "Middle", "Switch position Middle" },
+                    { "Down", "Switch position Down" }
+                },
+                false
+            }
+        },
+        {
             "od",
             {
                 "od",

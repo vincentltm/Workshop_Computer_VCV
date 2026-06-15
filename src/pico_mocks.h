@@ -42,6 +42,7 @@ struct Port;
 #ifdef __APPLE__
 #define __attribute__(x)
 #endif
+#define VREG_VOLTAGE_1_15 115
 #define VREG_VOLTAGE_1_20 120
 #define VREG_VOLTAGE_1_25 125
 

@@ -201,6 +201,13 @@ void register_all_cards() {
         "Adrian Vos - with Vibe code support"
     });
     g_card_registry.push_back({
+        "freq_shift",
+        "Freq Shift",
+        "35",
+        "Dual Input Frequency Shifter for Feedback Experimentation",
+        "Ben Regnier"
+    });
+    g_card_registry.push_back({
         "compulidean",
         "Compulidean",
         "37",
