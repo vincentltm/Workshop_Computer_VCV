@@ -600,24 +600,96 @@ struct WorkshopComputer : Module, IGridConsumer, IComputerModule {
         for (int i = 0; i < 6; i++) {
             int in_id = input_mapping[i];
             if (in_id >= 0 && in_id < (int)inputInfos.size() && inputInfos[in_id]) {
+                std::string name = "";
+                std::string desc = "";
                 if (meta) {
-                    inputInfos[in_id]->name = meta->inputs[i].name;
-                    inputInfos[in_id]->description = meta->inputs[i].description;
-                } else {
-                    inputInfos[in_id]->name = "";
-                    inputInfos[in_id]->description = "";
+                    const auto& contexts = meta->inputs[i];
+                    std::vector<const ExtendedMetadata::PortContext*> matches;
+                    bool has_specific_match = false;
+                    for (const auto& ctx : contexts) {
+                        if (ctx.z != "any") {
+                            if ((ctx.z == "down" && z_val == 0) ||
+                                (ctx.z == "middle" && z_val == 1) ||
+                                (ctx.z == "up" && z_val == 2)) {
+                                has_specific_match = true;
+                                break;
+                            }
+                        }
+                    }
+                    for (const auto& ctx : contexts) {
+                        bool match = false;
+                        if (has_specific_match) {
+                            if (ctx.z == "down" && z_val == 0) match = true;
+                            else if (ctx.z == "middle" && z_val == 1) match = true;
+                            else if (ctx.z == "up" && z_val == 2) match = true;
+                        } else {
+                            if (ctx.z == "any") match = true;
+                        }
+                        if (match) {
+                            matches.push_back(&ctx);
+                        }
+                    }
+                    for (size_t m = 0; m < matches.size(); m++) {
+                        if (m > 0) {
+                            name += " / ";
+                            desc += "\n";
+                        }
+                        name += matches[m]->name;
+                        if (!matches[m]->gesture.empty()) {
+                            name += " [" + matches[m]->gesture + "]";
+                        }
+                        desc += matches[m]->description;
+                    }
                 }
+                inputInfos[in_id]->name = name;
+                inputInfos[in_id]->description = desc;
             }
 
             int out_id = output_mapping[i];
             if (out_id >= 0 && out_id < (int)outputInfos.size() && outputInfos[out_id]) {
+                std::string name = "";
+                std::string desc = "";
                 if (meta) {
-                    outputInfos[out_id]->name = meta->outputs[i].name;
-                    outputInfos[out_id]->description = meta->outputs[i].description;
-                } else {
-                    outputInfos[out_id]->name = "";
-                    outputInfos[out_id]->description = "";
+                    const auto& contexts = meta->outputs[i];
+                    std::vector<const ExtendedMetadata::PortContext*> matches;
+                    bool has_specific_match = false;
+                    for (const auto& ctx : contexts) {
+                        if (ctx.z != "any") {
+                            if ((ctx.z == "down" && z_val == 0) ||
+                                (ctx.z == "middle" && z_val == 1) ||
+                                (ctx.z == "up" && z_val == 2)) {
+                                has_specific_match = true;
+                                break;
+                            }
+                        }
+                    }
+                    for (const auto& ctx : contexts) {
+                        bool match = false;
+                        if (has_specific_match) {
+                            if (ctx.z == "down" && z_val == 0) match = true;
+                            else if (ctx.z == "middle" && z_val == 1) match = true;
+                            else if (ctx.z == "up" && z_val == 2) match = true;
+                        } else {
+                            if (ctx.z == "any") match = true;
+                        }
+                        if (match) {
+                            matches.push_back(&ctx);
+                        }
+                    }
+                    for (size_t m = 0; m < matches.size(); m++) {
+                        if (m > 0) {
+                            name += " / ";
+                            desc += "\n";
+                        }
+                        name += matches[m]->name;
+                        if (!matches[m]->gesture.empty()) {
+                            name += " [" + matches[m]->gesture + "]";
+                        }
+                        desc += matches[m]->description;
+                    }
                 }
+                outputInfos[out_id]->name = name;
+                outputInfos[out_id]->description = desc;
             }
         }
 
@@ -1378,6 +1450,8 @@ struct WorkshopComputer : Module, IGridConsumer, IComputerModule {
         if (card && card_globals.g_dsp_ready.load(std::memory_order_relaxed)) {
             card_globals.dsp_phase += card_globals.expected_sample_rate / args.sampleRate;
             while (card_globals.dsp_phase >= 1.0) {
+                card_globals.virtual_time_accumulator += 1000000.0 / card_globals.expected_sample_rate;
+                card_globals.virtual_time_us.store((uint64_t)card_globals.virtual_time_accumulator, std::memory_order_relaxed);
                 card->update_inputs();
                 card->ProcessSample();
                 card_globals.dsp_phase -= 1.0;
@@ -1807,24 +1881,62 @@ struct WorkshopComputerWidget : ModuleWidget {
             }
         }
 
-        // Open Card Manual / Editor
+        // Card Info, Manual, Repository and Credits
         if (module && !module->card_globals.active_card_id_str.empty()) {
             std::string card_id = module->card_globals.active_card_id_str;
             const auto* meta = ExtendedMetadata::get_card_metadata(card_id);
-            if (meta && !meta->editor.empty()) {
-                menu->addChild(new MenuSeparator());
+            if (meta) {
+                bool added_separator = false;
 
-                struct OpenManualItem : MenuItem {
-                    std::string url;
-                    void onAction(const event::Action& e) override {
-                        system::openBrowser(url);
+                // 1. Link to Manual/Editor if present
+                if (!meta->editor.empty()) {
+                    if (!added_separator) {
+                        menu->addChild(new MenuSeparator());
+                        added_separator = true;
                     }
-                };
+                    struct OpenLinkItem : MenuItem {
+                        std::string url;
+                        void onAction(const event::Action& e) override {
+                            system::openBrowser(url);
+                        }
+                    };
+                    OpenLinkItem* editorItem = new OpenLinkItem();
+                    editorItem->text = "Open Card Manual / Editor...";
+                    editorItem->url = meta->editor;
+                    menu->addChild(editorItem);
+                }
 
-                OpenManualItem* manualItem = new OpenManualItem();
-                manualItem->text = "Open Card Manual / Editor...";
-                manualItem->url = meta->editor;
-                menu->addChild(manualItem);
+                // 2. Link to Original Card Repository if present
+                if (!meta->repository.empty()) {
+                    if (!added_separator) {
+                        menu->addChild(new MenuSeparator());
+                        added_separator = true;
+                    }
+                    struct OpenLinkItem : MenuItem {
+                        std::string url;
+                        void onAction(const event::Action& e) override {
+                            system::openBrowser(url);
+                        }
+                    };
+                    OpenLinkItem* repoItem = new OpenLinkItem();
+                    repoItem->text = "Open Original Card Repository...";
+                    repoItem->url = meta->repository;
+                    menu->addChild(repoItem);
+                }
+
+                // 3. Credits and License Labels
+                menu->addChild(new MenuSeparator());
+                
+                std::string orig_text = "Original Card: " + (meta->creator.empty() ? "Unknown" : meta->creator);
+                menu->addChild(createMenuLabel(orig_text));
+                
+                std::string port_text = "VCV Port: Vincent Maurer";
+                menu->addChild(createMenuLabel(port_text));
+
+                if (!meta->license.empty()) {
+                    std::string lic_text = "Card License: " + meta->license;
+                    menu->addChild(createMenuLabel(lic_text));
+                }
             }
         }
 

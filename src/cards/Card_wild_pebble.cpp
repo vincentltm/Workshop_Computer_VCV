@@ -94,8 +94,52 @@ namespace Card_WildPebble {
 
 /* stripped ComputerCard include */
 /* stripped hardware include */
+/* stripped bsp include */
+/* stripped pico include */
+/* stripped tusb include */
 /* stripped system include */
 /* stripped pico include */
+
+static constexpr uint8_t kMidiClock = 0xF8;
+static constexpr uint8_t kMidiStart = 0xFA;
+static constexpr uint8_t kMidiContinue = 0xFB;
+static constexpr uint8_t kMidiStop = 0xFC;
+static constexpr uint8_t kMidiNoteOff = 0x80;
+static constexpr uint8_t kMidiNoteOn = 0x90;
+static constexpr uint8_t kMidiChannel = 0;
+static constexpr uint8_t kMidiClocksPerStep = 12;
+
+volatile uint8_t gMidiClockTicksPending = 0;
+volatile uint8_t gMidiStartPending = 0;
+volatile uint8_t gMidiContinuePending = 0;
+volatile uint8_t gMidiStopPending = 0;
+
+struct MidiMessage
+{
+    uint8_t status;
+    uint8_t data1;
+    uint8_t data2;
+};
+
+static constexpr uint8_t kMidiQueueSize = 32;
+volatile MidiMessage gMidiOutputQueue[kMidiQueueSize];
+volatile uint8_t gMidiQueueWrite = 0;
+volatile uint8_t gMidiQueueRead = 0;
+
+void QueueMidiMessage(uint8_t status, uint8_t data1, uint8_t data2)
+{
+    uint8_t nextWrite = (uint8_t)((gMidiQueueWrite + 1) & (kMidiQueueSize - 1));
+
+    if(nextWrite == gMidiQueueRead)
+    {
+        return;
+    }
+
+    gMidiOutputQueue[gMidiQueueWrite].status = status;
+    gMidiOutputQueue[gMidiQueueWrite].data1 = data1;
+    gMidiOutputQueue[gMidiQueueWrite].data2 = data2;
+    gMidiQueueWrite = nextWrite;
+}
 
 class WildPebble : public ComputerCard
 {
@@ -144,7 +188,19 @@ public:
     uint32_t internalClockPeriod = 4000;
 
     bool externalClockActive = false;
-    uint32_t externalClockTimeout = 0;
+    uint32_t pulseClockTimeout = 0;
+    uint32_t midiClockTimeout = 0;
+    uint32_t lastPulseClockSample = 0;
+    uint32_t lastMidiStepSample = 0;
+    uint32_t pulseClockPeriod = 0xFFFFFFFF;
+    uint32_t midiClockPeriod = 0xFFFFFFFF;
+    bool midiClockRunning = false;
+    uint8_t midiClockDivider = 0;
+    bool midiNoteGateActive = false;
+    uint8_t midiLastNote = 48;
+    uint32_t midiNoteOffSample = 0;
+    uint32_t midiNoteOnSample = 0;
+    uint32_t selectedClockPeriod = 4000;
 
     int32_t tension = 64;
     bool tensionRising = true;
@@ -532,6 +588,183 @@ public:
         }
     }
 
+    uint32_t ActiveStepPeriod() const
+    {
+        if(selectedClockPeriod > 0)
+        {
+            return selectedClockPeriod;
+        }
+
+        return internalClockPeriod;
+    }
+
+    uint8_t MidiVelocity() const
+    {
+        int32_t velocity = 28 + (currentEnergy >> 1) + (tension >> 2);
+
+        if(velocity > 127)
+        {
+            velocity = 127;
+        }
+
+        if(velocity < 24)
+        {
+            velocity = 24;
+        }
+
+        return (uint8_t)velocity;
+    }
+
+    uint32_t MidiNoteLength() const
+    {
+        uint32_t stepPeriod = ActiveStepPeriod();
+        uint32_t shape = (uint32_t)(80 + (currentEnergy >> 1) + (tension >> 2));
+
+        if(shape > 240)
+        {
+            shape = 240;
+        }
+
+        uint32_t noteLength = (stepPeriod * shape) >> 8;
+
+        if(noteLength < 120)
+        {
+            noteLength = 120;
+        }
+
+        return noteLength;
+    }
+
+    bool ShouldRetriggerMidiNote()
+    {
+        if(!midiNoteGateActive)
+        {
+            return true;
+        }
+
+        uint32_t minGap = ActiveStepPeriod() >> 3;
+
+        if(minGap < 120)
+        {
+            minGap = 120;
+        }
+
+        if((sampleCounter - midiNoteOnSample) < minGap)
+        {
+            return false;
+        }
+
+        uint32_t retriggerChance = (uint32_t)((currentEnergy >> 1) + (tension >> 2));
+
+        if(retriggerChance > 220)
+        {
+            retriggerChance = 220;
+        }
+
+        return (Random() & 255) < retriggerChance;
+    }
+
+    void TriggerMidiNote()
+    {
+        if(!ShouldRetriggerMidiNote())
+        {
+            return;
+        }
+
+        if(midiNoteGateActive)
+        {
+            QueueMidiMessage(kMidiNoteOff | kMidiChannel,
+                             midiLastNote,
+                             0);
+        }
+
+        midiLastNote = (uint8_t)currentMIDINote;
+
+        QueueMidiMessage(kMidiNoteOn | kMidiChannel,
+                         midiLastNote,
+                         MidiVelocity());
+
+        midiNoteGateActive = true;
+        midiNoteOnSample = sampleCounter;
+        midiNoteOffSample = sampleCounter + MidiNoteLength();
+    }
+
+    bool ConsumeMidiClock()
+    {
+        bool clockEvent = false;
+
+        if(gMidiStartPending > 0)
+        {
+            gMidiStartPending--;
+            midiClockRunning = true;
+            midiClockDivider = 0;
+            currentStep = -1;
+            clockCounter = 0;
+            lastMidiStepSample = sampleCounter;
+        }
+
+        if(gMidiContinuePending > 0)
+        {
+            gMidiContinuePending--;
+            midiClockRunning = true;
+        }
+
+        if(gMidiStopPending > 0)
+        {
+            gMidiStopPending--;
+            midiClockRunning = false;
+            midiClockDivider = 0;
+            midiClockTimeout = 0;
+            midiClockPeriod = 0xFFFFFFFF;
+
+            if(midiNoteGateActive)
+            {
+                QueueMidiMessage(kMidiNoteOff | kMidiChannel,
+                                 midiLastNote,
+                                 0);
+                midiNoteGateActive = false;
+            }
+        }
+
+        while(gMidiClockTicksPending > 0)
+        {
+            gMidiClockTicksPending--;
+
+            if(!midiClockRunning)
+            {
+                continue;
+            }
+
+            midiClockTimeout = 48000;
+
+            midiClockDivider++;
+
+            if(midiClockDivider >= kMidiClocksPerStep)
+            {
+                midiClockDivider = 0;
+                midiClockPeriod = sampleCounter - lastMidiStepSample;
+                lastMidiStepSample = sampleCounter;
+                clockEvent = true;
+                break;
+            }
+        }
+
+        return clockEvent;
+    }
+
+    void UpdateMidiNoteOutput()
+    {
+        if(midiNoteGateActive &&
+           ((int32_t)(sampleCounter - midiNoteOffSample) >= 0))
+        {
+            QueueMidiMessage(kMidiNoteOff | kMidiChannel,
+                             midiLastNote,
+                             0);
+
+            midiNoteGateActive = false;
+        }
+    }
+
     virtual void ProcessSample()
     {
         sampleCounter++;
@@ -560,23 +793,57 @@ public:
 
         bool freeze = PulseIn2();
 
-        bool clockEvent = false;
+        bool midiClockEvent = ConsumeMidiClock();
+        bool pulseClockEvent = false;
 
         if(PulseIn1RisingEdge())
         {
-            externalClockActive = true;
-            externalClockTimeout = 48000;
-            clockEvent = true;
+            pulseClockPeriod = sampleCounter - lastPulseClockSample;
+            lastPulseClockSample = sampleCounter;
+            pulseClockTimeout = 48000;
+            pulseClockEvent = true;
         }
 
-        if(externalClockTimeout > 0)
+        if(pulseClockTimeout > 0)
         {
-            externalClockTimeout--;
+            pulseClockTimeout--;
+        }
+
+        if(midiClockTimeout > 0)
+        {
+            midiClockTimeout--;
+        }
+
+        bool pulseClockActive = pulseClockTimeout > 0;
+        bool midiClockActive =
+            midiClockRunning &&
+            (midiClockTimeout > 0);
+
+        bool preferPulseClock =
+            pulseClockActive &&
+            (!midiClockActive ||
+             (pulseClockPeriod < midiClockPeriod));
+
+        bool clockEvent = false;
+
+        if(preferPulseClock)
+        {
+            clockEvent = pulseClockEvent;
+            selectedClockPeriod = pulseClockPeriod;
+        }
+        else if(midiClockActive)
+        {
+            clockEvent = midiClockEvent;
+            selectedClockPeriod = midiClockPeriod;
         }
         else
         {
-            externalClockActive = false;
+            selectedClockPeriod = internalClockPeriod;
         }
+
+        externalClockActive =
+            pulseClockActive ||
+            midiClockActive;
 
         if(!externalClockActive)
         {
@@ -614,6 +881,11 @@ public:
         if(clockEvent)
         {
             AdvanceStep(density, mode);
+
+            if(pulse1)
+            {
+                TriggerMidiNote();
+            }
             
         // Update S+H only when Pulse2 fires
             
@@ -687,6 +959,7 @@ public:
 
         PulseOut1(pulse1);
         PulseOut2(pulse2);
+        UpdateMidiNoteOutput();
 
         CVOut1MIDINote(currentMIDINote);
 
@@ -869,13 +1142,91 @@ public:
     }
 };
 
+WildPebble card;
+
+void AudioCore()
+{
+    card.Run();
+}
+
+void HandleMidiInputByte(uint8_t byte)
+{
+    if(byte == kMidiClock)
+    {
+        if(gMidiClockTicksPending < 255)
+        {
+            gMidiClockTicksPending++;
+        }
+    }
+    else if(byte == kMidiStart)
+    {
+        gMidiStartPending++;
+    }
+    else if(byte == kMidiContinue)
+    {
+        gMidiContinuePending++;
+    }
+    else if(byte == kMidiStop)
+    {
+        gMidiStopPending++;
+    }
+}
+
+void MidiDeviceTask()
+{
+    uint8_t packet[64];
+
+    while(tud_midi_available())
+    {
+        uint32_t bytesRead =
+            tud_midi_stream_read(packet, sizeof(packet));
+
+        for(uint32_t i = 0; i < bytesRead; ++i)
+        {
+            HandleMidiInputByte(packet[i]);
+        }
+    }
+
+    while(gMidiQueueRead != gMidiQueueWrite)
+    {
+        MidiMessage message;
+        message.status = gMidiOutputQueue[gMidiQueueRead].status;
+        message.data1 = gMidiOutputQueue[gMidiQueueRead].data1;
+        message.data2 = gMidiOutputQueue[gMidiQueueRead].data2;
+
+        uint8_t out[3] =
+        {
+            message.status,
+            message.data1,
+            message.data2
+        };
+
+        uint32_t written = tud_midi_stream_write(0, out, sizeof(out));
+
+        if(written == 0)
+        {
+            break;
+        }
+
+        gMidiQueueRead =
+            (uint8_t)((gMidiQueueRead + 1) & (kMidiQueueSize - 1));
+    }
+}
+
 int main()
 {
     set_sys_clock_khz(144000, true);
 
-    WildPebble card;
+    board_init();
+    tusb_init();
 
-    card.Run();
+    multicore_launch_core1(AudioCore);
+
+    while(true)
+    {
+        tud_task();
+        MidiDeviceTask();
+    }
 
     return 0;
 }

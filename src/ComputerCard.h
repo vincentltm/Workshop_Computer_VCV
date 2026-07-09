@@ -22,6 +22,7 @@ public:
     bool pulse[2] = {false, false};
     bool last_pulse[2] = {false, false};
     volatile int32_t cv[2] = {0, 0};
+    bool is_heap_allocated = false;
 
     ComputerCard() {
         thisptr = this;
@@ -36,6 +37,7 @@ public:
     }
 
     virtual ~ComputerCard() {
+        printf("[DEBUG] ~ComputerCard called for %p\n", this);
         if (thisptr == this) {
             thisptr = nullptr;
         }
@@ -50,10 +52,12 @@ public:
             t_instance->card_ptr = this;
             t_instance->g_dsp_ready = true;
         }
+#ifndef __EMSCRIPTEN__
         while (!g_cancellation_requested.load(std::memory_order_relaxed)) {
             BackgroundLoop();
             sleep_ms(2);
         }
+#endif
     }
 
     void EnableNormalisationProbe() { useNormProbe = true; }

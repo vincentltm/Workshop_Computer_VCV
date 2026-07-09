@@ -96,7 +96,7 @@ CARD_WHITELIST = [
     },
     {
         "id": "bends",
-        "dir": "releases/45_bends",
+        "dir": os.path.join(VCV_PROJECT_DIR, "deps", "external", "45_bends"),
         "ns": "Card_Bends",
         "num": "45",
         "sources": ["bends.cpp"]
@@ -278,14 +278,14 @@ CARD_WHITELIST = [
     },
     {
         "id": "modes",
-        "dir": "releases/49_modes",
+        "dir": os.path.join(VCV_PROJECT_DIR, "deps", "external", "49_modes"),
         "ns": "Card_Modes",
         "num": "49",
         "sources": ["modes.cpp", "resonator_q15.cpp", "resources_q15.cpp", "samples_flash.cpp", "string_q15.cpp"]
     },
     {
         "id": "rompler",
-        "dir": "releases/46_rompler",
+        "dir": os.path.join(VCV_PROJECT_DIR, "deps", "external", "46_rompler"),
         "ns": "Card_Rompler",
         "num": "46",
         "sources": ["rompler.cpp"]
@@ -523,6 +523,76 @@ CARD_WHITELIST = [
             "lua/src/lvm.c",
             "lua/src/lzio.c"
         ]
+    },
+    {
+        "id": "clockwork",
+        "dir": "releases/26_clockwork",
+        "ns": "Card_Clockwork",
+        "num": "26",
+        "sources": ["main.cpp"]
+    },
+    {
+        "id": "castle_process",
+        "dir": "releases/43_Castle_Process",
+        "ns": "Card_CastleProcess",
+        "num": "43",
+        "sources": ["CastleProcess.cpp"]
+    },
+    {
+        "id": "west_coast_lpg",
+        "dir": "releases/81_West_Coast_LPG/src",
+        "ns": "Card_WestCoastLPG",
+        "num": "81",
+        "sources": ["vactrol.cpp"]
+    },
+    {
+        "id": "origami",
+        "dir": "releases/83_Origami/src",
+        "ns": "Card_Origami",
+        "num": "83",
+        "sources": ["origami.cpp"]
+    },
+    {
+        "id": "cosmik_c1zzl3",
+        "dir": "releases/84_CosmikC1zzl3",
+        "ns": "Card_CosmikC1zzl3",
+        "num": "84",
+        "sources": ["C1ZZL3.cpp", "C1ZZL3_LUT.cpp"]
+    },
+    {
+        "id": "fr330hfr33",
+        "dir": "releases/87_fr330hfr33",
+        "ns": "Card_Fr330hfr33",
+        "num": "87",
+        "sources": ["Fr330hfr33.cpp", "Fr330hfr33_LUT.cpp"]
+    },
+    {
+        "id": "pantograph",
+        "dir": "releases/90_Pantograph",
+        "ns": "Card_Pantograph",
+        "num": "90",
+        "sources": ["pantograph.cpp"]
+    },
+    {
+        "id": "chorgan",
+        "dir": "releases/91_chorgan",
+        "ns": "Card_Chorgan",
+        "num": "91",
+        "sources": ["main.cpp"]
+    },
+    {
+        "id": "turing_matrix",
+        "dir": "releases/93_Turing_Matrix",
+        "ns": "Card_TuringMatrix",
+        "num": "93",
+        "sources": ["Turing.cpp", "Clock.cpp", "Config.cpp", "MainApp.cpp", "UI.cpp", "main.cpp"]
+    },
+    {
+        "id": "offair2",
+        "dir": "releases/95_offair2",
+        "ns": "Card_OffAir2",
+        "num": "95",
+        "sources": ["main.cpp"]
     }
 ]
 
@@ -550,7 +620,7 @@ CARD_WHITELIST.append({
 
 
 def fix_main_return(content):
-    match = re.search(r'\bint\s+main\s*\([^)]*\)', content)
+    match = re.search(r'(?m)^\s*(?!//|/\*)\bint\s+main\s*\([^)]*\)', content)
     if not match:
         return content
     start_pos = match.end()
@@ -648,9 +718,12 @@ def main():
         web_src = None
         curr_dir = card_dir_abs
         while curr_dir and os.path.basename(curr_dir) != "releases" and curr_dir != "/":
-            potential_web = os.path.join(curr_dir, "web")
-            if os.path.isdir(potential_web):
-                web_src = potential_web
+            for folder_name in ["web", "web_config", "editor", "web_ui"]:
+                potential_web = os.path.join(curr_dir, folder_name)
+                if os.path.isdir(potential_web):
+                    web_src = potential_web
+                    break
+            if web_src:
                 break
             curr_dir = os.path.dirname(curr_dir)
             
@@ -727,8 +800,12 @@ def main():
             try:
                 with open(info_path, 'r') as f:
                     for line in f:
-                        if ":" in line:
-                            key, val = line.split(":", 1)
+                        line_rstrip = line.rstrip()
+                        if not line_rstrip.strip() or line_rstrip.strip().startswith('#'):
+                            continue
+                        indent = len(line_rstrip) - len(line_rstrip.lstrip())
+                        if indent == 0 and ":" in line_rstrip:
+                            key, val = line_rstrip.split(":", 1)
                             key = key.strip().lower()
                             val = val.strip().strip('"').strip("'")
                             if key == "name":

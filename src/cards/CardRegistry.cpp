@@ -6,7 +6,7 @@ void register_all_cards() {
     g_card_registry.clear();
     g_card_registry.push_back({
         "simple_midi",
-        "Simple Midi",
+        "Simple MIDI",
         "00",
         "Takes USB midi, sends it to pulse and CV outputs, also sends knob positions and CV inputs back to the computer as CC values.",
         "Tom Whitwell"
@@ -20,14 +20,14 @@ void register_all_cards() {
     });
     g_card_registry.push_back({
         "byo_benjolin",
-        "Byo Benjolin",
+        "BYO Benjolin",
         "04",
         "Rungler, Chaotic VCO, Noise Source, Turing Machine, Quantizer",
         "Dune Desormeaux"
     });
     g_card_registry.push_back({
         "chord_blimey",
-        "Chord Blimey",
+        "Chord Blimey!",
         "05",
         "Generates CV/Pulse arpeggios",
         "Tom Waters"
@@ -85,8 +85,8 @@ void register_all_cards() {
         "noisebox",
         "Noisebox",
         "13",
-        "Workshop Computer Card",
-        "Music Thing Modular"
+        "13-algorithm noise synth with CV modulation, sample-and-hold, and crusher mode",
+        "Eric Gao"
     });
     g_card_registry.push_back({
         "cvmod",
@@ -97,14 +97,14 @@ void register_all_cards() {
     });
     g_card_registry.push_back({
         "mlrws",
-        "Mlrws",
+        "MLRws",
         "15",
-        "A remix of monome's classic MLR sample cutting platform (grid controller encouraged but optional)",
+        "A remix of monome's classic MLR sample cutting platform (grid controller encouraged but optional). Diagrams here are for Gridless mode.",
         "Dune Desormeaux"
     });
     g_card_registry.push_back({
         "chord_organ",
-        "Chord Organ",
+        "Chord Organ-ish",
         "18",
         "Chord Organ-ish - 16 chords, 8 voices, 1V/oct root. Inspired by Music Thing Chord Organ.",
         "jkeyworth"
@@ -152,6 +152,13 @@ void register_all_cards() {
         "Music Thing Modular"
     });
     g_card_registry.push_back({
+        "clockwork",
+        "Clockwork",
+        "26",
+        ">-",
+        "Vincent Maurer"
+    });
+    g_card_registry.push_back({
         "siren",
         "Siren",
         "27",
@@ -163,18 +170,18 @@ void register_all_cards() {
         "Eighties Bass",
         "28",
         "Bass-oriented complete monosynth voice consisting of five detuned saw wave oscillators with mixable white noise and adjustable resonant filter.",
-        "@todbot / Tod Kurt"
+        "Tod Kurt (@todbot)"
     });
     g_card_registry.push_back({
         "cirpy_wavetable",
         "Cirpy Wavetable",
         "30",
         "Wavetable oscillator that using wavetables from Plaits, Braids, and Microwave,",
-        "@todbot / Tod Kurt"
+        "Tod Kurt (@todbot)"
     });
     g_card_registry.push_back({
         "esp",
-        "Esp",
+        "ESP",
         "31",
         "A MS-20-style External Signal Processor that includes a preamp, bandpass filter, envelope follower, gate, and 1v/oct pitch outs.",
         "Ben Regnier"
@@ -188,7 +195,7 @@ void register_all_cards() {
     });
     g_card_registry.push_back({
         "drumdrum",
-        "Drumdrum",
+        "drumdrum",
         "33",
         "DFAM-style 8-step sequencer",
         "Moses Hoyt"
@@ -198,11 +205,11 @@ void register_all_cards() {
         "Dual Quant",
         "34",
         "Dual quantised granular pitch shifter with calibrated 1V/oct CV outputs",
-        "Adrian Vos - with Vibe code support"
+        "Music Thing Modular"
     });
     g_card_registry.push_back({
         "freq_shift",
-        "Freq Shift",
+        "FreqShift",
         "35",
         "Dual Input Frequency Shifter for Feedback Experimentation",
         "Ben Regnier"
@@ -241,6 +248,13 @@ void register_all_cards() {
         "42",
         "Nature soundscape audio. A cozy rain ambience mix for background listening. You control the intensity. This card plays rain ambience which was recorded in my backyard.",
         "Brian Dorsey"
+    });
+    g_card_registry.push_back({
+        "castle_process",
+        "Castle Process",
+        "43",
+        "Fort Processor-inspired harsh noise processor with chopped external audio and a bass pulse voice",
+        "Adrian Vos"
     });
     g_card_registry.push_back({
         "birds",
@@ -289,7 +303,7 @@ void register_all_cards() {
         "Grains",
         "51",
         "Granular Sampler and Effect",
-        "Vincent Maurer (vincentmaurer.de)"
+        "Vincent Maurer"
     });
     g_card_registry.push_back({
         "glitter",
@@ -302,8 +316,8 @@ void register_all_cards() {
         "tapegrade",
         "Tapegrade",
         "54",
-        "Mono-input stereo cassette warble processor with wow, flutter, hiss, crackle, and tape wear morphing.",
-        "Adrian Vos"
+        ">-",
+        "Music Thing Modular"
     });
     g_card_registry.push_back({
         "fifths",
@@ -328,17 +342,17 @@ void register_all_cards() {
     });
     g_card_registry.push_back({
         "lochovibes",
-        "LoChoVibes",
+        "Lochovibes",
         "58",
-        "Stereo chorus and vibrato effect featuring triangle, sine, and slow drift LFO modes, modulation-based delay movement, and tape-style saturation.",
+        ">-",
         "Music Thing Modular"
     });
     g_card_registry.push_back({
         "bitphase",
-        "BitPhase",
+        "Bitphase",
         "59",
-        "experimental phaser/tremolo with bit destruction",
-        "Adrian Vos"
+        "Resonant 4-stage phaser for the Workshop Computer with deep notch filtering, wide modulation sweeps, controllable resonance, tremolo blending, and digital Burst-mode degradation.",
+        "Music Thing Modular"
     });
     g_card_registry.push_back({
         "markov",
@@ -386,8 +400,8 @@ void register_all_cards() {
         "wild_pebble",
         "Wild Pebble",
         "74",
-        "Playable generative rhythm and melody organism inspired by Pet Rock",
-        "Adrian Vos with Vibecode support"
+        "MIDI-clockable generative rhythm and melody organism inspired by Pet Rock",
+        "Music Thing Modular"
     });
     g_card_registry.push_back({
         "talker",
@@ -397,11 +411,32 @@ void register_all_cards() {
         "Chris Johnson"
     });
     g_card_registry.push_back({
+        "west_coast_lpg",
+        "West Coast LPG",
+        "81",
+        "Dual vactrol-emulating low-pass gate (combined VCA + low-pass filter) with fast-attack/slow-decay 'plong', self-pinging percussion, and per-channel VCA/VCF/LPG modes.",
+        "Jason Moore"
+    });
+    g_card_registry.push_back({
         "computer_grids",
         "Computer Grids",
         "82",
         "Grids-inspired trigger sequencer with Web MIDI SysEx configuration.",
         "Phil Miller"
+    });
+    g_card_registry.push_back({
+        "origami",
+        "Origami",
+        "83",
+        "Dual oversampled wavefolder — triangle / sine / hard-clip folding with bias (even-harmonic) control and CV over fold depth, band-limited via 4x oversampling.",
+        "Jason Moore"
+    });
+    g_card_registry.push_back({
+        "cosmik_c1zzl3",
+        "Cosmik C1Zzl3",
+        "84",
+        ">-",
+        "Music Thing Modular"
     });
     g_card_registry.push_back({
         "tesserae",
@@ -411,8 +446,43 @@ void register_all_cards() {
         "MTM Community"
     });
     g_card_registry.push_back({
+        "fr330hfr33",
+        "Fr330Hfr33",
+        "87",
+        "Hardware-tested acid bass synthesiser with selectable saw or square oscillator, switchable 18 or 24 dB diode-style filtering, accent and glide, distortion, USB MIDI device/host operation, and a persistent editable sequencer.",
+        "Music Thing Modular"
+    });
+    g_card_registry.push_back({
+        "pantograph",
+        "Pantograph",
+        "90",
+        "Trace and record CV — record knob movements, loop them at bipolar speed",
+        "Kenny Shen"
+    });
+    g_card_registry.push_back({
+        "chorgan",
+        "Chorgan",
+        "91",
+        "Chorgan — 6-voice chord synthesizer with morphing timbre, chord extension presets, and built-in chord sequencer. Two modes: normal (detune/chorus) and slew (portamento chord changes). Inspired by the Music Thing Modular Chord Organ.",
+        "Andy Jenkinson (uglifruit)"
+    });
+    g_card_registry.push_back({
+        "turing_matrix",
+        "Turing Matrix",
+        "93",
+        "Turing Machine sequencer with a switchable mixer layer inspired by the Music Thing Modular Turing Machine and Vactrol Mix combination",
+        "Music Thing Modular"
+    });
+    g_card_registry.push_back({
+        "offair2",
+        "OffAir",
+        "95",
+        "OffAir — AM/Shortwave/Longwave radio simulator. Tune between two Stations and interference with authentic heterodyne whistles, SSB pitch-shift detuning, AM envelope detection, swelling per-band static, and triggerable Insta-ference one-shots. Baked recordings or live audio inputs become the Stations.",
+        "Andy Jenkinson (uglifruit)"
+    });
+    g_card_registry.push_back({
         "duo_midi",
-        "Duo Midi",
+        "Duo MIDI",
         "98",
         "A duophonic midi device/host interface",
         "Dune Desormeaux"

@@ -87,6 +87,9 @@ def parse_info_yaml(content):
         "description": "",
         "creator": "",
         "editor": "",
+        "manual": "",
+        "license": "",
+        "repository": "",
         "inputs": [],
         "outputs": [],
         "knobs": [],
@@ -99,9 +102,28 @@ def parse_info_yaml(content):
     current_knob_control = None
     current_switch_pos = None
 
+    is_multiline_manual = False
+    manual_lines = []
+    manual_indent = None
+
     for line in lines:
         line_rstrip = line.rstrip()
         stripped = line_rstrip.strip()
+        
+        if is_multiline_manual:
+            if not stripped:
+                manual_lines.append("")
+                continue
+            indent = len(line_rstrip) - len(line_rstrip.lstrip())
+            if indent > 0:
+                if manual_indent is None:
+                    manual_indent = indent
+                content_line = line_rstrip[manual_indent:] if len(line_rstrip) >= manual_indent else line_rstrip.lstrip()
+                manual_lines.append(content_line)
+                continue
+            else:
+                is_multiline_manual = False
+                result["manual"] = "\n".join(manual_lines).strip()
         
         if not stripped or stripped.startswith('#'):
             continue
@@ -122,6 +144,17 @@ def parse_info_yaml(content):
                     result["creator"] = v
                 elif k == "editor":
                     result["editor"] = v
+                elif k == "license":
+                    result["license"] = v
+                elif k == "repository":
+                    result["repository"] = v
+                elif k == "manual":
+                    if v == "|" or v == ">":
+                        is_multiline_manual = True
+                        manual_lines = []
+                        manual_indent = None
+                    else:
+                        result["manual"] = v
                 elif k in ["panel", "controls", "host"]:
                     current_section = k
                     current_subsection = None
@@ -151,7 +184,7 @@ def parse_info_yaml(content):
                         k, v = item_content.split(':', 1)
                         current_item[k.strip().lower()] = v.strip().strip('"\'')
                 elif current_subsection == "knobs":
-                    current_item = {"when": {}, "main": {}, "x": {}, "y": {}}
+                    current_item = {"when": {}}
                     result["knobs"].append(current_item)
                     if item_content.startswith("when:"):
                         when_val = item_content.split(':', 1)[1].strip()
@@ -177,7 +210,9 @@ def parse_info_yaml(content):
                 elif current_subsection == "knobs" and current_item is not None:
                     if indent == 6:
                         current_knob_control = k
-                    elif indent >= 8 and current_knob_control in ["main", "x", "y"]:
+                        if k not in current_item:
+                            current_item[k] = {}
+                    elif indent >= 8 and current_knob_control is not None:
                         current_item[current_knob_control][k] = v
                 elif current_subsection == "switches" and current_item is not None:
                     if indent == 6:
@@ -185,6 +220,9 @@ def parse_info_yaml(content):
                     elif indent >= 8 and current_switch_pos in ["up", "middle", "down"]:
                         current_item[current_switch_pos][k] = v
             continue
+
+    if is_multiline_manual:
+        result["manual"] = "\n".join(manual_lines).strip()
 
     return result
 
@@ -238,7 +276,10 @@ header = """// ExtendedMetadata.hpp
 
 namespace ExtendedMetadata {
 
-struct PortMeta {
+struct PortContext {
+    std::string z;        // "up", "middle", "down", "any"
+    std::string gesture;  // e.g. "hold", "double-hold", or ""
+    std::string mode;     // e.g. "bank-indicator" or ""
     std::string name;
     std::string description;
 };
@@ -269,9 +310,12 @@ struct CardMeta {
     std::string description;
     std::string creator;
     std::string editor;
+    std::string manual;
+    std::string license;
+    std::string repository;
 
-    PortMeta inputs[6];
-    PortMeta outputs[6];
+    std::vector<PortContext> inputs[6];
+    std::vector<PortContext> outputs[6];
 
     std::vector<KnobContext> knobs[3]; // 0=Main, 1=X, 2=Y
     SwitchMeta z_switch;
@@ -299,6 +343,9 @@ for card in CARD_WHITELIST:
             "description": "Workshop Computer Card",
             "creator": "Music Thing Modular",
             "editor": "",
+            "manual": "",
+            "license": "",
+            "repository": "",
             "inputs": [],
             "outputs": [],
             "knobs": [],
@@ -306,26 +353,65 @@ for card in CARD_WHITELIST:
         }
     
     # Process Inputs
-    inputs_meta = [{"name": d["name"], "description": d["description"]} for d in DEFAULT_INPUTS]
+    inputs_meta = [[{
+        "z": "any", "gesture": "", "mode": "",
+        "name": d["name"], "description": d["description"]
+    }] for d in DEFAULT_INPUTS]
+    
     for inp in data.get("inputs", []):
         iid = inp.get("id", "").lower().replace("_", "").replace(" ", "")
         idx = in_map.get(iid, -1)
         if idx != -1:
-            inputs_meta[idx] = {
+            inputs_meta[idx][0] = {
+                "z": "any", "gesture": "", "mode": "",
                 "name": inp.get("name", DEFAULT_INPUTS[idx]["name"]),
                 "description": inp.get("description", DEFAULT_INPUTS[idx]["description"])
             }
             
     # Process Outputs
-    outputs_meta = [{"name": d["name"], "description": d["description"]} for d in DEFAULT_OUTPUTS]
+    outputs_meta = [[{
+        "z": "any", "gesture": "", "mode": "",
+        "name": d["name"], "description": d["description"]
+    }] for d in DEFAULT_OUTPUTS]
+    
     for outp in data.get("outputs", []):
         oid = outp.get("id", "").lower().replace("_", "").replace(" ", "")
         idx = out_map.get(oid, -1)
         if idx != -1:
-            outputs_meta[idx] = {
+            outputs_meta[idx][0] = {
+                "z": "any", "gesture": "", "mode": "",
                 "name": outp.get("name", DEFAULT_OUTPUTS[idx]["name"]),
                 "description": outp.get("description", DEFAULT_OUTPUTS[idx]["description"])
             }
+
+    # Process context-dependent jacks and knobs from controls
+    for kb in data.get("knobs", []):
+        when = kb.get("when", {})
+        z = when.get("z", "any")
+        gesture = when.get("gesture", "")
+        mode = when.get("mode", "")
+        
+        for k, v in kb.items():
+            if k == "when":
+                continue
+            name = v.get("name", "")
+            desc = v.get("description", "")
+            if not name and not desc:
+                continue
+                
+            in_idx = in_map.get(k.lower(), -1)
+            if in_idx != -1:
+                inputs_meta[in_idx].append({
+                    "z": z, "gesture": gesture, "mode": mode,
+                    "name": name, "description": desc
+                })
+                
+            out_idx = out_map.get(k.lower(), -1)
+            if out_idx != -1:
+                outputs_meta[out_idx].append({
+                    "z": z, "gesture": gesture, "mode": mode,
+                    "name": name, "description": desc
+                })
 
     # Generate Switch Z Meta
     sw = data.get("switches", {})
@@ -337,23 +423,47 @@ for card in CARD_WHITELIST:
     sw_down_name = sw.get("down", {}).get("name", "Down")
     sw_down_desc = sw.get("down", {}).get("description", "Switch position Down")
 
+    # Fallback license and repository URLs
+    repo = data.get("repository") or ""
+    if not repo:
+        if "releases" in info_dir:
+            folder_basename = os.path.basename(info_dir)
+            repo = f"https://github.com/TomWhitwell/Workshop_Computer/tree/main/releases/{folder_basename}"
+            
+    lic = data.get("license") or ""
+    if not lic:
+        creator_lower = (data.get("creator") or "").lower()
+        if "chris johnson" in creator_lower:
+            lic = "MIT"
+        elif "tom whitwell" in creator_lower or "music thing" in creator_lower:
+            lic = "MIT"
+
     header += f"        {{\n            {escape_cpp(card_id)},\n            {{\n"
     header += f"                {escape_cpp(card_id)},\n"
     header += f"                {escape_cpp(data.get('name') or card_id.replace('_', ' ').title())},\n"
     header += f"                {escape_cpp(data.get('description') or 'Workshop Computer Card')},\n"
     header += f"                {escape_cpp(data.get('creator') or 'Music Thing Modular')},\n"
     header += f"                {escape_cpp(data.get('editor') or '')},\n"
+    header += f"                {escape_cpp(data.get('manual') or '')},\n"
+    header += f"                {escape_cpp(lic)},\n"
+    header += f"                {escape_cpp(repo)},\n"
     
     # Write inputs array
     header += "                {\n"
     for i in range(6):
-        header += f"                    {{ {escape_cpp(inputs_meta[i]['name'])}, {escape_cpp(inputs_meta[i]['description'])} }},\n"
+        header += "                    {\n"
+        for ctx in inputs_meta[i]:
+            header += f"                        {{ {escape_cpp(ctx['z'])}, {escape_cpp(ctx['gesture'])}, {escape_cpp(ctx['mode'])}, {escape_cpp(ctx['name'])}, {escape_cpp(ctx['description'])} }},\n"
+        header += "                    },\n"
     header += "                },\n"
 
     # Write outputs array
     header += "                {\n"
     for i in range(6):
-        header += f"                    {{ {escape_cpp(outputs_meta[i]['name'])}, {escape_cpp(outputs_meta[i]['description'])} }},\n"
+        header += "                    {\n"
+        for ctx in outputs_meta[i]:
+            header += f"                        {{ {escape_cpp(ctx['z'])}, {escape_cpp(ctx['gesture'])}, {escape_cpp(ctx['mode'])}, {escape_cpp(ctx['name'])}, {escape_cpp(ctx['description'])} }},\n"
+        header += "                    },\n"
     header += "                },\n"
 
     # Write Knobs contexts (Main=0, X=1, Y=2)

@@ -177,8 +177,12 @@ inline uint32_t tud_cdc_write_flush() {
 }
 
 inline bool tud_cdc_connected() {
+#ifdef __EMSCRIPTEN__
+    return true;
+#else
     if (!t_instance) return true;
     return t_instance->grid_connected_flag || t_instance->web_ui_connected;
+#endif
 }
 
 inline uint32_t tud_cdc_n_available(uint8_t itf) { (void)itf; return tud_cdc_available(); }
@@ -199,5 +203,6 @@ inline uint32_t tuh_cdc_read(uint8_t dev_addr, void* buffer, uint32_t bufsize) {
     return tud_cdc_read(buffer, bufsize);
 }
 inline bool tud_mounted() { return true; }
+inline bool tud_suspended() { return false; }
 
 

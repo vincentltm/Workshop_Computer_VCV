@@ -221,7 +221,11 @@ struct ProgramCardWidget : Widget {
             const auto* meta = ExtendedMetadata::get_card_metadata(card_id);
             if (meta) {
                 tooltip = new ui::Tooltip();
-                tooltip->text = meta->name + ": " + meta->description;
+                std::string t = meta->name + "\n" + meta->description;
+                if (!meta->manual.empty() && meta->manual != meta->description) {
+                    t += "\n\nManual:\n" + meta->manual;
+                }
+                tooltip->text = t;
                 APP->scene->addChild(tooltip);
             }
         }
@@ -244,7 +248,11 @@ struct ProgramCardWidget : Widget {
             std::string card_id = computerModule->get_active_card_id();
             const auto* meta = ExtendedMetadata::get_card_metadata(card_id);
             if (meta) {
-                tooltip->text = meta->name + ": " + meta->description;
+                std::string t = meta->name + "\n" + meta->description;
+                if (!meta->manual.empty() && meta->manual != meta->description) {
+                    t += "\n\nManual:\n" + meta->manual;
+                }
+                tooltip->text = t;
             } else {
                 tooltip->text = "";
             }

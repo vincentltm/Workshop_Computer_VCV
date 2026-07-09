@@ -3637,7 +3637,11 @@ window.addEventListener('DOMContentLoaded', async () => {
     
     try {
         // Determine the base path of the current app to handle trailing slashes correctly
-        const basePath = window.location.pathname.endsWith('/') ? window.location.pathname : window.location.pathname + '/';
+        let path = window.location.pathname;
+        if (path.endsWith('.html') || path.endsWith('.htm')) {
+            path = path.substring(0, path.lastIndexOf('/'));
+        }
+        const basePath = path.endsWith('/') ? path : path + '/';
         const uf2Url = basePath.includes('/blackbird') ? basePath + 'UF2/blackbird_platform.uf2' : '/blackbird/UF2/blackbird_platform.uf2';
         const loaded = await uf2Generator.loadBaseUf2(uf2Url);
         if (loaded) {

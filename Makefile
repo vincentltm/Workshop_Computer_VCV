@@ -46,3 +46,8 @@ install-dev: all
 	rm -rf "$(INSTALLED_PLUGIN_DIR)/res"
 	cp -r res "$(INSTALLED_PLUGIN_DIR)/"
 	@echo "Installed directly to $(INSTALLED_PLUGIN_DIR)"
+
+test_behavioral:
+	python3 -u tools/test_card_behavioral.py
+
+

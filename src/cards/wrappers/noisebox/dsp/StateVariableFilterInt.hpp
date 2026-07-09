@@ -123,7 +123,7 @@ private:
 #ifdef COMPUTERCARD_NOIMPL
     static constexpr int F_LUT_SIZE = Card_Noisebox::F_LUT_SIZE;
 #else
-    static constexpr int F_LUT_SIZE = ::F_LUT_SIZE;
+    static constexpr int F_LUT_SIZE = 512;
 #endif
 
     // State & params
@@ -149,7 +149,7 @@ private:
 #ifdef COMPUTERCARD_NOIMPL
         const Card_Noisebox::KnobIdxFrac m = KnobMap_512[knob012 & 0x0FFF];
 #else
-        const ::KnobIdxFrac m = KnobMap_512[knob012 & 0x0FFF];
+        const KnobIdxFrac m = KnobMap_512[knob012 & 0x0FFF];
 #endif
         const uint16_t a = F_LUT_512[m.idx];
         const uint16_t b = F_LUT_512[m.idx + 1];

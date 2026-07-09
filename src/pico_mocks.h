@@ -166,6 +166,16 @@ struct CustomCancellationAtomic {
     }
 };
 
+#ifdef __EMSCRIPTEN__
+#include <functional>
+extern std::function<void()> g_wasm_background_tick;
+extern std::function<void()> g_wasm_core1_tick;
+extern thread_local bool g_core1_tick_active;
+extern thread_local bool g_background_tick_active;
+#endif
+
+typedef uint64_t absolute_time_t;
+
 // ──────────────────────────────────────────────────────────────────────────────
 // Per-instance card globals  ←  THE KEY STRUCT
 // Every WorkshopComputer module instance owns one of these.
@@ -200,10 +210,15 @@ struct CardGlobals {
     std::atomic<bool> g_dsp_ready{false};
     std::atomic<bool> block_audio_processing{false};
     std::atomic<bool> in_audio_callback{false};
+    bool g_core1_fifo_driven = false;
 
     // ── Sample rate conversion ──
     double expected_sample_rate = 48000.0;
+    double host_sample_rate = 48000.0;
     double dsp_phase = 0.0;
+    std::atomic<uint64_t> virtual_time_us{0};
+    double virtual_time_accumulator = 0.0;
+    std::atomic<bool> g_flash_dirty{false};
 
 
     // ── Flash emulation ──
@@ -227,6 +242,10 @@ struct CardGlobals {
     rack::audio::Port* bridge_audio_port = nullptr;
     std::atomic<bool> grid_connected_flag{true};
     std::atomic<bool> sample_mgr_active{false};
+    bool welcome_sent_val = false;
+    absolute_time_t welcome_time_val = 0;
+    bool g_force_all_leds_armed_val = false;
+    uint32_t g_force_all_leds_on_until_us_val = 0;
     std::atomic<bool> web_ui_connected{false};
 
     // ── DSO helper function pointers ──
@@ -241,6 +260,48 @@ struct CardGlobals {
     unsigned int g_adc_selected_input = 0;
     gpio_irq_callback_t g_gpio_callbacks[32] = {nullptr};
     bool g_last_pulse_state[2] = {false, false};
+
+    void reset() {
+        memset(g_knobs, 0, sizeof(g_knobs));
+        g_switch = 1;
+        memset(g_audio_in, 0, sizeof(g_audio_in));
+        memset(g_cv_in, 0, sizeof(g_cv_in));
+        memset(g_pulse_in, 0, sizeof(g_pulse_in));
+        memset(g_input_connected, 0, sizeof(g_input_connected));
+        memset(g_audio_out, 0, sizeof(g_audio_out));
+        memset(g_cv_out, 0, sizeof(g_cv_out));
+        memset(g_pulse_out, 0, sizeof(g_pulse_out));
+        memset(g_led_brightness, 0, sizeof(g_led_brightness));
+        g_cancellation_requested_val.store(false);
+        g_core1_cancellation_requested_val.store(false);
+        g_fifo_1_to_0.clear();
+        g_fifo_0_to_1.clear();
+        g_synth_need_render.store(false);
+        g_dsp_ready.store(false);
+        block_audio_processing.store(false);
+        in_audio_callback.store(false);
+        g_midi_rx_packet_queue.clear();
+        g_midi_tx_byte_queue.clear();
+        g_serial_rx_byte_queue.clear();
+        g_serial_tx_byte_queue.clear();
+        memset(g_gpio_pins, 0, sizeof(g_gpio_pins));
+        g_adc_selected_input = 0;
+        memset(g_gpio_callbacks, 0, sizeof(g_gpio_callbacks));
+        memset(g_last_pulse_state, 0, sizeof(g_last_pulse_state));
+        expected_sample_rate = 48000.0;
+        dsp_phase = 0.0;
+        virtual_time_us.store(0);
+        welcome_sent_val = false;
+        welcome_time_val = 0;
+        g_force_all_leds_armed_val = false;
+        g_force_all_leds_on_until_us_val = 0;
+        virtual_time_accumulator = 0.0;
+        g_flash_dirty.store(false);
+        grid_connected_flag.store(true);
+        sample_mgr_active.store(false);
+        web_ui_connected.store(false);
+        g_core1_fifo_driven = false;
+    }
 
     CardGlobals() : dma_hw(&dma_hw_instance) {
         memset(g_flash_memory_val, 0xFF, sizeof(g_flash_memory_val));
@@ -304,6 +365,15 @@ inline bool CustomCancellationAtomic::load(std::memory_order order) const {
 // XIP_BASE now points to this instance's flash buffer
 #define XIP_BASE ((uintptr_t)(get_safe_instance()->g_flash_memory_val))
 
+
+#if defined(__EMSCRIPTEN__) || defined(__wasm__)
+#define PICO_YIELD() ((void)0)
+#elif defined(__arm__) || defined(__aarch64__)
+#define PICO_YIELD() asm volatile("yield")
+#else
+#define PICO_YIELD() __builtin_ia32_pause()
+#endif
+
 // ──────────────────────────────────────────────────────────────────────────────
 // SpinFIFO method bodies (need g_cancellation_requested macro)
 // ──────────────────────────────────────────────────────────────────────────────
@@ -313,13 +383,19 @@ inline void SpinFIFO::push(uintptr_t val) {
     int spins = 0;
     while (next_t == head.load(std::memory_order_acquire)) {
         if (g_cancellation_requested.load(std::memory_order_relaxed)) throw ThreadExitException();
+#ifdef __EMSCRIPTEN__
+        if (!is_core1_thread && g_wasm_core1_tick && !g_core1_tick_active) {
+            g_core1_tick_active = true;
+            is_core1_thread = true;
+            g_wasm_core1_tick();
+            is_core1_thread = false;
+            g_core1_tick_active = false;
+            continue;
+        }
+#endif
         if (++spins > 50000) std::this_thread::sleep_for(std::chrono::milliseconds(1));
         else {
-            #if defined(__arm__) || defined(__aarch64__)
-            asm volatile("yield");
-            #else
-            __builtin_ia32_pause();
-            #endif
+            PICO_YIELD();
         }
     }
     buffer[t].store(val, std::memory_order_relaxed);
@@ -331,21 +407,36 @@ inline uintptr_t SpinFIFO::pop() {
     int spins = 0;
     while (h == tail.load(std::memory_order_acquire)) {
         if (g_cancellation_requested.load(std::memory_order_relaxed)) throw ThreadExitException();
+#ifdef __EMSCRIPTEN__
+        if (!is_core1_thread && g_wasm_core1_tick && !g_core1_tick_active) {
+            g_core1_tick_active = true;
+            is_core1_thread = true;
+            g_wasm_core1_tick();
+            is_core1_thread = false;
+            g_core1_tick_active = false;
+            h = head.load(std::memory_order_relaxed);
+            continue;
+        }
+        if (is_core1_thread && g_wasm_background_tick && !g_background_tick_active) {
+            g_background_tick_active = true;
+            is_core1_thread = false;
+            g_wasm_background_tick();
+            is_core1_thread = true;
+            g_background_tick_active = false;
+            h = head.load(std::memory_order_relaxed);
+            continue;
+        }
+        // Under single-threaded Emscripten, if we are still empty, we must not spin.
+        // Return 0 immediately to prevent browser freeze.
+        return 0;
+#endif
         if (!is_core1_thread) {
             // Audio thread: spin/yield but never sleep to prevent audio dropouts.
-            #if defined(__arm__) || defined(__aarch64__)
-            asm volatile("yield");
-            #else
-            __builtin_ia32_pause();
-            #endif
+            PICO_YIELD();
         } else {
             if (++spins > 50000) std::this_thread::sleep_for(std::chrono::milliseconds(1));
             else {
-                #if defined(__arm__) || defined(__aarch64__)
-                asm volatile("yield");
-                #else
-                __builtin_ia32_pause();
-                #endif
+                PICO_YIELD();
             }
         }
     }
@@ -371,13 +462,16 @@ extern thread_local bool is_core1_thread;
 // Time
 // ──────────────────────────────────────────────────────────────────────────────
 #define PICO_SDK_VERSION_STRING "2.2.0"
-typedef uint64_t absolute_time_t;
+// typedef uint64_t absolute_time_t; (Moved earlier)
 #define at_the_end_of_time 0xFFFFFFFFFFFFFFFFULL
 #ifndef MLR_FIRMWARE_VERSION
 #define MLR_FIRMWARE_VERSION "1.1.2"
 #endif
 
 inline absolute_time_t get_absolute_time() {
+    if (t_instance) {
+        return t_instance->virtual_time_us.load(std::memory_order_relaxed);
+    }
     auto now = std::chrono::steady_clock::now();
     return std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch()).count();
 }
@@ -407,6 +501,7 @@ inline bool time_reached(absolute_time_t t) { return get_absolute_time() >= t; }
 
 inline void sleep_us(uint64_t us) {
     if (g_cancellation_requested.load(std::memory_order_relaxed)) throw ThreadExitException();
+#ifndef __EMSCRIPTEN__
     if (us == 0) return;
     if (us >= 1000) {
         uint64_t ms = us / 1000;
@@ -421,6 +516,7 @@ inline void sleep_us(uint64_t us) {
     } else {
         std::this_thread::sleep_for(std::chrono::microseconds(us));
     }
+#endif
 }
 
 inline void sleep_until(absolute_time_t target) {
@@ -463,6 +559,9 @@ inline int getchar_timeout_us(uint32_t timeout_us) {
 }
 
 inline void busy_wait_us_32(uint32_t us) {
+#ifdef __EMSCRIPTEN__
+    if (g_cancellation_requested.load(std::memory_order_relaxed)) throw ThreadExitException();
+#else
     if (is_core1_thread) {
         // Core 1 uses this in two contexts:
         // 1. Synth render sync (tiny us) — block until Core 0 needs more audio
@@ -483,14 +582,11 @@ inline void busy_wait_us_32(uint32_t us) {
             while (std::chrono::duration_cast<std::chrono::microseconds>(
                     std::chrono::steady_clock::now() - start).count() < us) {
                 if (g_cancellation_requested.load(std::memory_order_relaxed)) throw ThreadExitException();
-                #if defined(__arm__) || defined(__aarch64__)
-                asm volatile("yield");
-                #else
-                __builtin_ia32_pause();
-                #endif
+                PICO_YIELD();
             }
         }
     }
+#endif
 }
 inline void busy_wait_ms(uint32_t ms) { sleep_ms(ms); }
 
@@ -510,14 +606,38 @@ inline bool multicore_lockout_victim_is_initialized(unsigned int) { return true;
 
 // Forward-declare so ComputerCard.h can use it
 inline void multicore_launch_core1(void (*entry)()) {
+    if (t_instance) {
+        t_instance->g_core1_cancellation_requested_val = false;
+    }
     if (t_instance && t_instance->multicore_launch_core1_fn) {
         t_instance->multicore_launch_core1_fn(entry);
+    } else {
+#ifdef __EMSCRIPTEN__
+        is_core1_thread = true;
+        entry();
+        is_core1_thread = false;
+#endif
     }
 }
 
 inline void multicore_fifo_push_blocking(uintptr_t data) {
-    if (!is_core1_thread) g_fifo_0_to_1.push(data);
-    else                  g_fifo_1_to_0.push(data);
+    if (!is_core1_thread) {
+        g_fifo_0_to_1.push(data);
+#ifdef __EMSCRIPTEN__
+        if (t_instance) {
+            t_instance->g_core1_fifo_driven = true;
+        }
+        if (g_wasm_core1_tick && !g_core1_tick_active) {
+            g_core1_tick_active = true;
+            is_core1_thread = true;
+            g_wasm_core1_tick();
+            is_core1_thread = false;
+            g_core1_tick_active = false;
+        }
+#endif
+    } else {
+        g_fifo_1_to_0.push(data);
+    }
 }
 inline uintptr_t multicore_fifo_pop_blocking() {
     if (!is_core1_thread) return g_fifo_1_to_0.pop();
@@ -538,14 +658,21 @@ inline void multicore_fifo_drain() {
 // ──────────────────────────────────────────────────────────────────────────────
 
 inline void flash_range_erase(uint32_t flash_offs, size_t count) {
-    if (flash_offs + count <= PICO_FLASH_SIZE_BYTES)
+    if (flash_offs + count <= PICO_FLASH_SIZE_BYTES) {
         memset(g_flash_memory + flash_offs, 0xFF, count);
+        if (t_instance) {
+            t_instance->g_flash_dirty.store(true, std::memory_order_release);
+        }
+    }
 }
 inline void flash_range_program(uint32_t flash_offs, const uint8_t* data, size_t count) {
     if (flash_offs + count <= PICO_FLASH_SIZE_BYTES) {
         memcpy(g_flash_memory + flash_offs, data, count);
-        if (t_instance && t_instance->save_flash_to_disk_fn) {
-            t_instance->save_flash_to_disk_fn();
+        if (t_instance) {
+            t_instance->g_flash_dirty.store(true, std::memory_order_release);
+            if (t_instance->save_flash_to_disk_fn) {
+                t_instance->save_flash_to_disk_fn();
+            }
         }
     }
 }
@@ -631,6 +758,9 @@ inline void pwm_init(unsigned int, const pwm_config*, bool) {}
 inline void pwm_set_gpio_level(unsigned int gpio, uint16_t level) {
     if      (gpio == 23) g_cv_out[0] = ((float)level - 1024.f) * (5.f / 1024.f);
     else if (gpio == 22) g_cv_out[1] = ((float)level - 1024.f) * (5.f / 1024.f);
+    else if (gpio >= 10 && gpio <= 15) {
+        g_led_brightness[gpio - 10] = (float)level / 65535.f;
+    }
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -844,7 +974,12 @@ inline unsigned int get_core_num() {
     return is_core1_thread ? 1 : 0;
 }
 
-inline void tight_loop_contents() {}
+inline void tight_loop_contents() {
+    if (t_instance && t_instance->g_cancellation_requested_val.load(std::memory_order_relaxed)) {
+        throw ThreadExitException();
+    }
+    std::this_thread::sleep_for(std::chrono::microseconds(10));
+}
 
 inline bool tuh_midi_packet_read(uint8_t, uint8_t*) { return false; }
 
