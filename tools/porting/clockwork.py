@@ -36,5 +36,10 @@ def post_process(content, src_rel):
             'ComputerCard::audio_callback_ptr = audio_callback_ram_wrapper;',
             '// ComputerCard::audio_callback_ptr = audio_callback_ram_wrapper;'
         )
+        # 3. Periodically call process_usb_midi_device and tick_ui_once inside ProcessSample (on host builds)
+        content = content.replace(
+            'void __not_in_flash_func(ClockworksCard::ProcessSample)() {',
+            'void __not_in_flash_func(ClockworksCard::ProcessSample)() {\n#ifndef __arm__\n    static uint32_t ui_counter = 0;\n    ui_counter++;\n    if (ui_counter >= 48) {\n        ui_counter = 0;\n        process_usb_midi_device();\n        tick_ui_once();\n    }\n#endif'
+        )
         
     return content

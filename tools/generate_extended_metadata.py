@@ -93,7 +93,9 @@ def parse_info_yaml(content):
         "inputs": [],
         "outputs": [],
         "knobs": [],
-        "switches": {}
+        "switches": {},
+        "switch_modes": {},
+        "panel_controls": []
     }
 
     current_section = None
@@ -102,28 +104,40 @@ def parse_info_yaml(content):
     current_knob_control = None
     current_switch_pos = None
 
-    is_multiline_manual = False
-    manual_lines = []
-    manual_indent = None
+    multiline_target = None
+    multiline_lines = []
+    multiline_indent = None
 
     for line in lines:
         line_rstrip = line.rstrip()
         stripped = line_rstrip.strip()
         
-        if is_multiline_manual:
+        if multiline_target is not None:
             if not stripped:
-                manual_lines.append("")
+                multiline_lines.append("")
                 continue
             indent = len(line_rstrip) - len(line_rstrip.lstrip())
-            if indent > 0:
-                if manual_indent is None:
-                    manual_indent = indent
-                content_line = line_rstrip[manual_indent:] if len(line_rstrip) >= manual_indent else line_rstrip.lstrip()
-                manual_lines.append(content_line)
+            if indent > 0 and (multiline_indent is None or indent >= multiline_indent):
+                if multiline_indent is None:
+                    multiline_indent = indent
+                content_line = line_rstrip[multiline_indent:] if len(line_rstrip) >= multiline_indent else line_rstrip.lstrip()
+                multiline_lines.append(content_line)
                 continue
             else:
-                is_multiline_manual = False
-                result["manual"] = "\n".join(manual_lines).strip()
+                # End multiline
+                val = "\n".join(multiline_lines).strip()
+                if multiline_target[0] == "manual":
+                    result["manual"] = val
+                elif multiline_target[0] == "port":
+                    _, sub, idx, key = multiline_target
+                    result[sub][idx][key] = val
+                elif multiline_target[0] == "switch_mode":
+                    _, key = multiline_target
+                    result["switch_modes"][key] = val
+                elif multiline_target[0] == "panel_control":
+                    _, idx, key = multiline_target
+                    result["panel_controls"][idx][key] = val
+                multiline_target = None
         
         if not stripped or stripped.startswith('#'):
             continue
@@ -138,8 +152,14 @@ def parse_info_yaml(content):
                 v = v.strip().strip('"\'')
                 if k == "name":
                     result["name"] = v
-                elif k == "description":
-                    result["description"] = v
+                elif k in ["manual", "description", "summary"]:
+                    v_strip = v.strip() if v else ""
+                    if v_strip in ["|", ">", "|-", ">-"]:
+                        multiline_target = ("manual",)
+                        multiline_lines = []
+                        multiline_indent = None
+                    else:
+                        result["manual"] = v
                 elif k == "creator":
                     result["creator"] = v
                 elif k == "editor":
@@ -148,14 +168,7 @@ def parse_info_yaml(content):
                     result["license"] = v
                 elif k == "repository":
                     result["repository"] = v
-                elif k == "manual":
-                    if v == "|" or v == ">":
-                        is_multiline_manual = True
-                        manual_lines = []
-                        manual_indent = None
-                    else:
-                        result["manual"] = v
-                elif k in ["panel", "controls", "host"]:
+                elif k in ["panel", "controls", "host", "switch_modes"]:
                     current_section = k
                     current_subsection = None
             continue
@@ -165,10 +178,18 @@ def parse_info_yaml(content):
             if ':' in stripped:
                 k, v = stripped.split(':', 1)
                 k = k.strip().lower()
-                if current_section == "panel" and k in ["inputs", "outputs"]:
+                v_strip = v.strip() if v else ""
+                if current_section == "panel" and k in ["inputs", "outputs", "controls"]:
                     current_subsection = k
                 elif current_section == "controls" and k in ["knobs", "switches"]:
                     current_subsection = k
+                elif current_section == "switch_modes":
+                    if v_strip in ["|", ">", "|-", ">-"]:
+                        multiline_target = ("switch_mode", k)
+                        multiline_lines = []
+                        multiline_indent = None
+                    else:
+                        result["switch_modes"][k] = v.strip().strip('"\'')
                 else:
                     current_subsection = None
             continue
@@ -196,6 +217,15 @@ def parse_info_yaml(content):
                         if k.strip().lower() == "id":
                             current_item["id"] = v.strip().strip('"\'')
                             result["switches"] = current_item
+            elif ':' in stripped:
+                k, v = stripped.split(':', 1)
+                k = k.strip().lower()
+                if current_subsection in ["inputs", "outputs"]:
+                    current_item = {"id": k}
+                    result[current_subsection].append(current_item)
+                elif current_section == "panel" and current_subsection == "controls":
+                    current_item = {"id": k}
+                    result["panel_controls"].append(current_item)
             continue
 
         # Nested keys inside list items at indent 6 or 8
@@ -204,9 +234,22 @@ def parse_info_yaml(content):
                 k, v = stripped.split(':', 1)
                 k = k.strip().lower()
                 v = v.strip().strip('"\'')
+                v_strip = v.strip() if v else ""
                 
                 if current_subsection in ["inputs", "outputs"] and current_item is not None:
-                    current_item[k] = v
+                    if v_strip in ["|", ">", "|-", ">-"]:
+                        multiline_target = ("port", current_subsection, len(result[current_subsection]) - 1, k)
+                        multiline_lines = []
+                        multiline_indent = None
+                    else:
+                        current_item[k] = v
+                elif current_subsection == "controls" and current_item is not None:
+                    if v_strip in ["|", ">", "|-", ">-"]:
+                        multiline_target = ("panel_control", len(result["panel_controls"]) - 1, k)
+                        multiline_lines = []
+                        multiline_indent = None
+                    else:
+                        current_item[k] = v
                 elif current_subsection == "knobs" and current_item is not None:
                     if indent == 6:
                         current_knob_control = k
@@ -221,8 +264,28 @@ def parse_info_yaml(content):
                         current_item[current_switch_pos][k] = v
             continue
 
-    if is_multiline_manual:
-        result["manual"] = "\n".join(manual_lines).strip()
+    if multiline_target is not None:
+        val = "\n".join(multiline_lines).strip()
+        if multiline_target[0] == "manual":
+            result["manual"] = val
+        elif multiline_target[0] == "port":
+            _, sub, idx, key = multiline_target
+            result[sub][idx][key] = val
+        elif multiline_target[0] == "switch_mode":
+            _, key = multiline_target
+            result["switch_modes"][key] = val
+        elif multiline_target[0] == "panel_control":
+            _, idx, key = multiline_target
+            result["panel_controls"][idx][key] = val
+
+    # Normalize switch_modes to switches format
+    if result["switch_modes"]:
+        result["switches"] = {
+            "id": "Z",
+            "up": {"name": "Up", "description": result["switch_modes"].get("up", "Switch position Up")},
+            "middle": {"name": "Middle", "description": result["switch_modes"].get("middle", "Switch position Middle")},
+            "down": {"name": "Down", "description": result["switch_modes"].get("down", "Switch position Down")}
+        }
 
     return result
 
@@ -364,7 +427,7 @@ for card in CARD_WHITELIST:
         if idx != -1:
             inputs_meta[idx][0] = {
                 "z": "any", "gesture": "", "mode": "",
-                "name": inp.get("name", DEFAULT_INPUTS[idx]["name"]),
+                "name": inp.get("name") or inp.get("label") or DEFAULT_INPUTS[idx]["name"],
                 "description": inp.get("description", DEFAULT_INPUTS[idx]["description"])
             }
             
@@ -380,7 +443,7 @@ for card in CARD_WHITELIST:
         if idx != -1:
             outputs_meta[idx][0] = {
                 "z": "any", "gesture": "", "mode": "",
-                "name": outp.get("name", DEFAULT_OUTPUTS[idx]["name"]),
+                "name": outp.get("name") or outp.get("label") or DEFAULT_OUTPUTS[idx]["name"],
                 "description": outp.get("description", DEFAULT_OUTPUTS[idx]["description"])
             }
 
@@ -468,6 +531,17 @@ for card in CARD_WHITELIST:
 
     # Write Knobs contexts (Main=0, X=1, Y=2)
     knobs_contexts = [[], [], []]
+    for idx, key in enumerate(["main", "x", "y"]):
+        panel_ctrl = next((c for c in data.get("panel_controls", []) if c.get("id") == key), None)
+        if panel_ctrl:
+            name = panel_ctrl.get("label") or panel_ctrl.get("name") or ""
+            desc = panel_ctrl.get("description") or ""
+            if name or desc:
+                knobs_contexts[idx].append({
+                    "z": "any", "gesture": "", "mode": "",
+                    "name": name, "description": desc
+                })
+
     for kb in data.get("knobs", []):
         when = kb.get("when", {})
         z = when.get("z", "any")

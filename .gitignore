@@ -23,3 +23,6 @@ tmp_monome_rack/
 **/node_modules/
 **/__pycache__/
 *.pyc
+test_card_behavior
+test_card_functional
+

@@ -61,13 +61,6 @@ void register_all_cards() {
         "Music Thing Modular"
     });
     g_card_registry.push_back({
-        "twists",
-        "Twists",
-        "10",
-        "A port of Mutable Instruments Braids with a web editor",
-        "Random Works"
-    });
-    g_card_registry.push_back({
         "goldfish",
         "Goldfish",
         "11",
@@ -213,13 +206,6 @@ void register_all_cards() {
         "35",
         "Dual Input Frequency Shifter for Feedback Experimentation",
         "Ben Regnier"
-    });
-    g_card_registry.push_back({
-        "compulidean",
-        "Compulidean",
-        "37",
-        "Drum machine / Euclidean generated drum patterns + drum machine.",
-        "Tristan Rowley (semi-rewrite by Antigravity)"
     });
     g_card_registry.push_back({
         "od",

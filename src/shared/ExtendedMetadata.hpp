@@ -60,7 +60,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "simple_midi",
                 "Simple MIDI",
-                "Takes USB midi, sends it to pulse and CV outputs, also sends knob positions and CV inputs back to the computer as CC values.",
+                "Workshop Computer Card",
                 "Tom Whitwell",
                 "",
                 "USB MIDI utility firmware for routing incoming MIDI notes to CV/Gate outputs.\nKnob and CV positions are transmitted back to the host as MIDI CC values.\nHold the switch during boot to enter calibration mode for the two pitch/CV channels.",
@@ -132,10 +132,10 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "bitphase",
                 "Bitphase",
-                "Resonant 4-stage phaser for the Workshop Computer with deep notch filtering, wide modulation sweeps, controllable resonance, tremolo blending, and digital Burst-mode degradation.",
+                "Workshop Computer Card",
                 "Music Thing Modular",
                 "",
-                "",
+                "Resonant 4-stage phaser for the Workshop Computer with deep notch filtering, wide modulation sweeps, controllable resonance, tremolo blending, and digital Burst-mode degradation.",
                 "",
                 "https://github.com/TomWhitwell/Workshop_Computer/tree/main/releases/59_BitPhase",
                 {
@@ -146,13 +146,13 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                         { "any", "", "", "Audio 2 Input", "Audio input 2" },
                     },
                     {
-                        { "any", "", "", "CV 1 Input", "CV input 1" },
+                        { "any", "", "", "Rate CV", "Modulates phaser and tremolo speed" },
                     },
                     {
-                        { "any", "", "", "CV 2 Input", "CV input 2" },
+                        { "any", "", "", "Resonance CV", "Modulates phaser feedback amount" },
                     },
                     {
-                        { "any", "", "", "Pulse 1 Input", "Pulse input 1" },
+                        { "any", "", "", "LFO Reset", "Resets phaser LFO so sweep can be clock-synchronised" },
                     },
                     {
                         { "any", "", "", "Pulse 2 Input", "Pulse input 2" },
@@ -160,39 +160,42 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 },
                 {
                     {
-                        { "any", "", "", "Audio 1 Output", "Audio output 1" },
+                        { "any", "", "", "Processed Output A", "Dual mono output of processed signal" },
                     },
                     {
-                        { "any", "", "", "Audio 2 Output", "Audio output 2" },
+                        { "any", "", "", "Processed Output B", "Dual mono output of processed signal" },
                     },
                     {
-                        { "any", "", "", "CV 1 Output", "CV output 1" },
+                        { "any", "", "", "Phaser LFO CV", "Phaser LFO waveform output" },
                     },
                     {
-                        { "any", "", "", "CV 2 Output", "CV output 2" },
+                        { "any", "", "", "Tremolo LFO CV", "Tremolo LFO waveform output" },
                     },
                     {
-                        { "any", "", "", "Pulse 1 Output", "Pulse output 1" },
+                        { "any", "", "", "Burst Active", "High while Burst mode is active" },
                     },
                     {
-                        { "any", "", "", "Pulse 2 Output", "Pulse output 2" },
+                        { "any", "", "", "Phaser LFO Phase", "Phaser LFO phase indicator for synchronising external events" },
                     },
                 },
                 {
                     {
+                        { "any", "", "", "Rate", "Speed of the internal phaser and tremolo LFOs" },
                     },
                     {
+                        { "any", "", "", "Sweep Depth", "Phaser modulation depth from narrow movement to wide sweeping notches" },
                     },
                     {
+                        { "any", "", "", "Resonance", "Phaser feedback amount from smooth phasing to edge-of-self-oscillation" },
                     },
                 },
                 {
                     "Z",
-                    { "Up", "Switch position Up" },
-                    { "Middle", "Switch position Middle" },
-                    { "Down", "Switch position Down" }
+                    { "Up", "Pure resonant 4-stage all-pass phaser with the cleanest signal path." },
+                    { "Middle", "Blends phasing with tremolo for animated pulsing movement." },
+                    { "Down", "Adds sample-and-hold reduction, bit-depth reduction, and unstable lo-fi texture." }
                 },
-                false
+                true
             }
         },
         {
@@ -200,80 +203,12 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "voices_of_sid",
                 "Voices Of Sid",
-                "Dual MOS 6581 SID emulation (reSID engine) with CV/gate control, stereo output, waveform selection, and randomize",
+                "Workshop Computer Card",
                 "Joep Vermaat",
                 "",
+                "Dual MOS 6581 SID emulation (reSID engine) with CV/gate control, stereo output, waveform selection, and randomize",
                 "",
                 "",
-                "",
-                {
-                    {
-                        { "any", "", "", "Audio 1 Input", "Audio input 1" },
-                    },
-                    {
-                        { "any", "", "", "Audio 2 Input", "Audio input 2" },
-                    },
-                    {
-                        { "any", "", "", "CV 1 Input", "CV input 1" },
-                    },
-                    {
-                        { "any", "", "", "CV 2 Input", "CV input 2" },
-                    },
-                    {
-                        { "any", "", "", "Pulse 1 Input", "Pulse input 1" },
-                    },
-                    {
-                        { "any", "", "", "Pulse 2 Input", "Pulse input 2" },
-                    },
-                },
-                {
-                    {
-                        { "any", "", "", "Audio 1 Output", "Audio output 1" },
-                    },
-                    {
-                        { "any", "", "", "Audio 2 Output", "Audio output 2" },
-                    },
-                    {
-                        { "any", "", "", "CV 1 Output", "CV output 1" },
-                    },
-                    {
-                        { "any", "", "", "CV 2 Output", "CV output 2" },
-                    },
-                    {
-                        { "any", "", "", "Pulse 1 Output", "Pulse output 1" },
-                    },
-                    {
-                        { "any", "", "", "Pulse 2 Output", "Pulse output 2" },
-                    },
-                },
-                {
-                    {
-                    },
-                    {
-                    },
-                    {
-                    },
-                },
-                {
-                    "Z",
-                    { "Up", "Switch position Up" },
-                    { "Middle", "Switch position Middle" },
-                    { "Down", "Switch position Down" }
-                },
-                false
-            }
-        },
-        {
-            "compulidean",
-            {
-                "compulidean",
-                "Compulidean",
-                "Generative Euclidean drum + sample player.",
-                "Tristan Rowley",
-                "",
-                "Drum-machine card built around Euclidean pattern generation and sample playback.\nThis release folder is a stub; code, full documentation, and UF2 downloads live in the external repository.",
-                "",
-                "https://github.com/doctea/compulidian",
                 {
                     {
                         { "any", "", "", "Audio 1 Input", "Audio input 1" },
@@ -336,7 +271,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "usb_audio_bridge",
                 "USB Audio & MIDI",
-                "6-Channel USB Audio & MIDI firmware with CV/Gate support",
+                "Workshop Computer Card",
                 "Vincent Maurer (vincentmaurer.de)",
                 "https://vincentmaurer.de/usb-audio/midi_config.html",
                 "Class-compliant USB composite firmware providing multichannel USB audio plus USB MIDI.\nMiddle switch mode runs standard audio interface behavior; up switch mode enables configurable MIDI/CV/Gate mapping;\ndown switch mode disables MIDI for audio-only operation.\nRouting, channel count, sample rate, and CV/Pulse behaviors are configurable via the web interface and can be saved to flash.",
@@ -407,7 +342,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "crafted_volts",
                 "Crafted Volts",
-                "Manually set control voltages (CV) with the input knobs and switch. It also attenuverts (attenuates and inverts) incoming voltages.",
+                "Workshop Computer Card",
                 "Brian Dorsey",
                 "",
                 "CV utility for generating manual voltages and attenuverting incoming control signals.\nMain, X, and Y knobs each drive a paired output; patching into corresponding inputs replaces knob value and applies attenuverting.\nPulse outputs follow Z switch state as complementary high/low gates.\nLEDs mirror output voltage levels in the same 2x3 physical layout as output jacks.",
@@ -480,7 +415,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "eighties_bass",
                 "Eighties Bass",
-                "Bass-oriented complete monosynth voice consisting of five detuned saw wave oscillators with mixable white noise and adjustable resonant filter.",
+                "Workshop Computer Card",
                 "Tod Kurt (@todbot)",
                 "",
                 "Eighties Bass is a complete mono bass voice using 5 saw oscillators plus optional white noise.\nMain sets filter cutoff, X sets pitch offset, and Y sets resonance.\nPress switch down to cycle filter mode (LPF/BPF/HPF).\nCV In 1 provides pitch CV, CV In 2 offsets cutoff, Audio In 1 modulates detune, and Audio In 2 modulates noise amount.",
@@ -552,7 +487,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "cirpy_wavetable",
                 "Cirpy Wavetable",
-                "Wavetable oscillator that using wavetables from Plaits, Braids, and Microwave,",
+                "Workshop Computer Card",
                 "Tod Kurt (@todbot)",
                 "",
                 "cirpy_wavetable loads WAV wavetables and plays them as a continuously running oscillator.\nMain sets wavetable position, X sets LFO modulation amount, and Y sets LFO rate.\nSwitch down selects next wavetable file; switch up toggles CV pitch quantization.\nCV In 1 controls pitch and CV In 2 offsets wavetable position.\nCV Out 1 mirrors wavetable position and CV Out 2 mirrors LFO modulation signal.",
@@ -625,7 +560,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "freq_shift",
                 "FreqShift",
-                "Dual Input Frequency Shifter for Feedback Experimentation",
+                "Workshop Computer Card",
                 "Ben Regnier",
                 "",
                 "Dual-input frequency shifter designed for feedback patching and experimental use.\nMain sets shift amount (center = 0 Hz). Switch up uses a wide log-scaled bipolar range (±7000 Hz);\nmiddle uses a narrower linear range (±440 Hz). X sets internal feedback amount and Y crossfades the audio inputs.\nCV In 1 modulates shift (added to Main). CV In 2 blends the combined feedback path.",
@@ -699,7 +634,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "od",
                 "Od",
-                "Loopable chaotic Lorenz attractor trajectories and zero-crossings as CV and pulses, with sensitivity to initial conditions.",
+                "Workshop Computer Card",
                 "M. John Mills",
                 "",
                 "Simulates a Lorenz attractor to generate loopable CV and pulse signals.\nThis release folder is a stub; documentation and UF2 builds are maintained in the external repository.",
@@ -767,10 +702,10 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "bends",
                 "Bends",
-                "Stereo Multi-FX, Glitch, and Codec Demolisher Card",
+                "Workshop Computer Card",
                 "Vincent Maurer (vincentmaurer.de) with Advanced Agentic Coding",
                 "",
-                "",
+                "Stereo Multi-FX, Glitch, and Codec Demolisher Card",
                 "",
                 "",
                 {
@@ -835,7 +770,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "backyard_rain",
                 "Backyard Rain",
-                "Nature soundscape audio. A cozy rain ambience mix for background listening. You control the intensity. This card plays rain ambience which was recorded in my backyard.",
+                "Workshop Computer Card",
                 "Brian Dorsey",
                 "",
                 "Ambient backyard rain playback card with user-controlled intensity.\nThis release folder is a stub; docs and release UF2 files are maintained in the external repository.",
@@ -903,7 +838,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "utility_pair",
                 "Utility Pair",
-                "25 small utilities, which can be combined in pairs",
+                "Workshop Computer Card",
                 "Chris Johnson",
                 "",
                 "Utility Pair splits the card into independent left and right utility engines.\nEach side owns one knob/control and one column of input/output jacks, letting two utilities run at once.\nIn the 2025 multi-pack firmware, hold Z down at power/reset to enter utility selection mode, then choose left and right utilities and start.\nSpecific jack behavior depends on the chosen utility pair.",
@@ -979,7 +914,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "turing_machine",
                 "Turing Machine",
-                "Turing Machine with tap tempo clock, 2 x pulse outputs, 4 x CV outputs",
+                "Workshop Computer Card",
                 "Tom Whitwell",
                 "https://www.musicthing.co.uk/web_config/turing.html",
                 "Dual Turing-style random sequencer with tap tempo or external clocking.\nPulse In 1 overrides tap tempo as the main clock; Pulse In 2 can clock channel 2 independently.\nCV In 1 controls divide/multiply on channel 2, CV In 2 applies quantized pitch offset.\nAudio/CV In 1 can reset sequences; Audio/CV In 2 can CV-switch between the two presets.",
@@ -1051,7 +986,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "vink",
                 "Vink",
-                "Dual delay loops with sigmoid saturation for Jaap Vink / Roland Kayn style feedback patching",
+                "Workshop Computer Card",
                 "Ben Regnier",
                 "",
                 "Vink provides two independently time-modulated delay taps with optional sigmoid saturation blend.\nMain controls base delay time, X controls tap 2 offset, and Y crossfades dry to saturated output.\nIn switch up, outputs are split per tap; in middle/down, taps are mixed to mono on both outputs.\nCV In 1 and CV In 2 modulate tap times. Pulse outputs track tap periods.",
@@ -1122,7 +1057,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "siren",
                 "Siren",
-                "Multi-algorithm drone oscillator. Inspired by the Forge TME Vhikk X.",
+                "Workshop Computer Card",
                 "Moses Hoyt",
                 "",
                 "Siren is a drone source with 6 oscillator banks (SINE, CLST, DTON, ANLG, WSHP, WAVE).\nUse switch up for WARP/SPAN/MORPH and switch middle for SEED/SCAN/BASIS.\nSwitch down (momentary) cycles banks with a smoothed crossfade.\nPulse In 1 gates the drone; Pulse In 2 randomizes SEED on short trigger and cycles bank on long hold.\nAudio In 1 can be processed and mixed with the drone; Audio In 2 modulates SPAN.",
@@ -1197,7 +1132,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "grains",
                 "Grains",
-                "Granular Sampler and Effect",
+                "Workshop Computer Card",
                 "Vincent Maurer",
                 "https://vincentmaurer.de/grains/grains_manager.html",
                 "Grains records and replays granular audio from a live buffer or stored sample slots. The interface is page-based:\npage 1 (position/density/size), page 2 (envelope/tone/pitch), page 3 (mix/spread/feedback-diffusion), and page 4\n(reverb). Flick/hold gestures control page changes, freeze, and load/save menus. Tape Mode is available at power-up\nfor scrub-style sample playback from the same slot system.",
@@ -1277,7 +1212,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "reverb",
                 "Reverb+",
-                "Reverb effect, plus pulse/CV generators and MIDI-to-CV, configurable using web interface.",
+                "Workshop Computer Card",
                 "Chris Johnson",
                 "https://www.musicthing.co.uk/web_config/reverb.html",
                 "Stereo reverb card with configurable utility routing for CV, pulse, clocks, Turing Machine, and Bernoulli gate.\nTop audio jacks are fixed to reverb I/O; most other controls and jacks are assignable in the web editor.\nZ up passes input normally, Z middle enables input noise gate, Z down freezes the reverb.\nHold Z down while loading to restore default configuration.",
@@ -1351,10 +1286,10 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "flux",
                 "Flux",
-                "Multi-FX and Synth Firmware",
+                "Workshop Computer Card",
                 "WorkshopSystem",
                 "",
-                "",
+                "Multi-FX and Synth Firmware",
                 "",
                 "",
                 {
@@ -1419,7 +1354,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "chord_organ",
                 "Chord Organ-ish",
-                "Chord Organ-ish - 16 chords, 8 voices, 1V/oct root. Inspired by Music Thing Chord Organ.",
+                "Workshop Computer Card",
                 "jkeyworth",
                 "",
                 "Chord voice generator with 16 chord types, root CV control, and selectable progression patterns.\nMain + CV1 select chord, X + CV2 set root pitch (1V/oct), and Y selects one of 9 progressions.\nPulseIn1 advances the progression and retriggers; PulseIn2 or Z-down cycles waveform.\nZ up enables glide, Z middle disables glide. AudioIn1 acts as a VCA CV.",
@@ -1499,7 +1434,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "resonator",
                 "Resonator",
-                "Karplus-Strong based sympathetic resonator. Can be used for resonant droning as well as plucking sounds.",
+                "Workshop Computer Card",
                 "Johan Eklund",
                 "https://johaneklund.io/resonator",
                 "Four-string sympathetic resonator inspired by Rings/tanpura techniques.\nFeed audio to excite resonant strings, or trigger plucks with PulseIn1.\nX sets base pitch (or fine tune with CV1 connected), Y sets damping, Main sets wet/dry mix.\nPulseIn2 or short Z-down press advances chord mode; long Z-down hold resets progression defaults.",
@@ -1576,7 +1511,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "fifths",
                 "Fifths",
-                "A quantizer/sequencer that can create harmony and nimbly traverse the circle of fifths in attempts to make jazz",
+                "Workshop Computer Card",
                 "Dune Desormeaux",
                 "",
                 "Fifths quantizes incoming or generated CV to keys arranged around the circle of fifths and outputs both\na quantized note and an ambiguous third harmony voice. It can run from external clock (Pulse In 1) or internal\ntap-tempo clock, and can loop or write incoming material depending on switch state/toggles. Loop length is set by X,\nkey center is selected by Main (or CV In 2), and CV In 1 transposes up to two octaves. Pulse outputs provide\nan internal clock pulse plus a probabilistic sequence pulse stream.",
@@ -1649,7 +1584,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "computer_grids",
                 "Computer Grids",
-                "Grids-inspired trigger sequencer with Web MIDI SysEx configuration.",
+                "Workshop Computer Card",
                 "Phil Miller",
                 "",
                 "Grids-inspired trigger sequencer for the Workshop Computer. Control pattern map and fill with knobs,\nor per-lane density when switch Z is **up**. Internal clock with swing, or follow external clock on **PulseIn1**.\nConfigure and save settings via the Web MIDI SysEx editor (Chrome recommended).",
@@ -1728,7 +1663,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "byo_benjolin",
                 "BYO Benjolin",
-                "Rungler, Chaotic VCO, Noise Source, Turing Machine, Quantizer",
+                "Workshop Computer Card",
                 "Dune Desormeaux",
                 "",
                 "Chaotic Benjolin-inspired program combining rungler-style modulation, quantized CV, and pulse generation.\nForward/back clocks can be driven from Pulse In 1 and Pulse In 2.\nThe card blends internal randomness with external modulation for probability, offset, and amplitude.\n\nThe Z switch sets how shift-register cells are written on each clock:\n  - Up (Double Length): toggles the write cell each clock, producing a stable loop of double length.\n  - Middle (Unlock): writes from the data input (or internal noise) when data exceeds the Chaos threshold.\n  - Down (Write): forces the write cell to a fixed value.\nThe Chaos, Offset, and Chaos VCA knobs behave the same in all switch positions.",
@@ -1799,7 +1734,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "goldfish",
                 "Goldfish",
-                "Weird delay/looper for audio and CV",
+                "Workshop Computer Card",
                 "Dune Desormeaux",
                 "",
                 "Goldfish is a multi-mode stereo delay/looper with synchronized pulse/CV outputs. The switch selects\nrecord, delay, and play behaviors. Audio is streamed to flash (IMA-ADPCM), so loops/delays run from\n~55s on a 2MB card up to ~9min on 16MB. Pulse inputs provide clock/reset (and gated recording); the\nCV/audio inputs modulate delay time, playback position and speed, and the generated CV/pitch material.",
@@ -1870,7 +1805,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "bumpers",
                 "Bumpers",
-                "Bouncing ball' style delay and trigger generators",
+                "Workshop Computer Card",
                 "Chris Johnson",
                 "",
                 "Bouncing-ball trigger generator and multitap delay card.\nTrigger streams can be internally generated or externally clocked, with pulse outputs and related CV/audio outputs.\nPatching audio input enables the delay processor; otherwise outputs act as trigger/CV generators.",
@@ -1942,7 +1877,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "sheep",
                 "Sheep",
-                "A time-stretching and pitch-shifting granular processor and digital degradation playground with 2 fidelity options.",
+                "Workshop Computer Card",
                 "Dune Desormeaux",
                 "",
                 "Granular buffer processor with triggerable grains, reverse/forward playback, loop/glitch mode, and freeze.\nMain controls grain speed or CV2 pitch attenuation, X controls delay spread (or CV1 attenuation), Y sets grain size.\nPulseIn1 triggers grains; PulseIn2 acts as a grain gate. Z up freezes buffer, Z middle runs normal mode, Z down enables loop/glitch behavior.\nTwo firmware builds are provided in source comments: lo-fi longer buffer and hi-fi shorter buffer.",
@@ -2013,7 +1948,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "knots",
                 "Knots",
-                "Six-engine oscillator firmware for the Music Thing Workshop System",
+                "Workshop Computer Card",
                 "Jeff Fletcher",
                 "",
                 "Six-engine oscillator card with Normal/Alt output modes, MIDI input, and clock/gate utilities.\nMain sets pitch, X/Y shape engine parameters, CV and pulse inputs modulate mode/slot behavior,\nand Z handles mode switching, engine advance, and Pulse Out 2 clock configuration.",
@@ -2089,7 +2024,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "chord_blimey",
                 "Chord Blimey!",
-                "Generates CV/Pulse arpeggios",
+                "Workshop Computer Card",
                 "Tom Waters",
                 "",
                 "Trigger-driven chord arpeggiator for Workshop Computer.\nCV Out 1 outputs arpeggiated notes while Pulse Out 1 emits matching note triggers.\nPulse Out 2 fires at end-of-cycle for chaining/looping; Audio Out 1/2 provide probabilistic random modulation voltages.\nUse switch gestures to set fixed step length and arpeggiator direction.",
@@ -2162,7 +2097,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "noisebox",
                 "Noisebox",
-                "13-algorithm noise synth with CV modulation, sample-and-hold, and crusher mode",
+                "Workshop Computer Card",
                 "Eric Gao",
                 "",
                 "Noisebox selects among 13 noise algorithms with Main, with X/Y shaping the active algorithm.\nMain can be offset by `AudioIn1`, output level is VCA-controlled by `AudioIn2`, and switch down\nrandomizes control offsets (hold to reset). `PulseIn1` clocks sample-and-hold behavior; switch up\nor `PulseIn2` enables sample-rate/bit reduction.",
@@ -2236,7 +2171,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "cvmod",
                 "CVMod",
-                "Quad CV delay inspired by Make Noise Multimod",
+                "Workshop Computer Card",
                 "Chris Johnson",
                 "",
                 "CVMod records one CV stream into a loop and reads it out through four moving heads. X + `CVIn1`\nsets loop duration, Main + `AudioIn2` sets head speed, and Y + `CVIn2` sets head phase offset.\nSwitch down (or `PulseIn1`) resets read-head position; switch up cycles motion function.",
@@ -2308,7 +2243,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "esp",
                 "ESP",
-                "A MS-20-style External Signal Processor that includes a preamp, bandpass filter, envelope follower, gate, and 1v/oct pitch outs.",
+                "Workshop Computer Card",
                 "Ben Regnier",
                 "",
                 "ESP processes incoming audio through a gain stage and bandpass section, then derives envelope, gate, trigger, and pitch control signals.\nMain controls preamp gain, X sets lower cutoff, and Y sets upper cutoff.\nIn switch middle, pitch updates are held unless gate is high; otherwise pitch tracks continuously.\nAudio Out 1 is post-gain signal and Audio Out 2 is bandpassed output.",
@@ -2380,10 +2315,10 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "modes",
                 "Modes",
-                "Physical Modeling Voice (Mutable Instruments Elements port)",
+                "Workshop Computer Card",
                 "Vincent Maurer",
                 "",
-                "",
+                "Physical Modeling Voice (Mutable Instruments Elements port)",
                 "",
                 "",
                 {
@@ -2448,10 +2383,10 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "rompler",
                 "Rompler",
-                "General MIDI SF2 Polyphonic Multisampler",
+                "Workshop Computer Card",
                 "Vincent Maurer & Antigravity",
                 "",
-                "",
+                "General MIDI SF2 Polyphonic Multisampler",
                 "",
                 "",
                 {
@@ -2516,7 +2451,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "trace",
                 "Trace",
-                "Oscillograph stereo oscillator",
+                "Workshop Computer Card",
                 "Ruiyang Wang",
                 "",
                 "Oscillograph-focused dual-output oscillator bank for X/Y scope visuals. Main controls\npitch (summed with CVIn1). X and Y control oscillator-specific modulation offsets in\nnormal mode; with switch up they become attenuation controls for AudioIn1/AudioIn2\nmodulation depth. Switch down advances oscillator selection, while pulse inputs can\ncycle bank/index externally.",
@@ -2591,7 +2526,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "talker",
                 "Talker",
-                "Proof of concept speech synthesizer, based on TalkiePCM, inspired by 1970s LPC speech synths.",
+                "Workshop Computer Card",
                 "Chris Johnson",
                 "",
                 "Early proof-of-concept LPC speech card that babbles randomized words. Z switch sets continuous,\noff, or single-word behavior. Main + CVIn1 set pitch (with X as attenuverter), while Y + CVIn2\nset speaking speed. AudioOut1 is speech, AudioOut2 exposes the LPC exciter components.",
@@ -2664,7 +2599,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "bytebeat",
                 "Bytebeat",
-                "Generates and mangles bytebeats",
+                "Workshop Computer Card",
                 "Matt Kuebrich",
                 "",
                 "Bytebeat generator with 36 built-in formulas across 6 banks plus 6 user formula slots.\nMain controls sample rate, X selects formula/bank or user slot, and Y controls parameter 1.\nPulse In 1 resets/triggers and Pulse In 2 toggles reverse playback.\nBuilt-in/user formula editing is available through the included browser tool (`bytebeat.html`).",
@@ -2735,85 +2670,14 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             }
         },
         {
-            "twists",
-            {
-                "twists",
-                "Twists",
-                "A port of Mutable Instruments Braids with a web editor",
-                "Random Works",
-                "",
-                "Twists is a Workshop Computer port of Mutable Instruments Braids. `CVIn1` and Main control pitch,\n`PulseIn1` triggers the envelope/strike, and X/Y shape timbre and color. Switch down toggles between\nconfigured oscillator model sets, and `twists.html` can be used over USB for shape selection/config.",
-                "",
-                "https://github.com/TomWhitwell/Workshop_Computer/tree/main/releases/src",
-                {
-                    {
-                        { "any", "", "", "Timbre Modulation", "Added to X control before timbre parameter mapping" },
-                    },
-                    {
-                        { "any", "", "", "Color Modulation", "Added to Y control before color parameter mapping" },
-                    },
-                    {
-                        { "any", "", "", "Pitch CV", "Primary pitch input for the oscillator voice" },
-                    },
-                    {
-                        { "any", "", "", "CV 2 Input", "CV input 2" },
-                    },
-                    {
-                        { "any", "", "", "Trigger", "Trigger input for note/strike events" },
-                    },
-                    {
-                        { "any", "", "", "Pulse 2 Input", "Pulse input 2" },
-                    },
-                },
-                {
-                    {
-                        { "any", "", "", "Main Audio Output", "Rendered Braids oscillator audio" },
-                    },
-                    {
-                        { "any", "", "", "Audio 2 Output", "Audio output 2" },
-                    },
-                    {
-                        { "any", "", "", "CV 1 Output", "CV output 1" },
-                    },
-                    {
-                        { "any", "", "", "CV 2 Output", "CV output 2" },
-                    },
-                    {
-                        { "any", "", "", "Pulse 1 Output", "Pulse output 1" },
-                    },
-                    {
-                        { "any", "", "", "Pulse 2 Output", "Pulse output 2" },
-                    },
-                },
-                {
-                    {
-                        { "down", "", "", "Model Set Toggle", "Switch-down action toggles active six-model set" },
-                    },
-                    {
-                        { "any", "", "", "Timbre", "Braids timbre parameter" },
-                    },
-                    {
-                        { "any", "", "", "Color", "Braids color parameter" },
-                    },
-                },
-                {
-                    "Z",
-                    { "Up", "Switch position Up" },
-                    { "Middle", "Switch position Middle" },
-                    { "Down", "Switch position Down" }
-                },
-                false
-            }
-        },
-        {
             "dual_quant",
             {
                 "dual_quant",
                 "Dual Quant",
-                "Dual quantised granular pitch shifter with calibrated 1V/oct CV outputs",
+                "Workshop Computer Card",
                 "Music Thing Modular",
                 "",
-                "",
+                "Dual quantised granular pitch shifter with calibrated 1V/oct CV outputs",
                 "",
                 "https://github.com/TomWhitwell/Workshop_Computer/tree/main/releases/34_dual_quant",
                 {
@@ -2824,10 +2688,10 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                         { "any", "", "", "Audio 2 Input", "Audio input 2" },
                     },
                     {
-                        { "any", "", "", "CV 1 Input", "CV input 1" },
+                        { "any", "", "", "Pitch Mod A", "Additional semitone modulation for output A" },
                     },
                     {
-                        { "any", "", "", "CV 2 Input", "CV input 2" },
+                        { "any", "", "", "Pitch Mod B", "Additional semitone modulation for output B" },
                     },
                     {
                         { "any", "", "", "Pulse 1 Input", "Pulse input 1" },
@@ -2844,10 +2708,10 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                         { "any", "", "", "Audio 2 Output", "Audio output 2" },
                     },
                     {
-                        { "any", "", "", "CV 1 Output", "CV output 1" },
+                        { "any", "", "", "Pitch CV Out\nA", "Pitch A converted to millivolt CV output" },
                     },
                     {
-                        { "any", "", "", "CV 2 Output", "CV output 2" },
+                        { "any", "", "", "Pitch CV Out\nB", "Pitch B converted to millivolt CV output" },
                     },
                     {
                         { "any", "", "", "Pulse 1 Output", "Pulse output 1" },
@@ -2858,6 +2722,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 },
                 {
                     {
+                        { "any", "", "", "Quantize\nEnable", "Enables chromatic semitone quantization for both outputs" },
                     },
                     {
                     },
@@ -2866,11 +2731,11 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 },
                 {
                     "Z",
-                    { "Up", "Switch position Up" },
-                    { "Middle", "Switch position Middle" },
-                    { "Down", "Switch position Down" }
+                    { "Up", "Z up: MAIN: Global Pitch Offset; X: Output A Offset; Y: Output B Offset." },
+                    { "Middle", "Z middle: MAIN: Quantize Enable." },
+                    { "Down", "" }
                 },
-                false
+                true
             }
         },
         {
@@ -2878,7 +2743,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "birds",
                 "Birds",
-                "Two birds sing to each other controlled by a Turing-style shift register sequencer with clock in and CV/pulse out.",
+                "Workshop Computer Card",
                 "Tom Whitwell",
                 "",
                 "Two interacting birds are generated from a Turing-style looped random sequencer.\nMain controls lock/change behavior, X shifts bird pitch, Y controls phrase speed,\nZ selects normal/wild/reseed modes, and Pulse In 1 can replace the internal clock.",
@@ -2953,10 +2818,10 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "tapegrade",
                 "Tapegrade",
-                ">-",
+                "Workshop Computer Card",
                 "Music Thing Modular",
                 "",
-                "",
+                "Mono-input stereo cassette warble processor with wow, flutter, hiss, crackle, and tape\nwear morphing.",
                 "",
                 "https://github.com/TomWhitwell/Workshop_Computer/tree/main/releases/54_Tapegrade",
                 {
@@ -2967,16 +2832,16 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                         { "any", "", "", "Audio 2 Input", "Audio input 2" },
                     },
                     {
-                        { "any", "", "", "CV 1 Input", "CV input 1" },
+                        { "any", "", "", "Tape Depth\nMod", "Modulates wow/pitch movement amount; also routed to CV Out 1 attenuator path" },
                     },
                     {
-                        { "any", "", "", "CV 2 Input", "CV input 2" },
+                        { "any", "", "", "Instability\nMod", "Modulates flutter/transport agitation; also routed to CV Out 2 attenuator path" },
                     },
                     {
-                        { "any", "", "", "Pulse 1 Input", "Pulse input 1" },
+                        { "any", "", "", "Damage Burst\nTrig", "Rising edge forces brief heavy tape degradation burst" },
                     },
                     {
-                        { "any", "", "", "Pulse 2 Input", "Pulse input 2" },
+                        { "any", "", "", "Crackle Gate", "High gate forces stronger crackle generation" },
                     },
                 },
                 {
@@ -2987,10 +2852,10 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                         { "any", "", "", "Audio 2 Output", "Audio output 2" },
                     },
                     {
-                        { "any", "", "", "CV 1 Output", "CV output 1" },
+                        { "any", "", "", "CV1\nAttenuated", "CV In 1 passthrough scaled by X knob" },
                     },
                     {
-                        { "any", "", "", "CV 2 Output", "CV output 2" },
+                        { "any", "", "", "CV2\nAttenuated", "CV In 2 passthrough scaled by Y knob" },
                     },
                     {
                         { "any", "", "", "Pulse 1 Output", "Pulse output 1" },
@@ -3001,19 +2866,22 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 },
                 {
                     {
+                        { "any", "", "", "Wet / Dry\nMix", "Blend between dry input and processed tape signal" },
                     },
                     {
+                        { "any", "", "", "Tape Depth", "Increases wow and pitch instability; also sets CV Out 1 attenuation" },
                     },
                     {
+                        { "any", "", "", "Instability", "Increases flutter/transport roughness; also sets CV Out 2 attenuation" },
                     },
                 },
                 {
                     "Z",
-                    { "Up", "Switch position Up" },
-                    { "Middle", "Switch position Middle" },
-                    { "Down", "Switch position Down" }
+                    { "Up", "Brighter and more stable tape response." },
+                    { "Middle", "Darker tone with moderate hiss and instability." },
+                    { "Down", "Strong hiss, crackle, and unstable behavior." }
                 },
-                false
+                true
             }
         },
         {
@@ -3021,7 +2889,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "glitch",
                 "Glitch",
-                "Clock-synced beat-repeater with ratcheting, reversal and audio degradation",
+                "Workshop Computer Card",
                 "Andy Jenkinson (uglifruit)",
                 "",
                 "Glitch records into a shared 2.33-second circular buffer and runs in two power-on modes. Glitch mode loops\nratcheted sub-slices with optional reverse, decimation, and bitcrush; Stutter mode slices beats, shuffles order,\nand can repeat slices before advancing. Pulse In 1 sets beat timing, CV In 1 freezes recording while playback\ncontinues, and Audio Out 2 stays dry for parallel routing.",
@@ -3089,10 +2957,10 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "lochovibes",
                 "Lochovibes",
-                ">-",
+                "Workshop Computer Card",
                 "Music Thing Modular",
                 "",
-                "",
+                "Stereo chorus and vibrato effect featuring triangle, sine, and slow drift LFO modes,\nmodulation-based delay movement, and tape-style saturation.",
                 "",
                 "https://github.com/TomWhitwell/Workshop_Computer/tree/main/releases/58_LoChoVibes",
                 {
@@ -3103,13 +2971,13 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                         { "any", "", "", "Audio 2 Input", "Audio input 2" },
                     },
                     {
-                        { "any", "", "", "CV 1 Input", "CV input 1" },
+                        { "any", "", "", "Depth Mod", "Bipolar CV modulation for X depth control" },
                     },
                     {
-                        { "any", "", "", "CV 2 Input", "CV input 2" },
+                        { "any", "", "", "Character\nMod", "Bipolar CV modulation for Y Character control" },
                     },
                     {
-                        { "any", "", "", "Pulse 1 Input", "Pulse input 1" },
+                        { "any", "", "", "Ext LFO\nClock", "Rising edges sync LFO timing to external pulse source with internal fallback\nwhen pulses stop" },
                     },
                     {
                         { "any", "", "", "Pulse 2 Input", "Pulse input 2" },
@@ -3123,10 +2991,10 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                         { "any", "", "", "Audio 2 Output", "Audio output 2" },
                     },
                     {
-                        { "any", "", "", "CV 1 Output", "CV output 1" },
+                        { "any", "", "", "LFO CV", "Main internal LFO waveform as CV" },
                     },
                     {
-                        { "any", "", "", "CV 2 Output", "CV output 2" },
+                        { "any", "", "", "Inverted LFO\nCV", "Inverted version of the internal LFO waveform" },
                     },
                     {
                         { "any", "", "", "Pulse 1 Output", "Pulse output 1" },
@@ -3137,19 +3005,21 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 },
                 {
                     {
+                        { "any", "", "", "Mod Rate", "LFO speed for chorus/vibrato movement" },
                     },
                     {
+                        { "any", "", "", "Mod Depth", "LFO pitch/modulation depth amount" },
                     },
                     {
                     },
                 },
                 {
                     "Z",
-                    { "Up", "Switch position Up" },
-                    { "Middle", "Switch position Middle" },
-                    { "Down", "Switch position Down" }
+                    { "Up", "Z up: MAIN: Modulation Rate; X: Modulation Depth; Y: Character." },
+                    { "Middle", "Z middle: MAIN: Modulation Rate; X: Modulation Depth; Y: Character." },
+                    { "Down", "Z down, momentary: MAIN: LFO Shape Select." }
                 },
-                false
+                true
             }
         },
         {
@@ -3157,7 +3027,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "markov",
                 "Markov",
-                "Dual generative Markov chain module — evolving melody (MarkoV) left side, rhythmic percussion patterns (MarkovPerc) right side, with internal synth voice",
+                "Workshop Computer Card",
                 "Andy Jenkinson (uglifruit)",
                 "",
                 "Dual Markov-chain generator with melody on voice A and rhythm/percussion on voice B.\nKnob X selects melodic transition profile, Knob Y selects percussion profile, and\nMain is switch-dependent: transpose (Z up), loop lock/mutate length (Z middle), or\nscale select while held (Z down). Pulse In 1 clocks both chains; CV Out 1 carries\nmelody pitch, Pulse Out 1 emits pitch-change gate, Pulse Out 2 emits percussion\ntriggers/ratchets/flams, and CV Out 2 carries percussion accent.",
@@ -3234,7 +3104,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "stretchcore",
                 "Stretchcore",
-                "A card for playing and manipulating samples with tempo control, timestretch with browser-based audio loading (infinitedigits.com/stretchcore/)",
+                "Workshop Computer Card",
                 "Infinite Digits",
                 "https://infinitedigits.co/stretchcore/",
                 "Mono sample-loop player with browser-loaded sample bank, tempo control, timestretch,\nand jump/selection gestures. Main knob targets playback position or sample index\ndepending on switch gesture, X sets internal tempo when not externally clocked, and\nY sets timestretch amount (with optional CV1 modulation). Switch down jumps to Main\nposition and emits Pulse Out 1; switch up selects sample from Main position and emits\nPulse Out 2. Pulse In 1 provides external clock, and Pulse In 2 triggers CV2-position\njumps (or loop start when CV2 is unpatched).",
@@ -3307,10 +3177,10 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "wild_pebble",
                 "Wild Pebble",
-                "MIDI-clockable generative rhythm and melody organism inspired by Pet Rock",
+                "Workshop Computer Card",
                 "Music Thing Modular",
                 "",
-                "",
+                "MIDI-clockable generative rhythm and melody organism inspired by Pet Rock",
                 "",
                 "https://github.com/TomWhitwell/Workshop_Computer/tree/main/releases/74_Wild_Pebble",
                 {
@@ -3321,16 +3191,16 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                         { "any", "", "", "Audio 2 Input", "Audio input 2" },
                     },
                     {
-                        { "any", "", "", "CV 1 Input", "CV input 1" },
+                        { "any", "", "", "Density Mod", "Modulates X density control" },
                     },
                     {
-                        { "any", "", "", "CV 2 Input", "CV input 2" },
+                        { "any", "", "", "Mutation Mod", "Modulates Y mutation control" },
                     },
                     {
-                        { "any", "", "", "Pulse 1 Input", "Pulse input 1" },
+                        { "any", "", "", "Ext Clock", "External clock input; when active it overrides internal tempo clock" },
                     },
                     {
-                        { "any", "", "", "Pulse 2 Input", "Pulse input 2" },
+                        { "any", "", "", "Freeze Gate", "While held high, mutation updates are disabled and structure is preserved" },
                     },
                 },
                 {
@@ -3341,33 +3211,35 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                         { "any", "", "", "Audio 2 Output", "Audio output 2" },
                     },
                     {
-                        { "any", "", "", "CV 1 Output", "CV output 1" },
+                        { "any", "", "", "Quant Melody\nCV", "Quantized pitch CV from evolving scale-constrained sequence" },
                     },
                     {
-                        { "any", "", "", "CV 2 Output", "CV output 2" },
+                        { "any", "", "", "Energy /\nTension CV", "Smoothed evolving modulation output from internal energy and tension state" },
                     },
                     {
-                        { "any", "", "", "Pulse 1 Output", "Pulse output 1" },
+                        { "any", "", "", "Primary Trig\nStream", "Main rhythm trigger stream used for melodic progression and kick events" },
                     },
                     {
-                        { "any", "", "", "Pulse 2 Output", "Pulse output 2" },
+                        { "any", "", "", "Companion\nTrig Stream", "Derived companion trigger stream used for snare/percussion events" },
                     },
                 },
                 {
                     {
+                        { "any", "", "", "Internal\nTempo", "Internal clock speed with variable swing profile according to switch position when internally clocked" },
                     },
                     {
+                        { "any", "", "", "Density", "Trigger probability density control (modulated by CVIn1)" },
                     },
                     {
                     },
                 },
                 {
                     "Z",
-                    { "Up", "Switch position Up" },
-                    { "Middle", "Switch position Middle" },
-                    { "Down", "Switch position Down" }
+                    { "Up", "Z up: Steady mode. Restrained mutation, tighter rhythms, and the calmest phrasing feel." },
+                    { "Middle", "Z middle: Drift mode. Balanced mutation, moderate swing, and gradual harmonic movement." },
+                    { "Down", "Z down: Surge mode. Strongest swing, wider melodic leaps, and the most animated behavior." }
                 },
-                false
+                true
             }
         },
         {
@@ -3375,7 +3247,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "divcom",
                 "DivCom",
-                "Comparator and VC clock divider, inspired by Serge NCOM",
+                "Workshop Computer Card",
                 "divmod",
                 "",
                 "DivCom combines a comparator and a clock divider. The comparator compares `AudioIn1` against\n`Offset + Scale * AudioIn2`, while the divider counts incoming clocks and emits divided gates,\nflip-flop, XOR, and counter CV outputs.",
@@ -3451,7 +3323,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "am_coupler",
                 "AM Coupler",
-                "AM radio transmitter / coupler",
+                "Workshop Computer Card",
                 "Chris Johnson",
                 "",
                 "AM Coupler generates a medium-wave AM carrier and modulates it with audio from `AudioIn1/2` (or an\nuploaded WAV when no audio inputs are patched). Main sets coarse carrier frequency, X + `CVIn1` fine tune,\nand Y controls modulation amount. Switch (or `PulseIn1` gate when patched) controls RF on/off.",
@@ -3524,7 +3396,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "slowmod",
                 "SlowMod",
-                "Chaotic quad-LFO with VCAs",
+                "Workshop Computer Card",
                 "divmod",
                 "",
                 "Four related LFO channels with cross-modulation and per-channel VCA behavior.\nMain sets global LFO rate from very slow to low audio range (AudioOut1 fastest, CVOut2 slowest).\nX sets cross-modulation intensity; Y crossfades each output with an inverted neighboring channel.\nPulseIn1 or Z up pauses motion; PulseIn2 or Z down randomizes phases.",
@@ -3597,7 +3469,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "nzt",
                 "NZT",
-                "Grain Noise and Noise Tools",
+                "Workshop Computer Card",
                 "@kjnilsson",
                 "",
                 "Grain-noise generator and noise utility card with density control, seed modulation, CV utilities,\nand optional audio-rate excitation via Pulse In 1. Audio Out 1/2 provide complementary dense/sparse textures.",
@@ -3668,10 +3540,10 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "glitter",
                 "Glitter",
-                "Granular Looping Sampler",
+                "Workshop Computer Card",
                 "Steve Jones",
                 "",
-                "",
+                "Granular Looping Sampler",
                 "",
                 "",
                 {
@@ -3736,10 +3608,10 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "degenerator",
                 "Degenerator",
-                "Degenerator — Disintegrating Looper. Capture audio loops and apply irreversible degradation with 6 algorithms (Saturation, Filter Drift, Tape Hiss, Oxide Shedding, Bit Crush, Bit Rot) via preview/apply workflow. Inspired by William Basinski's The Disintegration Loops.",
+                "Workshop Computer Card",
                 "Joep Vermaat",
                 "https://degenerator-web.netlify.app/",
-                "",
+                "Degenerator — Disintegrating Looper. Capture audio loops and apply irreversible degradation with 6 algorithms (Saturation, Filter Drift, Tape Hiss, Oxide Shedding, Bit Crush, Bit Rot) via preview/apply workflow. Inspired by William Basinski's The Disintegration Loops.",
                 "",
                 "https://codeberg.org/johantv/Degenerator",
                 {
@@ -3804,10 +3676,10 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "motorik",
                 "Motorik",
-                "Motorik drum machine with kick/snare/hihat, bass and melody CV outputs and inputs. Classic Krautrock grooves.",
+                "Workshop Computer Card",
                 "Joep Vermaat",
                 "",
-                "",
+                "Motorik drum machine with kick/snare/hihat, bass and melody CV outputs and inputs. Classic Krautrock grooves.",
                 "",
                 "https://codeberg.org/johantv/motorik",
                 {
@@ -3872,10 +3744,10 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "tesserae",
                 "Tesserae",
-                "Tesserae — Variable-voice (2-8) arpeggiated chord generator with 5 patterns, 10 scales, tap tempo, CV/audio transpose inputs, and dual CV + audio pitch outputs. Inspired by Laurie Spiegel's Music Mouse and Patchwork.",
+                "Workshop Computer Card",
                 "MTM Community",
                 "",
-                "",
+                "Tesserae — Variable-voice (2-8) arpeggiated chord generator with 5 patterns, 10 scales, tap tempo, CV/audio transpose inputs, and dual CV + audio pitch outputs. Inspired by Laurie Spiegel's Music Mouse and Patchwork.",
                 "",
                 "",
                 {
@@ -3940,7 +3812,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "toolbox",
                 "Toolbox",
-                "Mixer, VCA, noise, S&H, clock generator, etc.",
+                "Workshop Computer Card",
                 "divmod",
                 "",
                 "Utility-focused card inspired by the 0-Coast utility section. Includes a mixer/VCA with\nattenuverter, secondary VCA, sample-and-hold, clock generation with probability, and selectable\nnoise types.",
@@ -4008,7 +3880,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "mlrws",
                 "MLRws",
-                "A remix of monome's classic MLR sample cutting platform (grid controller encouraged but optional). Diagrams here are for Gridless mode.",
+                "Workshop Computer Card",
                 "Dune Desormeaux",
                 "https://dessertplanet.github.io/MLRws-web/",
                 "MLRws is a six-track sample-cutting instrument with grid and gridless workflows. It supports on-card\nsample storage, recording/playback, and USB grid interaction. In gridless mode, Main/X/Y plus switch\nmanage track selection, level/speed/start-position/radiate behavior, while pulse/CV I/O provides\nreset/clocking and CV envelope/pitch triggers.",
@@ -4085,7 +3957,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "drumdrum",
                 "drumdrum",
-                "DFAM-style 8-step sequencer",
+                "Workshop Computer Card",
                 "Moses Hoyt",
                 "https://mohoyt.com/drumdrum.html",
                 "drumdrum is an 8-step DFAM-inspired sequencer card.\nSwitch up is play (tempo, length, VCO2 offset), switch middle is edit (step pitch and velocity),\nand switch down supports short press cursor advance / long press play-pause.\nSequence data is randomized on reset and shared across panel, Monome Grid, 8mu, and browser editor workflows.\nPulse In 1 is external clock and Pulse In 2 resets to step 1.",
@@ -4161,7 +4033,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "blackbird",
                 "Blackbird",
-                "A scriptable, live-codable, USB-serial-to-CV device implementing monome crow's protocol",
+                "Workshop Computer Card",
                 "Dune Desormeaux",
                 "https://dessertplanet.github.io/web-druid/",
                 "Blackbird runs crow-compatible Lua scripts over USB serial and can also store scripts on card flash.\nPanel control behavior is script-defined: Lua code reads `bb.knob.*`, `bb.switch.position`, and inputs,\nthen decides how outputs respond. LEDs always reflect positive output voltages on the six outputs.",
@@ -4232,10 +4104,10 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "clockwork",
                 "Clockwork",
-                ">-",
+                "Workshop Computer Card",
                 "Vincent Maurer",
                 "https://vincentmaurer.de/clockwork/index.html",
-                "",
+                "6-channel polyrhythmic clock, gate, and LFO/envelope generator inspired by Pamela's Workout.",
                 "",
                 "https://github.com/TomWhitwell/Workshop_Computer/tree/main/releases/26_clockwork",
                 {
@@ -4246,16 +4118,16 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                         { "any", "", "", "Audio 2 Input", "Audio input 2" },
                     },
                     {
-                        { "any", "", "", "CV 1 Input", "CV input 1" },
+                        { "any", "", "", "Wave Param Mod", "CV control over the active channel's wave parameter, or external Delay/Math carrier input" },
                     },
                     {
-                        { "any", "", "", "CV 2 Input", "CV input 2" },
+                        { "any", "", "", "Probability Mod", "CV control over the active channel's trigger probability" },
                     },
                     {
-                        { "any", "", "", "Pulse 1 Input", "Pulse input 1" },
+                        { "any", "", "", "Clock Sync", "External clock source sync input" },
                     },
                     {
-                        { "any", "", "", "Pulse 2 Input", "Pulse input 2" },
+                        { "any", "", "", "Reset In", "Clock reset trigger or run gate" },
                     },
                 },
                 {
@@ -4266,33 +4138,35 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                         { "any", "", "", "Audio 2 Output", "Audio output 2" },
                     },
                     {
-                        { "any", "", "", "CV 1 Output", "CV output 1" },
+                        { "any", "", "", "Out 3\n(CV Out 1)", "Channel 3 CV/Gate output (PWM)" },
                     },
                     {
-                        { "any", "", "", "CV 2 Output", "CV output 2" },
+                        { "any", "", "", "Out 4\n(CV Out 2)", "Channel 4 CV/Gate output (PWM)" },
                     },
                     {
-                        { "any", "", "", "Pulse 1 Output", "Pulse output 1" },
+                        { "any", "", "", "Out 5\n(Pulse Out 1)", "Channel 5 Digital Gate output (GPIO)" },
                     },
                     {
-                        { "any", "", "", "Pulse 2 Output", "Pulse output 2" },
+                        { "any", "", "", "Out 6\n(Pulse Out 2)", "Channel 6 Digital Gate output (GPIO)" },
                     },
                 },
                 {
                     {
+                        { "any", "", "", "Modifier / Shape", "Master modifier or waveform shape select depending on switch tier" },
                     },
                     {
+                        { "any", "", "", "Steps / Level", "Euclidean steps or output level/delay depending on switch tier" },
                     },
                     {
                     },
                 },
                 {
                     "Z",
-                    { "Up", "Switch position Up" },
-                    { "Middle", "Switch position Middle" },
-                    { "Down", "Switch position Down" }
+                    { "Up", "UP: Sound Shaping (MAIN: Waveform, X: Level/Delay, Y: Wave Parameter). A short flick UP toggles Play/Pause." },
+                    { "Middle", "MIDDLE: Rhythm & performance (MAIN: Modifier, X: Steps, Y: Fills [steps > 0] or LFO Phase Offset [steps = 0])." },
+                    { "Down", "DOWN (Momentary): Tap to cycle pages. Hold down to access Advanced settings (MAIN: Loop length, X: Probability, Y: Step Offset [steps > 0] or Quantizer Scale [steps = 0])." }
                 },
-                false
+                true
             }
         },
         {
@@ -4300,10 +4174,10 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "castle_process",
                 "Castle Process",
-                "Fort Processor-inspired harsh noise processor with chopped external audio and a bass pulse voice",
+                "Workshop Computer Card",
                 "Adrian Vos",
                 "",
-                "",
+                "Fort Processor-inspired harsh noise processor with chopped external audio and a bass pulse voice",
                 "MIT",
                 "https://github.com/TomWhitwell/Workshop_Computer/tree/main/releases/43_Castle_Process",
                 {
@@ -4314,16 +4188,16 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                         { "any", "", "", "Audio 2 Input", "Audio input 2" },
                     },
                     {
-                        { "any", "", "", "CV 1 Input", "CV input 1" },
+                        { "any", "", "", "CV\n1", "Internal control modulation input" },
                     },
                     {
-                        { "any", "", "", "CV 2 Input", "CV input 2" },
+                        { "any", "", "", "CV\n2", "Internal control modulation input" },
                     },
                     {
-                        { "any", "", "", "Pulse 1 Input", "Pulse input 1" },
+                        { "any", "", "", "Bass\nTrigger", "External bass trigger input that takes over bass timing and suppresses the internal bass trigger behaviour" },
                     },
                     {
-                        { "any", "", "", "Pulse 2 Input", "Pulse input 2" },
+                        { "any", "", "", "Pulse\n2", "Reserved for further interaction" },
                     },
                 },
                 {
@@ -4340,27 +4214,30 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                         { "any", "", "", "CV 2 Output", "CV output 2" },
                     },
                     {
-                        { "any", "", "", "Pulse 1 Output", "Pulse output 1" },
+                        { "any", "", "", "Bass\nActivity", "Bass activity pulse output" },
                     },
                     {
-                        { "any", "", "", "Pulse 2 Output", "Pulse output 2" },
+                        { "any", "", "", "Chop\nPulse", "Internal chop pulse output" },
                     },
                 },
                 {
                     {
+                        { "any", "", "", "Drive /\nVoicing", "Controls overall drive and voicing" },
                     },
                     {
+                        { "any", "", "", "Chopping /\nMotion", "Controls chopping behaviour and motion" },
                     },
                     {
+                        { "any", "", "", "Tuning /\nInteraction", "Controls tuning and internal interaction" },
                     },
                 },
                 {
                     "Z",
-                    { "Up", "Switch position Up" },
-                    { "Middle", "Switch position Middle" },
-                    { "Down", "Switch position Down" }
+                    { "Up", "Alternate latched mode with a little more body and more squarewave colour." },
+                    { "Middle", "Default tighter and more direct chopped mode." },
+                    { "Down", "Momentary bend / chaos gesture while held for live performance accents." }
                 },
-                false
+                true
             }
         },
         {
@@ -4368,10 +4245,10 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "west_coast_lpg",
                 "West Coast LPG",
-                "Dual vactrol-emulating low-pass gate (combined VCA + low-pass filter) with fast-attack/slow-decay 'plong', self-pinging percussion, and per-channel VCA/VCF/LPG modes.",
+                "Workshop Computer Card",
                 "Jason Moore",
                 "",
-                "",
+                "Dual vactrol-emulating low-pass gate (combined VCA + low-pass filter) with fast-attack/slow-decay 'plong', self-pinging percussion, and per-channel VCA/VCF/LPG modes.",
                 "",
                 "https://github.com/TomWhitwell/Workshop_Computer/tree/main/releases/src",
                 {
@@ -4436,10 +4313,10 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "origami",
                 "Origami",
-                "Dual oversampled wavefolder — triangle / sine / hard-clip folding with bias (even-harmonic) control and CV over fold depth, band-limited via 4x oversampling.",
+                "Workshop Computer Card",
                 "Jason Moore",
                 "",
-                "",
+                "Dual oversampled wavefolder — triangle / sine / hard-clip folding with bias (even-harmonic) control and CV over fold depth, band-limited via 4x oversampling.",
                 "",
                 "https://github.com/TomWhitwell/Workshop_Computer/tree/main/releases/src",
                 {
@@ -4504,10 +4381,10 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "cosmik_c1zzl3",
                 "Cosmik C1Zzl3",
-                ">-",
+                "Workshop Computer Card",
                 "Music Thing Modular",
                 "",
-                "",
+                "Stable phase-distortion synthesiser and Turing machine firmware with Web MIDI\nenvelope readback, PD, detune, eight waveform families, hosted CZ patch\nimport, USB MIDI device/host operation, and optional Turing MIDI output.",
                 "",
                 "https://github.com/TomWhitwell/Workshop_Computer/tree/main/releases/84_CosmikC1zzl3",
                 {
@@ -4518,16 +4395,16 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                         { "any", "", "", "Audio 2 Input", "Audio input 2" },
                     },
                     {
-                        { "any", "", "", "CV 1 Input", "CV input 1" },
+                        { "any", "", "", "Phase\nDistortion", "Adds phase-distortion amount in synth and Turing modes" },
                     },
                     {
-                        { "any", "", "", "CV 2 Input", "CV input 2" },
+                        { "any", "", "", "Wave Control\nCV", "Adds wave control in synth and Turing modes" },
                     },
                     {
-                        { "any", "", "", "Pulse 1 Input", "Pulse input 1" },
+                        { "any", "", "", "Ext Turing\nClock", "External Turing clock in switch-up mode" },
                     },
                     {
-                        { "any", "", "", "Pulse 2 Input", "Pulse input 2" },
+                        { "any", "", "", "Envelope\nTrig", "Triggers selected envelope and oscillator sync in synth mode when preset is\nactive" },
                     },
                 },
                 {
@@ -4538,33 +4415,35 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                         { "any", "", "", "Audio 2 Output", "Audio output 2" },
                     },
                     {
-                        { "any", "", "", "CV 1 Output", "CV output 1" },
+                        { "any", "", "", "Stepped\nTuring CV", "Scaled stepped Turing CV; continues updating in synth mode" },
                     },
                     {
-                        { "any", "", "", "CV 2 Output", "CV output 2" },
+                        { "any", "", "", "Smoothed\nTuring CV", "Smoothed Turing CV; continues updating in synth mode" },
                     },
                     {
-                        { "any", "", "", "Pulse 1 Output", "Pulse output 1" },
+                        { "any", "", "", "Main Turing\nPulse", "Main Turing pulse; continues updating in synth mode" },
                     },
                     {
-                        { "any", "", "", "Pulse 2 Output", "Pulse output 2" },
+                        { "any", "", "", "Alternate\nTuring Pulse", "Alternate Turing bit pulse; continues updating in synth mode" },
                     },
                 },
                 {
                     {
+                        { "any", "", "", "Pitch", "Oscillator pitch in synth mode" },
                     },
                     {
+                        { "any", "", "", "Phase\nDistortion", "Phase-distortion amount" },
                     },
                     {
                     },
                 },
                 {
                     "Z",
-                    { "Up", "Switch position Up" },
-                    { "Middle", "Switch position Middle" },
-                    { "Down", "Switch position Down" }
+                    { "Up", "Z up: MAIN: Mutation; X: Sequence Length; Y: Clock Speed." },
+                    { "Middle", "Z middle: MAIN: Pitch; X: Phase Distortion; Y: Waveform Morph." },
+                    { "Down", "Z down, hold: MAIN: Detune; X: Ring Modulation; Y: Noise/Grit." }
                 },
-                false
+                true
             }
         },
         {
@@ -4572,10 +4451,10 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "fr330hfr33",
                 "Fr330Hfr33",
-                "Hardware-tested acid bass synthesiser with selectable saw or square oscillator, switchable 18 or 24 dB diode-style filtering, accent and glide, distortion, USB MIDI device/host operation, and a persistent editable sequencer.",
+                "Workshop Computer Card",
                 "Music Thing Modular",
                 "",
-                "",
+                "Hardware-tested acid bass synthesiser with selectable saw or square oscillator, switchable 18 or 24 dB diode-style filtering, accent and glide, distortion, USB MIDI device/host operation, and a persistent editable sequencer.",
                 "",
                 "https://github.com/TomWhitwell/Workshop_Computer/tree/main/releases/87_fr330hfr33",
                 {
@@ -4586,16 +4465,16 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                         { "any", "", "", "Audio 2 Input", "Audio input 2" },
                     },
                     {
-                        { "any", "", "", "CV 1 Input", "CV input 1" },
+                        { "any", "", "", "Pitch\nCV", "1V/oct pitch input in switch-up CV/gate mode." },
                     },
                     {
                         { "any", "", "", "CV 2 Input", "CV input 2" },
                     },
                     {
-                        { "any", "", "", "Pulse 1 Input", "Pulse input 1" },
+                        { "any", "", "", "Gate\nIn", "External gate input in switch-up CV/gate mode." },
                     },
                     {
-                        { "any", "", "", "Pulse 2 Input", "Pulse input 2" },
+                        { "any", "", "", "Clock /\nSlide", "External sequencer clock in switch-middle mode. In switch-up CV/MIDI\nmode, holding this input high manually enables glide for pitch changes." },
                     },
                 },
                 {
@@ -4606,13 +4485,13 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                         { "any", "", "", "Audio 2 Output", "Audio output 2" },
                     },
                     {
-                        { "any", "", "", "CV 1 Output", "CV output 1" },
+                        { "any", "", "", "Pitch\nOut", "Calibrated 1V/oct output following the currently played pitch." },
                     },
                     {
                         { "any", "", "", "CV 2 Output", "CV output 2" },
                     },
                     {
-                        { "any", "", "", "Pulse 1 Output", "Pulse output 1" },
+                        { "any", "", "", "Gate\nOut", "Gate output following external, MIDI, or sequencer notes." },
                     },
                     {
                         { "any", "", "", "Pulse 2 Output", "Pulse output 2" },
@@ -4620,19 +4499,21 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 },
                 {
                     {
+                        { "any", "", "", "Cutoff", "Sets the diode-style ladder filter resting cutoff with a curved response:\ncounter-clockwise is dark, the middle is broad and musical, and\nclockwise is bright." },
                     },
                     {
+                        { "any", "", "", "Resonance", "Uses a curved response: the lower range adds body, the upper range\nbecomes nasal and acid-like, and the final part of travel reaches firm\nself-oscillation. Broad diode-pair saturation keeps the oscillation\nround, while X adds only a small amount of extra filter-envelope sweep." },
                     },
                     {
                     },
                 },
                 {
                     "Z",
-                    { "Up", "Switch position Up" },
-                    { "Middle", "Switch position Middle" },
-                    { "Down", "Switch position Down" }
+                    { "Up", "External CV/gate or USB MIDI mode. CV In 1 controls pitch, Pulse In 1 controls gate, and holding Pulse In 2 high enables manual glide; overlapping MIDI notes glide automatically without retriggering the envelope." },
+                    { "Middle", "History-aware generative sequencer that avoids recent repeats, favors nearby scale motion, and occasionally makes wider or octave jumps. Pulse In 2 supplies an exact external clock; otherwise the configured internal tempo or optional MIDI clock can use adjustable swing." },
+                    { "Down", "Momentary battery pull. The gate falls, the current VCA level is held briefly, then pitch, filter, resonance, and both audio outputs collapse with the virtual supply." }
                 },
-                false
+                true
             }
         },
         {
@@ -4640,7 +4521,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "pantograph",
                 "Pantograph",
-                "Trace and record CV — record knob movements, loop them at bipolar speed",
+                "Workshop Computer Card",
                 "Kenny Shen",
                 "",
                 "Pantograph lets you trace a performance on the X and Y knobs (e.g. oscillator pitch + filter\ncutoff), record it, then loop it back out the two CV outputs at variable speeds.\n\nSwitch UP auditions live; hold DOWN to record (monitored, so you hear it as you play);\nrelease to MIDDLE and it loops exactly that length. The Main\nknob sets playback speed: centre = freeze, left = reverse, right = faster.\n\nPatch a gate into PULSE IN 1 and MIDDLE becomes a triggered enveloped; unpatched it free-loops.\nPULSE OUT 1 fires a trigger at the end of a recording.\nPULSE OUT 2 runs a gate from the shape of the recording.",
@@ -4660,7 +4541,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                         { "any", "", "", "Y Mod", "Live CV summed onto the CV2 output" },
                     },
                     {
-                        { "any", "", "", "Trigger", ">-" },
+                        { "any", "", "", "Trigger", "When patched, Play (Middle) becomes a one-shot: each rising edge retriggers. Unpatched = loop." },
                     },
                     {
                         { "any", "", "", "(unused)", "Not used" },
@@ -4711,7 +4592,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "chorgan",
                 "Chorgan",
-                "Chorgan — 6-voice chord synthesizer with morphing timbre, chord extension presets, and built-in chord sequencer. Two modes: normal (detune/chorus) and slew (portamento chord changes). Inspired by the Music Thing Modular Chord Organ.",
+                "Workshop Computer Card",
                 "Andy Jenkinson (uglifruit)",
                 "",
                 "Six-voice morphing chord synthesizer with built-in chord sequencer.\nKnob X and CV In 1 set root pitch; Knob Y selects interval above root (0–12 semitones).\nMain knob morphs all six voices through sine, triangle, saw, and narrow pulse; CV In 2 offsets timbre.\nAudio In 1 controls slew speed (0V=instant, +5V=approx 1 min glide). Audio In 2 shifts chord voicing through octave inversions (bipolar, +/-6 steps).\nTap Switch Down to cycle chord extension presets; hold one second to store a chord in the sequencer.\nPulse In 1 advances preset; Pulse In 2 recalls the next stored chord on rising edges.\nBoot with Switch Down held for slew mode (portamento chord changes instead of detune).",
@@ -4785,10 +4666,10 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "turing_matrix",
                 "Turing Matrix",
-                "Turing Machine sequencer with a switchable mixer layer inspired by the Music Thing Modular Turing Machine and Vactrol Mix combination",
+                "Workshop Computer Card",
                 "Music Thing Modular",
                 "",
-                "",
+                "Turing Machine sequencer with a switchable mixer layer inspired by the Music Thing Modular Turing Machine and Vactrol Mix combination",
                 "",
                 "https://github.com/TomWhitwell/Workshop_Computer/tree/main/releases/93_Turing_Matrix",
                 {
@@ -4799,16 +4680,16 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                         { "any", "", "", "Audio 2 Input", "Audio input 2" },
                     },
                     {
-                        { "any", "", "", "CV 1 Input", "CV input 1" },
+                        { "any", "", "", "CV Input 1", "Divide/multiply modulation in middle mode; mix input 1 in up mode" },
                     },
                     {
-                        { "any", "", "", "CV 2 Input", "CV input 2" },
+                        { "any", "", "", "CV Input 2", "Pitch offset in middle mode; mix input 2 in up mode" },
                     },
                     {
-                        { "any", "", "", "Pulse 1 Input", "Pulse input 1" },
+                        { "any", "", "", "Ext Clock 1", "Replaces tap tempo and drives the main Turing clock" },
                     },
                     {
-                        { "any", "", "", "Pulse 2 Input", "Pulse input 2" },
+                        { "any", "", "", "Ext Clock 2", "Independently clocks channel 2 when patched" },
                     },
                 },
                 {
@@ -4819,33 +4700,35 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                         { "any", "", "", "Audio 2 Output", "Audio output 2" },
                     },
                     {
-                        { "any", "", "", "CV 1 Output", "CV output 1" },
+                        { "any", "", "", "Chan 1 Quant\nCV", "Quantized pitch CV in middle mode; crossfaded CV output 1 in up mode" },
                     },
                     {
-                        { "any", "", "", "CV 2 Output", "CV output 2" },
+                        { "any", "", "", "Chan 2 Quant\nCV", "Quantized pitch CV in middle mode; crossfaded CV output 2 in up mode" },
                     },
                     {
-                        { "any", "", "", "Pulse 1 Output", "Pulse output 1" },
+                        { "any", "", "", "Chan 1 Pulse", "Clock or Turing-bit pulse behavior depending on pulse mode configuration" },
                     },
                     {
-                        { "any", "", "", "Pulse 2 Output", "Pulse output 2" },
+                        { "any", "", "", "Chan 2 Pulse", "Clock or Turing-bit pulse behavior depending on pulse mode configuration" },
                     },
                 },
                 {
                     {
+                        { "any", "", "", "Random / Write\nMixer Lag", "Drives the main Turing machine write behavior in middle mode and sets mixer lag in up mode" },
                     },
                     {
+                        { "any", "", "", "Loop Length\nMixer Depth 1", "Sets channel 1 sequence length in middle mode and mixer depth 1 in up mode" },
                     },
                     {
                     },
                 },
                 {
                     "Z",
-                    { "Up", "Switch position Up" },
-                    { "Middle", "Switch position Middle" },
-                    { "Down", "Switch position Down" }
+                    { "Up", "Z up: MAIN: Mixer Lag; X: Mix Depth 1; Y: Mix Depth 2. Mixer mode active." },
+                    { "Middle", "Z middle: MAIN: Randomness / Write; X: Loop Length; Y: Div / Mult. Turing mode active." },
+                    { "Down", "Z down, momentary: MAIN: Tap Tempo." }
                 },
-                false
+                true
             }
         },
         {
@@ -4853,7 +4736,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "offair2",
                 "OffAir",
-                "OffAir — AM/Shortwave/Longwave radio simulator. Tune between two Stations and interference with authentic heterodyne whistles, SSB pitch-shift detuning, AM envelope detection, swelling per-band static, and triggerable Insta-ference one-shots. Baked recordings or live audio inputs become the Stations.",
+                "Workshop Computer Card",
                 "Andy Jenkinson (uglifruit)",
                 "",
                 "Tune across a virtual shortwave band with the Main knob. Two Stations (live audio\ninputs, or baked recordings in baked-in audio mode) plus three interference signals\nare scattered across the dial and re-randomised on each band change. Approaching a\nStation you hear a sliding heterodyne whistle, the audio pulls into tune and the\nstatic ducks away; off-tune it pitch-shifts (SW/LW) or distorts (AM). Knob X sets IF\nbandwidth/brightness, Knob Y the noise level. Tap Switch Down to cycle AM/SW/LW.\nHold Switch Up for dead-air (baked-in mode) or a Pulse In 1-keyed morse Station 2\n(audio-input mode). Pulse In 2 fires curated \"Insta-ference\" one-shots.",
@@ -4926,7 +4809,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "krell",
                 "Krell",
-                "Krell",
+                "Workshop Computer Card",
                 "Benjamin Reily",
                 "",
                 "Krell outputs two independent channels of random pitch CV and looping AD envelopes, each with pulse outputs\nat end of cycle. Main sets overall tendency toward longer/shorter envelopes, X sets left-channel envelope timing,\nand Y sets right-channel timing. Switch up quantizes pitch to octaves, middle uses chromatic quantization,\nand switch down cycles note range between roughly one and three octaves.",
@@ -4997,7 +4880,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
             {
                 "duo_midi",
                 "Duo MIDI",
-                "A duophonic midi device/host interface",
+                "Workshop Computer Card",
                 "Dune Desormeaux",
                 "",
                 "Duophonic MIDI-to-CV card running a Blackbird Lua script. Z up is duophonic voice\nallocation, Z middle is mirrored mono, and Z down toggles pulse outputs between trigger and gate\nmode. Main sets velocity sensitivity; X and Y set envelope attack and release. Receives MIDI note,\nvelocity, pitch bend, and mod wheel.",

@@ -1680,6 +1680,15 @@ void ClockworksCard::render_leds_feedback(uint8_t mode, uint8_t val, int8_t sign
 }
 
 void __not_in_flash_func(ClockworksCard::ProcessSample)() {
+#ifndef __arm__
+    static uint32_t ui_counter = 0;
+    ui_counter++;
+    if (ui_counter >= 48) {
+        ui_counter = 0;
+        process_usb_midi_device();
+        tick_ui_once();
+    }
+#endif
     // Sync external period counters (one per ISR call at 48kHz)
     sync_sample_counter_++;
     samples_since_last_pulse_++;

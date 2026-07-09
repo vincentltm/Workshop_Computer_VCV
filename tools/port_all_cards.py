@@ -45,13 +45,7 @@ CARD_WHITELIST = [
             "reSID/wave.cc"
         ]
     },
-    {
-        "id": "compulidean",
-        "dir": "releases/37_compulidean",
-        "ns": "Card_Compulidean",
-        "num": "37",
-        "sources": []
-    },
+
     {
         "id": "usb_audio_bridge",
         "dir": "releases/06_usb_audio",
@@ -214,7 +208,7 @@ CARD_WHITELIST = [
         "dir": "releases/11_goldfish",
         "ns": "Card_Goldfish",
         "num": "11",
-        "sources": ["main.cpp"]
+        "sources": ["main.cpp", "goldfish_stream.c"]
     },
     {
         "id": "bumpers",
@@ -311,28 +305,7 @@ CARD_WHITELIST = [
         "num": "08",
         "sources": ["formulas.cpp", "bytebeat_card.cpp", "tinyexpr_bitw.c"]
     },
-    {
-        "id": "twists",
-        "dir": "releases/10_twists/src",
-        "ns": "Card_Twists",
-        "num": "10",
-        "sources": [
-            "braids/twists.cc",
-            "braids/usb_worker.cc",
-            "braids/analog_oscillator.cc",
-            "braids/digital_oscillator.cc",
-            "braids/macro_oscillator.cc",
-            "braids/quantizer.cc",
-            "braids/resources.cc",
-            "braids/settings.cc",
-            "braids/ui.cc",
-            "stmlib/utils/random.cc",
-            "braids/drivers/dac.cc",
-            "braids/drivers/display.cc",
-            "braids/drivers/gate_input.cc",
-            "braids/drivers/switch.cc"
-        ]
-    },
+
     {
         "id": "dual_quant",
         "dir": "releases/34_dual_quant",
