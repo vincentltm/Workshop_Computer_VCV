@@ -436,13 +436,25 @@ struct ProgramCardWidget : Widget {
 
                 for (auto& c : name) c = std::toupper(c);
 
-                std::vector<std::string> words;
-                std::string cur;
-                for (char c : name) {
-                    if (c == ' ') { if (!cur.empty()) { words.push_back(cur); cur = ""; } }
-                    else cur.push_back(c);
+                // Split name into 2 lines at the space closest to the middle of the string
+                std::string line1 = name;
+                std::string line2 = "";
+                size_t first_space = name.find(' ');
+                if (first_space != std::string::npos) {
+                    size_t best_space = first_space;
+                    int min_diff = std::abs((int)first_space - (int)(name.length() - 1 - first_space));
+                    size_t next_space = name.find(' ', first_space + 1);
+                    while (next_space != std::string::npos) {
+                        int diff = std::abs((int)next_space - (int)(name.length() - 1 - next_space));
+                        if (diff < min_diff) {
+                            min_diff = diff;
+                            best_space = next_space;
+                        }
+                        next_space = name.find(' ', next_space + 1);
+                    }
+                    line1 = name.substr(0, best_space);
+                    line2 = name.substr(best_space + 1);
                 }
-                if (!cur.empty()) words.push_back(cur);
 
                 std::shared_ptr<window::Font> font;
 #ifdef __APPLE__
@@ -478,11 +490,11 @@ struct ProgramCardWidget : Widget {
                     nvgRestore(args.vg);
                 };
 
-                if (words.size() >= 2) {
-                    draw_rotated_word(words[0], 13.7f); // Left utility label on the left side of the card widget
-                    draw_rotated_word(words[1], 22.7f); // Right utility label on the right side of the card widget
-                } else if (words.size() == 1) {
-                    draw_rotated_word(words[0], 18.2f);
+                if (!line2.empty()) {
+                    draw_rotated_word(line1, 22.7f); // First line goes on the right column (reads first when tilted left)
+                    draw_rotated_word(line2, 13.7f); // Second line goes on the left column (reads second when tilted left)
+                } else {
+                    draw_rotated_word(line1, 18.2f); // Single line is centered
                 }
             }
         }
