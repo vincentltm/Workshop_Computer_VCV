@@ -103,8 +103,6 @@ static void hex_decode(const std::string& s, uint8_t* data, size_t max_size) {
 std::function<void()> g_wasm_background_tick = nullptr;
 std::function<void()> g_wasm_core1_tick = nullptr;
 #endif
-thread_local bool g_core1_tick_active = false;
-thread_local bool g_background_tick_active = false;
 
 #ifdef __APPLE__
 #include <pthread.h>

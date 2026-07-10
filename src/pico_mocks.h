@@ -205,8 +205,8 @@ struct CustomCancellationAtomic {
 extern std::function<void()> g_wasm_background_tick;
 extern std::function<void()> g_wasm_core1_tick;
 #endif
-extern thread_local bool g_core1_tick_active;
-extern thread_local bool g_background_tick_active;
+inline thread_local bool g_core1_tick_active = false;
+inline thread_local bool g_background_tick_active = false;
 
 typedef uint64_t absolute_time_t;
 
