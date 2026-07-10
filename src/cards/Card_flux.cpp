@@ -1077,8 +1077,8 @@ public:
                                      : (mixedR < -32768 ? -32768 : mixedR));
       }
 
-      AudioOut(0, finalL);
-      AudioOut(1, finalR);
+      AudioOut(0, finalL >> 4);
+      AudioOut(1, finalR >> 4);
 
       // ---- LED Logic ----
       if (sw == ComputerCard::Switch::Down) {

@@ -461,6 +461,13 @@ def post_process(src_content, src_rel):
         parse_structs_from_text(src_content, local_map)
         src_content = rewrite_initializers(src_content, local_map)
 
+    if src_rel.endswith("main.cpp"):
+        # Scale 16-bit final audio outputs down by 4 bits to 12-bit range to avoid clipping distortion
+        src_content = src_content.replace(
+            '      AudioOut(0, finalL);\n      AudioOut(1, finalR);',
+            '      AudioOut(0, finalL >> 4);\n      AudioOut(1, finalR >> 4);'
+        )
+
     return src_content
 
 def get_extra_definitions():
