@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>'(flare) · patcher</title>
+  <link rel="icon" href="lens-logo.svg">
+  <link rel="stylesheet" href="flare.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">'(flare) <span>patcher</span></div>
+  
+  <div class="topbar-group">
+    <button id="browserBtn">⊞ Modules</button>
+    <button id="addRowBtn">+ Row</button>
+  </div>
+
+  <div class="topbar-dropdown">
+    <button class="dropdown-trigger">📁 File / Patches ▾</button>
+    <div class="dropdown-menu">
+      <div class="dropdown-section-title">Saved Patches</div>
+      <div class="dropdown-row">
+        <select id="patchSelect">
+          <option value="">📂 Load Patch</option>
+        </select>
+      </div>
+      <button id="savePatchBtn">💾 Save Patch</button>
+      <button id="deletePatchBtn" class="btn-danger">🗑️ Delete Patch</button>
+      <div class="dropdown-divider"></div>
+      <div class="dropdown-section-title">Patcher Operations</div>
+      <button id="clearBtn" class="btn-danger">🧹 Clear Patcher</button>
+      <button id="exportBtn">📤 Export .loupe</button>
+      <button id="importBtn">📥 Import .loupe</button>
+      <button id="importDx7Btn">🎹 Import DX7 .syx</button>
+      <input type="file" id="loupeFileInput" accept=".loupe,text/plain" style="display: none;">
+      <input type="file" id="dx7FileInput" accept=".syx" style="display: none;">
+    </div>
+  </div>
+
+  <div class="topbar-group">
+    <select id="flareMidiChSelect" title="Select default Flare MIDI channel" style="padding: 4px 6px;">
+      <option value="1">Ch 1</option>
+      <option value="2">Ch 2</option>
+      <option value="3">Ch 3</option>
+      <option value="4">Ch 4</option>
+      <option value="5">Ch 5</option>
+      <option value="6">Ch 6</option>
+      <option value="7">Ch 7</option>
+      <option value="8">Ch 8</option>
+      <option value="9">Ch 9</option>
+      <option value="10">Ch 10</option>
+      <option value="11">Ch 11</option>
+      <option value="12">Ch 12</option>
+      <option value="13">Ch 13</option>
+      <option value="14">Ch 14</option>
+      <option value="15">Ch 15</option>
+      <option value="16" selected>Ch 16</option>
+    </select>
+    <button id="connectMidiBtn">Connect MIDI</button>
+    <div id="midiConnectedGroup" style="display: none; align-items: center; gap: 6px;">
+      <span style="font-size: 11px; font-weight: 600; color: #9fd08a; padding-right: 6px; display: inline-flex; align-items: center; gap: 6px; user-select: none;">
+        <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #9fd08a; box-shadow: 0 0 6px #9fd08a;"></span>
+        Connected
+      </span>
+      <button id="sendBtn">Send</button>
+      <button id="saveCardBtn">Save</button>
+
+      <button id="disconnectMidiBtn" title="Disconnect" style="padding: 4px 6px; color: var(--ink-dim);">✕</button>
+    </div>
+  </div>
+
+  <div style="margin-left: auto; display: flex; gap: 8px; align-items: center;">
+    <div id="cpu-status" class="status-pill" style="margin-left: 0; display: none;">CPU: --</div>
+    <div id="mem-status" class="status-pill" style="margin-left: 0; display: none;">MEM: --</div>
+    <div id="status" class="status-pill" style="margin-left: 0;">initializing…</div>
+  </div>
+</header>
+
+<!-- Module Browser (slides down from top) -->
+<div class="browser-panel" id="browserPanel">
+  <div class="browser-search-row">
+    <input type="text" id="browserSearch" placeholder="Search modules…" autocomplete="off">
+    <button id="closeBrowserBtn" class="btn-icon">×</button>
+  </div>
+  <div class="browser-grid" id="browserGrid"></div>
+</div>
+
+<!-- App body: rack on left, code pane on right -->
+<div class="app-body" style="position: relative;">
+  <button id="toggleCodeBtn" title="Toggle Code Editor">⟨/⟩</button>
+
+  <div class="rack-viewport" id="rackViewport">
+    <div class="rack-case" id="rackCase" style="position: relative;">
+      <!-- rack rows injected by JS -->
+      <svg id="cableSvg" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+  </div>
+
+  <div class="code-pane" id="codePane" style="position: relative;">
+    <div class="code-pane-resizer" id="codePaneResizer"></div>
+    <div class="code-pane-hdr" style="display: flex; justify-content: space-between; align-items: center; padding: 4px 12px; height: 30px; box-sizing: border-box;">
+      <span id="codePaneTitle">Generated Loupe Code</span>
+      <div id="codePaneActions" style="display: flex; align-items: center; gap: 6px;">
+        <button id="importCodeBtn" style="background: #2d2c2a; color: #ddd; border: 1px solid #444; padding: 2px 6px; border-radius: 3px; font-size: 8px; cursor: pointer;">Import</button>
+        <button id="applyImportBtn" style="display: none; background: #2ecc71; color: #fff; border: none; padding: 2px 6px; border-radius: 3px; font-size: 8px; font-weight: bold; cursor: pointer;">Apply</button>
+        <button id="cancelImportBtn" style="display: none; background: #e74c3c; color: #fff; border: none; padding: 2px 6px; border-radius: 3px; font-size: 8px; font-weight: bold; cursor: pointer;">Cancel</button>
+        <span style="color: #444;">|</span>
+        <button id="codeMaximizeBtn" title="Maximize/Restore" style="background: none; border: none; color: var(--ink-dim); font-size: 11px; cursor: pointer; padding: 0 2px; line-height: 1;">⛶</button>
+      </div>
+    </div>
+    <textarea class="code-area" id="codeArea" readonly placeholder="Wire up modules…"></textarea>
+  </div>
+
+</div>
+
+</body>
+</html>

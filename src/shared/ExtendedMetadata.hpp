@@ -784,13 +784,13 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                         { "any", "", "", "Audio 2 Input", "Audio input 2" },
                     },
                     {
-                        { "any", "", "", "CV 1 Input", "CV input 1" },
+                        { "any", "", "", "Intensity CV", "CV modulation over rain intensity" },
                     },
                     {
                         { "any", "", "", "CV 2 Input", "CV input 2" },
                     },
                     {
-                        { "any", "", "", "Pulse 1 Input", "Pulse input 1" },
+                        { "any", "", "", "Thunder Trigger", "Rising edge triggers thunder playbacks" },
                     },
                     {
                         { "any", "", "", "Pulse 2 Input", "Pulse input 2" },
@@ -798,16 +798,16 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 },
                 {
                     {
-                        { "any", "", "", "Audio 1 Output", "Audio output 1" },
+                        { "any", "", "", "Mix L", "Left channel stereo audio mix" },
                     },
                     {
-                        { "any", "", "", "Audio 2 Output", "Audio output 2" },
+                        { "any", "", "", "Mix R", "Right channel stereo audio mix" },
                     },
                     {
-                        { "any", "", "", "CV 1 Output", "CV output 1" },
+                        { "any", "", "", "Intensity Monitor", "CV monitor mirroring the current rain intensity level" },
                     },
                     {
-                        { "any", "", "", "CV 2 Output", "CV output 2" },
+                        { "any", "", "", "LFO CV Out", "Control voltage output of the internal modulation LFO" },
                     },
                     {
                         { "any", "", "", "Pulse 1 Output", "Pulse output 1" },
@@ -818,10 +818,13 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 },
                 {
                     {
+                        { "any", "", "", "Rain Intensity", "Controls volume/density mix of the rain sample playback loops" },
                     },
                     {
+                        { "any", "", "", "Unused", "" },
                     },
                     {
+                        { "any", "", "", "Unused", "" },
                     },
                 },
                 {
@@ -4793,6 +4796,77 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                     },
                     {
                         { "any", "", "", "Noise Level", "Static floor (silent fully CCW); slowly swells and swishes, heaviest on LW" },
+                    },
+                },
+                {
+                    "Z",
+                    { "Up", "Switch position Up" },
+                    { "Middle", "Switch position Middle" },
+                    { "Down", "Switch position Down" }
+                },
+                false
+            }
+        },
+        {
+            "lens",
+            {
+                "lens",
+                "Lens",
+                "Workshop Computer Card",
+                "Graham Ritchie",
+                "",
+                "A programmable audio environment running Loupe patches.\nUse the visual patcher (Flare) to connect oscillators, delays, envelopes, and logic.\nMain knob: Assignable parameter (default mutation/prob).\nX/Y knobs: Assignable parameters.\nZ switch: Down/Middle/Up (default modes).",
+                "MIT",
+                "https://github.com/vincentltm/lens.git",
+                {
+                    {
+                        { "any", "", "", "Audio Input 1", "Audio signal input 1 (assignable in Loupe patch)" },
+                    },
+                    {
+                        { "any", "", "", "Audio Input 2", "Audio signal input 2 (assignable in Loupe patch)" },
+                    },
+                    {
+                        { "any", "", "", "CV Input 1", "Control voltage input 1 (assignable in Loupe patch)" },
+                    },
+                    {
+                        { "any", "", "", "CV Input 2", "Control voltage input 2 (assignable in Loupe patch)" },
+                    },
+                    {
+                        { "any", "", "", "Pulse Input 1", "Trigger/clock input 1 (assignable in Loupe patch)" },
+                    },
+                    {
+                        { "any", "", "", "Pulse Input 2", "Trigger/clock input 2 (assignable in Loupe patch)" },
+                    },
+                },
+                {
+                    {
+                        { "any", "", "", "Audio Output 1", "Audio signal output 1 (assignable in Loupe patch)" },
+                    },
+                    {
+                        { "any", "", "", "Audio Output 2", "Audio signal output 2 (assignable in Loupe patch)" },
+                    },
+                    {
+                        { "any", "", "", "CV Output 1", "Control voltage output 1 (assignable in Loupe patch)" },
+                    },
+                    {
+                        { "any", "", "", "CV Output 2", "Control voltage output 2 (assignable in Loupe patch)" },
+                    },
+                    {
+                        { "any", "", "", "Pulse Output 1", "Trigger/gate output 1 (assignable in Loupe patch)" },
+                    },
+                    {
+                        { "any", "", "", "Pulse Output 2", "Trigger/gate output 2 (assignable in Loupe patch)" },
+                    },
+                },
+                {
+                    {
+                        { "any", "", "", "Parameter Main", "Primary assignable knob (default: mutation rate/probability)" },
+                    },
+                    {
+                        { "any", "", "", "Parameter X", "Secondary assignable knob (knob :x)" },
+                    },
+                    {
+                        { "any", "", "", "Parameter Y", "Tertiary assignable knob (knob :y)" },
                     },
                 },
                 {

@@ -2470,6 +2470,9 @@ float    goldfish_stream_capacity_seconds(void)  { return s_capacity_samples / 2
 } // namespace Card_Goldfish
 
 extern "C" {
+    __attribute__((weak)) void tuh_midi_mount_cb(uint8_t, uint8_t, uint8_t, uint8_t, uint16_t) {}
+    __attribute__((weak)) void tuh_midi_rx_cb(uint8_t, uint32_t) {}
+    __attribute__((weak)) void tuh_midi_umount_cb(uint8_t, uint8_t) {}
     void set_thread_globals(CardGlobals* inst) {
         t_instance = inst;
         if (inst) {

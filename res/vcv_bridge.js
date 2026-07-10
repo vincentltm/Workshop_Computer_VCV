@@ -18,9 +18,35 @@
 
     // Track active MIDI listeners
     const midiListeners = new Set();
-    const isDrumDrum = window.location.pathname.indexOf("drumdrum") !== -1;
-    const deviceName = isDrumDrum ? "MTMComputer Input (DrumDrum)" : "MTMComputer Input";
-    const deviceNameOut = isDrumDrum ? "MTMComputer Output (DrumDrum)" : "MTMComputer Output";
+    const pathParts = window.location.pathname.split('/');
+    const cardId = pathParts[1] || "";
+    
+    const CARD_MIDI_NAMES = {
+        'simple_midi': 'Simple MIDI',
+        'duo_midi': 'Duo MIDI',
+        'krell': 'Krell',
+        'blackbird': 'Blackbird',
+        'flux': 'Flux',
+        'drumdrum': 'DrumDrum',
+        'twists': 'Twists',
+        'reverb': 'Reverb',
+        'bends': 'Bends',
+        'modes': 'Modes',
+        'grains': 'Grains',
+        'stretchcore': 'Stretchcore',
+        'degenerator': 'Degenerator',
+        'computer_grids': 'Computer Grids',
+        'rompler': 'Rompler',
+        'clockwork': 'Clockwork',
+        'cosmik_c1zzl3': 'Cosmik C1zzl3',
+        'fr330hfr33': 'Fr330hfr33',
+        'turing_matrix': 'Turing Matrix',
+        'lens': 'Lens'
+    };
+    
+    const activeName = CARD_MIDI_NAMES[cardId] || "Workshop Computer";
+    const deviceName = `${activeName} Input`;
+    const deviceNameOut = `${activeName} Output`;
 
     const mockMidiInput = {
         name: deviceName,

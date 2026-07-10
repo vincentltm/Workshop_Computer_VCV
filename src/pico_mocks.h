@@ -28,6 +28,9 @@ struct Port;
 #include <string.h>
 #include <atomic>
 #include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <queue>
 #include <chrono>
 #include <exception>
 #include <condition_variable>
@@ -77,29 +80,60 @@ extern thread_local bool is_core1_thread;
 
 class SpinFIFO {
 private:
+#ifdef __EMSCRIPTEN__
     std::atomic<uintptr_t> buffer[256];
     std::atomic<size_t> head{0};
     std::atomic<size_t> tail{0};
+#else
+    mutable std::mutex mutex_;
+    std::condition_variable cv_;
+    std::queue<uintptr_t> q_;
+#endif
 public:
     void push(uintptr_t val);       // defined after CardGlobals
     uintptr_t pop();
     bool pop_nonblocking(uintptr_t& val) {
+#ifdef __EMSCRIPTEN__
         size_t h = head.load(std::memory_order_relaxed);
         if (h == tail.load(std::memory_order_acquire)) return false;
         val = buffer[h].load(std::memory_order_relaxed);
         head.store((h + 1) % 256, std::memory_order_release);
         return true;
+#else
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (q_.empty()) return false;
+        val = q_.front();
+        q_.pop();
+        return true;
+#endif
     }
     bool empty() const {
+#ifdef __EMSCRIPTEN__
         return head.load(std::memory_order_acquire) == tail.load(std::memory_order_acquire);
+#else
+        std::lock_guard<std::mutex> lock(mutex_);
+        return q_.empty();
+#endif
     }
     size_t size() const {
+#ifdef __EMSCRIPTEN__
         size_t h = head.load(std::memory_order_acquire);
         size_t t = tail.load(std::memory_order_acquire);
         if (t >= h) return t - h;
         return 256 - h + t;
+#else
+        std::lock_guard<std::mutex> lock(mutex_);
+        return q_.size();
+#endif
     }
-    void clear() { head.store(0); tail.store(0); }
+    void clear() {
+#ifdef __EMSCRIPTEN__
+        head.store(0); tail.store(0);
+#else
+        std::lock_guard<std::mutex> lock(mutex_);
+        while (!q_.empty()) q_.pop();
+#endif
+    }
 };
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -166,13 +200,13 @@ struct CustomCancellationAtomic {
     }
 };
 
-#ifdef __EMSCRIPTEN__
 #include <functional>
+#ifndef VCV_PORT
 extern std::function<void()> g_wasm_background_tick;
 extern std::function<void()> g_wasm_core1_tick;
+#endif
 extern thread_local bool g_core1_tick_active;
 extern thread_local bool g_background_tick_active;
-#endif
 
 typedef uint64_t absolute_time_t;
 
@@ -248,6 +282,10 @@ struct CardGlobals {
     uint32_t g_force_all_leds_on_until_us_val = 0;
     std::atomic<bool> web_ui_connected{false};
 
+    // ── Instance-specific cooperative ticks ──
+    std::function<void()> g_wasm_background_tick = nullptr;
+    std::function<void()> g_wasm_core1_tick = nullptr;
+
     // ── DSO helper function pointers ──
     void (*set_thread_globals_fn)(CardGlobals*) = nullptr;
     void (*set_core1_thread_fn)(bool) = nullptr;
@@ -321,6 +359,10 @@ struct CardGlobals {
 // ──────────────────────────────────────────────────────────────────────────────
 extern thread_local CardGlobals* t_instance;
 
+#ifdef __EMSCRIPTEN__
+extern CardGlobals g_wasm_card_globals;
+#endif
+
 inline CardGlobals* get_safe_instance() {
     static CardGlobals dummy_instance;
     return t_instance ? t_instance : &dummy_instance;
@@ -377,13 +419,13 @@ inline bool CustomCancellationAtomic::load(std::memory_order order) const {
 // ──────────────────────────────────────────────────────────────────────────────
 // SpinFIFO method bodies (need g_cancellation_requested macro)
 // ──────────────────────────────────────────────────────────────────────────────
+#ifdef __EMSCRIPTEN__
 inline void SpinFIFO::push(uintptr_t val) {
     size_t t = tail.load(std::memory_order_relaxed);
     size_t next_t = (t + 1) % 256;
     int spins = 0;
     while (next_t == head.load(std::memory_order_acquire)) {
         if (g_cancellation_requested.load(std::memory_order_relaxed)) throw ThreadExitException();
-#ifdef __EMSCRIPTEN__
         if (!is_core1_thread && g_wasm_core1_tick && !g_core1_tick_active) {
             g_core1_tick_active = true;
             is_core1_thread = true;
@@ -392,7 +434,6 @@ inline void SpinFIFO::push(uintptr_t val) {
             g_core1_tick_active = false;
             continue;
         }
-#endif
         if (++spins > 50000) std::this_thread::sleep_for(std::chrono::milliseconds(1));
         else {
             PICO_YIELD();
@@ -407,7 +448,6 @@ inline uintptr_t SpinFIFO::pop() {
     int spins = 0;
     while (h == tail.load(std::memory_order_acquire)) {
         if (g_cancellation_requested.load(std::memory_order_relaxed)) throw ThreadExitException();
-#ifdef __EMSCRIPTEN__
         if (!is_core1_thread && g_wasm_core1_tick && !g_core1_tick_active) {
             g_core1_tick_active = true;
             is_core1_thread = true;
@@ -429,21 +469,43 @@ inline uintptr_t SpinFIFO::pop() {
         // Under single-threaded Emscripten, if we are still empty, we must not spin.
         // Return 0 immediately to prevent browser freeze.
         return 0;
-#endif
-        if (!is_core1_thread) {
-            // Audio thread: spin/yield but never sleep to prevent audio dropouts.
-            PICO_YIELD();
-        } else {
-            if (++spins > 50000) std::this_thread::sleep_for(std::chrono::milliseconds(1));
-            else {
-                PICO_YIELD();
-            }
-        }
     }
     uintptr_t val = buffer[h].load(std::memory_order_relaxed);
     head.store((h + 1) % 256, std::memory_order_release);
     return val;
 }
+#else
+inline void SpinFIFO::push(uintptr_t val) {
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (q_.size() >= 256) {
+            q_.pop();
+        }
+        q_.push(val);
+    }
+    cv_.notify_one();
+
+    // VCV Rack inline synchronous walk execution trigger
+    if (t_instance && !is_core1_thread && t_instance->g_wasm_core1_tick && !g_core1_tick_active) {
+        g_core1_tick_active = true;
+        is_core1_thread = true;
+        t_instance->g_wasm_core1_tick();
+        is_core1_thread = false;
+        g_core1_tick_active = false;
+    }
+}
+
+inline uintptr_t SpinFIFO::pop() {
+    std::unique_lock<std::mutex> lock(mutex_);
+    while (q_.empty()) {
+        if (g_cancellation_requested.load(std::memory_order_relaxed)) throw ThreadExitException();
+        cv_.wait_for(lock, std::chrono::milliseconds(5));
+    }
+    uintptr_t val = q_.front();
+    q_.pop();
+    return val;
+}
+#endif
 
 // Critical Section Mocks
 struct critical_section_t {
@@ -652,6 +714,28 @@ inline void multicore_fifo_drain() {
     if (!is_core1_thread) g_fifo_1_to_0.clear();
     else                  g_fifo_0_to_1.clear();
 }
+inline void multicore_fifo_clear_irq() {}
+
+struct SioHwMock {
+    struct FifoWr {
+        FifoWr& operator=(uint32_t val) {
+            multicore_fifo_push_blocking(val);
+            return *this;
+        }
+    } fifo_wr;
+
+    struct FifoRd {
+        operator uint32_t() const {
+            return multicore_fifo_pop_blocking();
+        }
+    } fifo_rd;
+};
+
+inline SioHwMock* get_sio_hw() {
+    static SioHwMock inst;
+    return &inst;
+}
+#define sio_hw (get_sio_hw())
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Flash
@@ -1018,3 +1102,8 @@ inline bool add_repeating_timer_us(int32_t delay_us, bool (*callback)(struct rep
 
 // Export global uint typedef for cards/wrappers
 typedef unsigned int uint;
+
+#ifdef VCV_PORT
+#define g_wasm_core1_tick (t_instance->g_wasm_core1_tick)
+#define g_wasm_background_tick (t_instance->g_wasm_background_tick)
+#endif

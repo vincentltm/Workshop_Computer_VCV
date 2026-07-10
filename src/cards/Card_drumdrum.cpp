@@ -2172,6 +2172,9 @@ extern "C" usbh_class_driver_t const* usbh_app_driver_get_cb(uint8_t* driver_cou
 } // namespace Card_DrumDrum
 
 extern "C" {
+    __attribute__((weak)) void tuh_midi_mount_cb(uint8_t, uint8_t, uint8_t, uint8_t, uint16_t) {}
+    __attribute__((weak)) void tuh_midi_rx_cb(uint8_t, uint32_t) {}
+    __attribute__((weak)) void tuh_midi_umount_cb(uint8_t, uint8_t) {}
     void set_thread_globals(CardGlobals* inst) {
         t_instance = inst;
         if (inst) {

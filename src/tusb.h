@@ -129,8 +129,51 @@ inline void board_init() {}
 #define TUD_OPT_RHPORT 0
 #define TUH_OPT_RHPORT 0
 inline void    tuh_init(uint8_t) {}
-inline void    tuh_task() {}
-inline int32_t tuh_midi_stream_read(uint8_t, uint8_t*, uint8_t*, uint16_t) { return 0; }
+extern "C" void tuh_midi_mount_cb(uint8_t dev_addr, uint8_t in_ep, uint8_t out_ep, uint8_t num_cables_rx, uint16_t num_cables_tx) __attribute__((weak));
+extern "C" void tuh_midi_rx_cb(uint8_t dev_addr, uint32_t num_packets) __attribute__((weak));
+extern "C" void tuh_midi_umount_cb(uint8_t dev_addr, uint8_t instance) __attribute__((weak));
+
+inline void tuh_task() {
+    static bool mounted = false;
+    if (!mounted) {
+        mounted = true;
+        if (&tuh_midi_mount_cb) {
+            tuh_midi_mount_cb(1, 1, 1, 1, 1);
+        }
+    }
+    if (!g_midi_rx_packet_queue.empty()) {
+        if (&tuh_midi_rx_cb) {
+            tuh_midi_rx_cb(1, 1);
+        }
+    }
+}
+
+inline int32_t tuh_midi_stream_read(uint8_t dev_addr, uint8_t* p_cable_num, uint8_t* p_buffer, uint16_t bufsize) {
+    (void)dev_addr;
+    if (p_cable_num) *p_cable_num = 0;
+    
+    static thread_local uint8_t local_byte_buf[256];
+    static thread_local size_t  local_byte_count = 0;
+    static thread_local size_t  local_byte_idx   = 0;
+
+    size_t bytes_written = 0;
+    while (bytes_written < bufsize && local_byte_idx < local_byte_count) {
+        p_buffer[bytes_written++] = local_byte_buf[local_byte_idx++];
+    }
+    while (bytes_written < bufsize) {
+        uint8_t packet[4];
+        if (!g_midi_rx_packet_queue.pop(packet)) break;
+        uint8_t cin = packet[0] & 0x0F;
+        size_t pkt_len = get_packet_size_from_cin_local(cin);
+        local_byte_count = 0;
+        local_byte_idx   = 0;
+        for (size_t i = 0; i < pkt_len; ++i)
+            local_byte_buf[local_byte_count++] = packet[1 + i];
+        while (bytes_written < bufsize && local_byte_idx < local_byte_count)
+            p_buffer[bytes_written++] = local_byte_buf[local_byte_idx++];
+    }
+    return bytes_written;
+}
 
 // ──────────────────────────────────────────────────────────────────────────────
 // USB-CDC inline stubs for serial communications (WebSerial support)

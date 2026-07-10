@@ -1120,11 +1120,13 @@ void __not_in_flash_func(core1_worker)() {
   multicore_fifo_push_blocking(0);
   multicore_fifo_push_blocking(0);
 
-  while (1) {
+  #if defined(__EMSCRIPTEN__) || defined(VCV_PORT)
+    g_wasm_core1_tick = []() {
+        
     if (core1_paused) {
       core1_is_paused = true;
-      while (core1_paused) {
-      }
+      if (core1_paused) { core1_is_paused = true; return; }
+      core1_is_paused = false;
       core1_is_paused = false;
       while (multicore_fifo_rvalid())
         multicore_fifo_pop_blocking();
@@ -1137,7 +1139,7 @@ void __not_in_flash_func(core1_worker)() {
     bool isTape = (trig & 0x80000000);
     Grains *gptr = (Grains *)ComputerCard::ThisPtr();
     if (!gptr)
-      continue;
+      return;
 
     // --- Secret Tape Mode Player (Retimable Granular Engine) ---
     if (isTape) {
@@ -1303,7 +1305,7 @@ void __not_in_flash_func(core1_worker)() {
         multicore_fifo_push_blocking(0);
         multicore_fifo_push_blocking(0);
       }
-      continue;
+      return;
     }
 
     if (gptr->inFlashMenu) {
@@ -1341,7 +1343,7 @@ void __not_in_flash_func(core1_worker)() {
       multicore_fifo_push_blocking((uint32_t)sL);
       multicore_fifo_push_blocking((uint32_t)sR);
       multicore_fifo_push_blocking(0);
-      continue;
+      return;
     }
     if (trig & 2)
       gptr->spawnGrain();
@@ -1554,7 +1556,447 @@ void __not_in_flash_func(core1_worker)() {
     multicore_fifo_push_blocking((uint32_t)sL);
     multicore_fifo_push_blocking((uint32_t)sR);
     multicore_fifo_push_blocking((uint32_t)eS);
-  }
+  
+    };
+#else
+    while (1) {
+        
+    if (core1_paused) {
+      core1_is_paused = true;
+      if (core1_paused) { core1_is_paused = true; return; }
+      core1_is_paused = false;
+      core1_is_paused = false;
+      while (multicore_fifo_rvalid())
+        multicore_fifo_pop_blocking();
+      // Re-prime the pipeline after flash-pause resume
+      multicore_fifo_push_blocking(0);
+      multicore_fifo_push_blocking(0);
+      multicore_fifo_push_blocking(0);
+    }
+    uint32_t trig = multicore_fifo_pop_blocking();
+    bool isTape = (trig & 0x80000000);
+    Grains *gptr = (Grains *)ComputerCard::ThisPtr();
+    if (!gptr)
+      return;
+
+    // --- Secret Tape Mode Player (Retimable Granular Engine) ---
+    if (isTape) {
+      static uint32_t tapePhaseA = 0, tapePhaseB = (2048 << 16);
+      static double spawnPosA = 0, spawnPosB = 0;
+      int32_t sM = gptr->cachedKnobMain, sX = gptr->cachedKnobX,
+              sY = gptr->cachedKnobY;
+      sM = (sM * 32767) >> 12; // Scale 0-4095 to 0-32767
+      sX = (sX * 32767) >> 12;
+      sY = (sY * 32767) >> 12;
+
+      // Deadzone for 1x playback at center (16384)
+      if (sX > 16184 && sX < 16584)
+        sX = 16384;
+      if (sY > 16184 && sY < 16584)
+        sY = 16384;
+
+      // Pitch Mod and Speed are matched mappings: linear from 0.0x to 2.0x,
+      // center is 1.0x
+      int32_t effY = sY + (gptr->CV1_acc >> 5); // Allow CV1 to modulate pitch
+      if (effY < 0)
+        effY = 0;
+      if (effY > 32767)
+        effY = 32767;
+
+      // Mapping: center (16384) results in 2.0 (normal speed for 48kHz output
+      // at 24kHz rate)
+      double pitchModBase = (double)effY / 8192.0;
+      if (pitchModBase < 0.01)
+        pitchModBase = 0.01;
+
+      // Wow & Flutter: Subtle random fluctuations for analog character
+      static int32_t wfSeed = 123;
+      wfSeed = (wfSeed * 1103515245 + 12345);
+      double flutter =
+          ((double)((wfSeed >> 16) & 0xFFFF) / 65535.0 - 0.5) * 0.0005;
+
+      static double smoothedSpeed = 2.0;
+      double speed = ((double)sX / 8192.0) + flutter;
+      smoothedSpeed +=
+          (speed - smoothedSpeed) * 0.02; // More inertia on speed changes
+
+      // Manual position for scrubbing / nudging with heavy noise filtering
+      static float sCV2 = 0;
+      sCV2 += ((float)gptr->cachedCV2 - sCV2) * 0.05f;
+
+      static double lastManualPos = -1.0;
+      static double smoothedDelta = 0.0;
+      double currentManualPos = (double)sM / 32768.0;
+      currentManualPos += (double)sCV2 / 4096.0;
+      // Wrap currentManualPos to 0..1
+      while (currentManualPos >= 1.0)
+        currentManualPos -= 1.0;
+      while (currentManualPos < 0)
+        currentManualPos += 1.0;
+
+      if (lastManualPos < 0)
+        lastManualPos = currentManualPos;
+      double manualDelta = currentManualPos - lastManualPos;
+      if (manualDelta > 0.5)
+        manualDelta -= 1.0;
+      if (manualDelta < -0.5)
+        manualDelta += 1.0;
+
+      if (gptr->cachedSwitch == ComputerCard::Switch::Down) {
+        manualDelta = 0;
+        lastManualPos = currentManualPos;
+      } else {
+        lastManualPos = currentManualPos;
+      }
+
+      uint32_t bS = 0;
+      const int16_t *buf = nullptr;
+      if (gptr->currentTapeSample < 4) {
+        buf = grainBuffer;
+        bS = GRAIN_BUF_SAMPLES;
+      } else {
+        buf = getFlashSamplePtr(gptr->currentTapeSample - 4, bS);
+      }
+
+      if (buf && bS > 0) {
+        double delta = 0;
+        if (gptr->tapeAutoPlay) {
+          delta = smoothedSpeed + manualDelta * (double)bS;
+        } else {
+          delta = manualDelta * (double)bS;
+        }
+
+        smoothedDelta +=
+            (delta - smoothedDelta) * 0.01; // Heavy tape inertia for scrubbing
+        delta = smoothedDelta;
+        gptr->tapePlayhead += delta;
+
+        while (gptr->tapePlayhead >= bS)
+          gptr->tapePlayhead -= bS;
+        while (gptr->tapePlayhead < 0)
+          gptr->tapePlayhead += bS;
+
+        // Support reverse playback when moving backwards
+        bool reverseGrains = (delta < 0);
+        uint32_t pitchInc = (uint32_t)(pitchModBase * 65536.0);
+
+        auto renderGrain = [&](uint32_t &ph, double &spawnPos) {
+          float totalPh = (float)ph * (1.0f / 65536.0f);
+          float p = reverseGrains ? ((float)spawnPos - totalPh)
+                                  : ((float)spawnPos + totalPh);
+
+          float fbS = (float)bS;
+          while (p < 0)
+            p += fbS;
+          while (p >= fbS)
+            p -= fbS;
+
+          // Safety clamp for index
+          if (p < 0)
+            p = 0;
+          if (p >= fbS)
+            p = fbS - 1.001f;
+
+          uint32_t i0 = (uint32_t)p;
+          uint32_t i1 = i0 + 1;
+          if (i1 >= bS)
+            i1 = 0;
+          float frac = p - (float)i0;
+
+          int32_t v =
+              (int32_t)((float)buf[i0] + (float)(buf[i1] - buf[i0]) * frac);
+
+          uint32_t envPhase = (ph >> 12) & 0xFFFF;
+          int32_t env = hannEnvelope(envPhase);
+
+          ph += pitchInc;
+
+          if ((ph >> 16) >= 4096) {
+            ph -= (4096 << 16);
+            spawnPos = gptr->tapePlayhead;
+          }
+          return (v * env) >> 15;
+        };
+
+        // Volume envelope: speed-dependent volume for realistic tape behavior
+        static float tapeVol = 1.0f;
+        // Volume depends on total movement speed (delta)
+        // 1.0x speed = full volume. 0 speed = silent.
+        float targetVol = (float)fabs(delta) * 0.5f;
+        if (targetVol > 1.0f)
+          targetVol = 1.0f;
+        if (targetVol < 0.01f)
+          targetVol = 0.0f;
+        tapeVol += (targetVol - tapeVol) * 0.1f;
+
+        int32_t out = renderGrain(tapePhaseA, spawnPosA) +
+                      renderGrain(tapePhaseB, spawnPosB);
+        out = (int32_t)((float)out * tapeVol);
+
+        multicore_fifo_push_blocking((uint32_t)out);
+        multicore_fifo_push_blocking((uint32_t)out);
+        multicore_fifo_push_blocking(
+            (uint32_t)((int32_t)(smoothedDelta *
+                                 1024.0))); // Pass scaled speed for CV2 output
+      } else {
+        multicore_fifo_push_blocking(0);
+        multicore_fifo_push_blocking(0);
+        multicore_fifo_push_blocking(0);
+      }
+      return;
+    }
+
+    if (gptr->inFlashMenu) {
+      static uint32_t previewPhase = 0;
+      static int lastSlot = -1;
+
+      bool isSave = freezeMode && !synthMode;
+      int32_t sL = 0, sR = 0;
+
+      if (!isSave) {
+        int slot = gptr->menuSelectedSlot;
+
+        if (slot != lastSlot) {
+          previewPhase = 0;
+          lastSlot = slot;
+        }
+
+        uint32_t bS = 0;
+        const int16_t *buf = nullptr;
+        if (slot < 4) {
+          buf = grainBuffer;
+          bS = GRAIN_BUF_SAMPLES;
+        } else {
+          buf = getFlashSamplePtr(slot - 4, bS);
+        }
+
+        if (buf && bS > 0) {
+          sL = sR = buf[previewPhase >> 16];
+          previewPhase += (1 << 16); // 1.0x speed playback
+          if ((previewPhase >> 16) >= bS)
+            previewPhase = 0;
+        }
+      }
+
+      multicore_fifo_push_blocking((uint32_t)sL);
+      multicore_fifo_push_blocking((uint32_t)sR);
+      multicore_fifo_push_blocking(0);
+      return;
+    }
+    if (trig & 2)
+      gptr->spawnGrain();
+
+    int32_t rawDP = params[0].pX + densityCV;
+    if (rawDP < 0)
+      rawDP = 0;
+    if (rawDP > 32767)
+      rawDP = 32767;
+
+    int32_t bip = rawDP - 16384;
+    bool spraying = (bip < -400);
+    bool rhythmic = (bip > 400);
+
+    uint32_t dPr = 0;
+    if (spraying || rhythmic) {
+      int32_t amt = (bip < 0) ? -bip : bip;
+      uint32_t x = ((amt - 400) * 32767) / 15983;
+
+      // Quadratic blend for x: provides more control in the mid-range densities
+      // by slowing down the curve at the start, while keeping exponential
+      // precision at the extreme high densities.
+      uint32_t x_curved = (x >> 1) + (((uint64_t)x * x) >> 16);
+
+      dPr = exp2_q16(871550 - (int32_t)x_curved * 13 -
+                     ((int32_t)x_curved * 55 >> 7)) >>
+            16;
+    }
+
+    if (dPr > 0) {
+      uint32_t current_gS = 120 + ((params[0].pY * 11880) >> 15);
+      uint32_t min_dPr = current_gS / 30; // Limit to maximum 30 active grains on average
+      if (dPr < min_dPr)
+        dPr = min_dPr;
+    }
+
+    int32_t smP = params[1].pX;
+    int32_t jitterAmt = 2000;
+    if (smP < 10922) {
+      uint32_t relX = (smP * 32767) / 10922;
+      jitterAmt = (relX >> 1) + (((uint64_t)relX * relX) >> 16);
+    }
+    if (dPr > 0) {
+      if (currentDensityThreshold == 0) {
+        int32_t jit = (fast_rand_q15_sym(1) * jitterAmt) >> 15;
+        currentDensityThreshold = dPr + (int32_t)(((int64_t)jit * dPr) >> 15);
+      }
+      if (++densityCounter >= currentDensityThreshold) {
+        densityCounter = 0;
+        gptr->spawnGrain();
+        if (spraying) {
+          // Left Side: Spraying (Stochastic timing)
+          currentDensityThreshold =
+              dPr + ((int32_t)fast_rand_q15(1) * dPr >> 14); // 0.5 to 1.5x dPr
+        } else {
+          // Right Side: Rhythmic (Periodic timing + Page2-X Jitter)
+          int32_t jit = (fast_rand_q15_sym(1) * jitterAmt) >> 15;
+          currentDensityThreshold = dPr + (int32_t)(((int64_t)jit * dPr) >> 15);
+        }
+        if (currentDensityThreshold < 10)
+          currentDensityThreshold = 10;
+      }
+    } else
+      densityCounter = 0;
+    int32_t sL = 0, sR = 0, eS = 0;
+    uint32_t bS = activeBufferSize;
+    const int16_t *buf = activeBuffer;
+    const bool isFrozenOrSynth = (synthMode || freezeMode);
+    for (int idx = 0; idx < gptr->numActiveGrains;) {
+      int i = gptr->activeGrainsIdx[idx];
+      Grain &g = grains_pool[i];
+      bool deactivate = false;
+
+      // --- Optimized Branchless Envelope Math ---
+      int32_t env = 0;
+      uint32_t ep = g.envPhase;
+      int32_t sFrac = g.envSFrac;
+
+      if (g.envSIdx == 0) {
+        int32_t hann = hannLUT[ep >> 6];
+        int32_t decayEnv = (65535 - ep) >> 2;
+        env = (hann * (32768 - sFrac) + decayEnv * sFrac) >> 15;
+      } else if (g.envSIdx == 1) {
+        int32_t decayEnv = (65535 - ep) >> 2;
+        int32_t att = ep << 4;
+        int32_t rel = (65535 - ep) << 4;
+        int32_t sqEnv = att < rel ? att : rel;
+        if (sqEnv > 16384)
+          sqEnv = 16384;
+        env = (decayEnv * (32768 - sFrac) + sqEnv * sFrac) >> 15;
+      } else {
+        int32_t attackEnv = ep >> 2;
+        int32_t att = ep << 4;
+        int32_t rel = (65535 - ep) << 4;
+        int32_t sqEnv = att < rel ? att : rel;
+        if (sqEnv > 16384)
+          sqEnv = 16384;
+        env = (sqEnv * (32768 - sFrac) + attackEnv * sFrac) >> 15;
+      }
+
+      // --- 32-bit Position Processing ---
+      if (isFrozenOrSynth) {
+        if (g.reverse) {
+          if (g.posInt == 0) {
+            deactivate = true;
+          }
+        } else {
+          if (g.posInt >= bS - 1) {
+            deactivate = true;
+          }
+        }
+      } else {
+        if (g.posInt >= bS)
+          g.posInt -= bS;
+      }
+
+      if (!deactivate) {
+        uint32_t p0 = g.posInt;
+        uint32_t p1 = p0 + 1;
+        if (g.reverse) {
+          p1 = (p0 == 0) ? (isFrozenOrSynth ? 0 : (bS - 1)) : (p0 - 1);
+        } else {
+          if (p1 >= bS)
+            p1 = isFrozenOrSynth ? p0 : 0;
+        }
+
+        int32_t f = g.posFrac;
+        int32_t x0 = buf[p0], x1 = buf[p1];
+        int32_t v = x0 + (((x1 - x0) * (int32_t)(f >> 1)) >> 15);
+
+        int32_t o = (v * env) >> 15;
+        sL += (o * g.panL) >> 15;
+        sR += (o * g.panR) >> 15;
+        eS += env;
+
+        // --- Fast 32-bit Phase Accumulation ---
+        g.posFrac += g.phaseInc;
+        uint32_t shift = (g.posFrac >> 16);
+        g.posFrac &= 0xFFFF;
+
+        if (g.reverse) {
+          if (shift > 0) {
+            if (g.posInt < shift)
+              g.posInt = g.posInt + bS - shift;
+            else
+              g.posInt -= shift;
+          }
+        } else {
+          g.posInt += shift;
+        }
+
+        g.envPhase += g.envPhaseInc;
+        if (g.envPhase >= 65535) {
+          deactivate = true;
+        }
+      }
+
+      if (deactivate) {
+        g.active = false;
+        activeGrainsCount--;
+        gptr->activeGrainsIdx[idx] =
+            gptr->activeGrainsIdx[--gptr->numActiveGrains];
+      } else {
+        idx++;
+      }
+    }
+    int ac = activeGrainsCount;
+    static int32_t smoothComp = 32768;
+    int32_t targetComp = 32768;
+    if (ac > 0) {
+      if (ac <= 1)
+        targetComp = 52000;
+      else if (ac <= 4)
+        targetComp = 38000;
+      else if (ac <= 12)
+        targetComp = 24000;
+      else if (ac <= 24)
+        targetComp = 16000;
+      else if (ac <= 48)
+        targetComp = 11000;
+      else
+        targetComp = 8000;
+    }
+    smoothComp += (targetComp - smoothComp) >>
+                  10; // Slower smoothing to prevent audio-rate gain flutter
+    sL = (int32_t)(((int64_t)sL * smoothComp) >> 15);
+    sR = (int32_t)(((int64_t)sR * smoothComp) >> 15);
+
+    // Soft Saturation for Grains (Higher threshold for more headroom)
+    auto sat = [](int32_t x) {
+      if (x > 24000)
+        x = 24000 + ((x - 24000) >> 3);
+      if (x < -24000)
+        x = -24000 + ((x + 24000) >> 3);
+      return x;
+    };
+    sL = sat(sL);
+    sR = sat(sR);
+
+    // Stronger DC block for grains to prevent drift
+    auto dcb_s = [](int32_t x, int32_t &px, int32_t &py) {
+      int32_t y = x - px + py - (py >> 7);
+      px = x;
+      py = y;
+      return y;
+    };
+    sL = dcb_s(sL, g_dc_xL, g_dc_yL);
+    sR = dcb_s(sR, g_dc_xR, g_dc_yR);
+
+    multicore_fifo_push_blocking((uint32_t)sL);
+    multicore_fifo_push_blocking((uint32_t)sR);
+    multicore_fifo_push_blocking((uint32_t)eS);
+  
+    }
+#endif
 }
 int main() {
   vreg_set_voltage(VREG_VOLTAGE_1_25);
@@ -1575,6 +2017,9 @@ int main() {
 } // namespace Card_Grains
 
 extern "C" {
+    __attribute__((weak)) void tuh_midi_mount_cb(uint8_t, uint8_t, uint8_t, uint8_t, uint16_t) {}
+    __attribute__((weak)) void tuh_midi_rx_cb(uint8_t, uint32_t) {}
+    __attribute__((weak)) void tuh_midi_umount_cb(uint8_t, uint8_t) {}
     void set_thread_globals(CardGlobals* inst) {
         t_instance = inst;
         if (inst) {

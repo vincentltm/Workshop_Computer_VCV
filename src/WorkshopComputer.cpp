@@ -98,6 +98,18 @@ static void hex_decode(const std::string& s, uint8_t* data, size_t max_size) {
     }
 }
 
+#include <functional>
+#ifndef VCV_PORT
+std::function<void()> g_wasm_background_tick = nullptr;
+std::function<void()> g_wasm_core1_tick = nullptr;
+#endif
+thread_local bool g_core1_tick_active = false;
+thread_local bool g_background_tick_active = false;
+
+#ifdef __APPLE__
+#include <pthread.h>
+#endif
+
 void host_multicore_launch_core1(void (*entry)()) {
     CardGlobals* inst = t_instance;
     if (!inst) return;
@@ -110,6 +122,11 @@ void host_multicore_launch_core1(void (*entry)()) {
     inst->g_core1_cancellation_requested_val = false;
 
     inst->g_core1_thread_val = std::thread([entry, inst, card]() {
+#ifdef __APPLE__
+        pthread_set_qos_class_self_np(QOS_CLASS_USER_INTERACTIVE, 0);
+#elif defined(_WIN32)
+        SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
+#endif
         t_instance = inst;
         is_core1_thread = true;
         g_current_card_ptr = card;
@@ -1821,63 +1838,79 @@ struct WorkshopComputerWidget : ModuleWidget {
             if (active_id == "krell" || active_id == "duo_midi") {
                 active_id = "blackbird";
             }
-            std::string manager_file = "";
-            std::vector<std::string> candidates = {
-                "index.html",
-                "editor.html",
-                active_id + "_manager.html",
-                active_id + ".html"
+
+            struct OpenManagerItem : MenuItem {
+                WorkshopComputer* module;
+                std::string manager_file;
+                void onAction(const event::Action& e) override {
+                    char url[512];
+                    snprintf(url, sizeof(url), "http://127.0.0.1:%d/%s/%s?instance=%p",
+                             g_web_server_port, module->card_globals.active_card_id_str.c_str(), manager_file.c_str(), module);
+                    
+                    #if defined(_WIN32)
+                        std::string cmd = "start " + std::string(url);
+                    #elif defined(__APPLE__)
+                        std::string cmd = "open \"" + std::string(url) + "\"";
+                    #else
+                        std::string cmd = "xdg-open \"" + std::string(url) + "\"";
+                    #endif
+                    int ret = std::system(cmd.c_str());
+                    (void)ret;
+                }
             };
-            
-            bool found = false;
-             for (const auto& candidate : candidates) {
-                std::string path = asset::plugin(pluginInstance, "res/web/" + active_id + "/" + candidate);
-                std::ifstream f(path);
-                if (f.good()) {
-                    f.close();
-                    manager_file = candidate;
-                    found = true;
-                    break;
-                }
-                // Try under dist/
-                std::string dist_path = asset::plugin(pluginInstance, "res/web/" + active_id + "/dist/" + candidate);
-                std::ifstream f_dist(dist_path);
-                if (f_dist.good()) {
-                    f_dist.close();
-                    manager_file = "dist/" + candidate;
-                    found = true;
-                    break;
-                }
-            }
-            
-            if (found) {
+
+            if (active_id == "lens") {
                 menu->addChild(new MenuSeparator());
-                
-                struct OpenManagerItem : MenuItem {
-                    WorkshopComputer* module;
-                    std::string manager_file;
-                    void onAction(const event::Action& e) override {
-                        char url[512];
-                        snprintf(url, sizeof(url), "http://127.0.0.1:%d/%s/%s?instance=%p",
-                                 g_web_server_port, module->card_globals.active_card_id_str.c_str(), manager_file.c_str(), module);
-                        
-                        #if defined(_WIN32)
-                            std::string cmd = "start " + std::string(url);
-                        #elif defined(__APPLE__)
-                            std::string cmd = "open \"" + std::string(url) + "\"";
-                        #else
-                            std::string cmd = "xdg-open \"" + std::string(url) + "\"";
-                        #endif
-                        int ret = std::system(cmd.c_str());
-                        (void)ret;
-                    }
+
+                OpenManagerItem* openFlare = new OpenManagerItem();
+                openFlare->text = "Open Flare Visual Patcher...";
+                openFlare->module = module;
+                openFlare->manager_file = "flare.html";
+                menu->addChild(openFlare);
+
+                OpenManagerItem* openLens = new OpenManagerItem();
+                openLens->text = "Open Lens Text Editor...";
+                openLens->module = module;
+                openLens->manager_file = "lens.html";
+                menu->addChild(openLens);
+            } else {
+                std::string manager_file = "";
+                std::vector<std::string> candidates = {
+                    "index.html",
+                    "editor.html",
+                    active_id + "_manager.html",
+                    active_id + ".html"
                 };
                 
-                OpenManagerItem* openItem = new OpenManagerItem();
-                openItem->text = "Open Card Manager...";
-                openItem->module = module;
-                openItem->manager_file = manager_file;
-                menu->addChild(openItem);
+                bool found = false;
+                for (const auto& candidate : candidates) {
+                    std::string path = asset::plugin(pluginInstance, "res/web/" + active_id + "/" + candidate);
+                    std::ifstream f(path);
+                    if (f.good()) {
+                        f.close();
+                        manager_file = candidate;
+                        found = true;
+                        break;
+                    }
+                    // Try under dist/
+                    std::string dist_path = asset::plugin(pluginInstance, "res/web/" + active_id + "/dist/" + candidate);
+                    std::ifstream f_dist(dist_path);
+                    if (f_dist.good()) {
+                        f_dist.close();
+                        manager_file = "dist/" + candidate;
+                        found = true;
+                        break;
+                    }
+                }
+                
+                if (found) {
+                    menu->addChild(new MenuSeparator());
+                    OpenManagerItem* openItem = new OpenManagerItem();
+                    openItem->text = "Open Card Manager...";
+                    openItem->module = module;
+                    openItem->manager_file = manager_file;
+                    menu->addChild(openItem);
+                }
             }
         }
 
@@ -2336,3 +2369,4 @@ void handle_client(socket_t client_fd) {
     send(client_fd, content.data(), content.length(), 0);
     close_socket(client_fd);
 }
+

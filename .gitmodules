@@ -1,3 +1,7 @@
 [submodule "deps/Workshop_Computer"]
 	path = deps/Workshop_Computer
 	url = https://github.com/vincent-maurer/Workshop_Computer.git
+[submodule "deps/external/52_lens"]
+	path = deps/external/52_lens
+	url = https://github.com/vincentltm/lens.git
+	branch = flare

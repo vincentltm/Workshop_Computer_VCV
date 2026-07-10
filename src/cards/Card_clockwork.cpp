@@ -778,6 +778,9 @@ void __not_in_flash_func(audio_callback_ram_wrapper)(void* inst) {
 }
 
 ClockworksCard::ClockworksCard() {
+    if (t_instance) {
+        t_instance->expected_sample_rate = 24000.0;
+    }
     midi_clock_tick_count_ = 0;
     midi_reset_counter_ = 0;
     last_midi_clock_time_ms_ = 0;
@@ -2557,8 +2560,8 @@ void __not_in_flash_func(ClockworksCard::ProcessSample)() {
                                     pulse_width = 1;
                                 }
 
-                                uint32_t step = 0x100000000ULL / N;
-                                uint32_t phase_mod = master_phase_ % step;
+                                uint64_t step64 = 0x100000000ULL / N; // step per sub-division
+                                uint32_t phase_mod = (step64 > 0) ? (uint32_t)(master_phase_ % step64) : master_phase_;
                                 bool high = (!run_gate_paused) && (phase_mod < base_inc * pulse_width);
                                 val = high ? 2047 : 0;
                             }
@@ -3081,8 +3084,8 @@ void __not_in_flash_func(ClockworksCard::ProcessSample)() {
                                     pulse_width = 1;
                                 }
 
-                                uint32_t step = 0x100000000ULL / N;
-                                uint32_t phase_mod = master_phase_ % step;
+                                uint64_t step64 = 0x100000000ULL / N; // step per sub-division
+                                uint32_t phase_mod = (step64 > 0) ? (uint32_t)(master_phase_ % step64) : master_phase_;
                                 bool high = (!run_gate_paused) && (phase_mod < base_inc * pulse_width);
                                 val = high ? 2047 : 0;
                             }

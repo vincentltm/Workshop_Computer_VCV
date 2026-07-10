@@ -292,6 +292,13 @@ void register_all_cards() {
         "Vincent Maurer"
     });
     g_card_registry.push_back({
+        "lens",
+        "Lens",
+        "52",
+        "A programmable synth/sequencer running Loupe (Lisp) patches. Connect visually via the web editor to compile and upload.",
+        "Graham Ritchie"
+    });
+    g_card_registry.push_back({
         "glitter",
         "Glitter",
         "53",

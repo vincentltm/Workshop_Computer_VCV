@@ -328,6 +328,9 @@ int main()
 } // namespace Card_WestCoastLPG
 
 extern "C" {
+    __attribute__((weak)) void tuh_midi_mount_cb(uint8_t, uint8_t, uint8_t, uint8_t, uint16_t) {}
+    __attribute__((weak)) void tuh_midi_rx_cb(uint8_t, uint32_t) {}
+    __attribute__((weak)) void tuh_midi_umount_cb(uint8_t, uint8_t) {}
     void set_thread_globals(CardGlobals* inst) {
         t_instance = inst;
         if (inst) {
