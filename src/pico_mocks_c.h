@@ -16,11 +16,10 @@
 #define __not_in_flash_func(x) x
 #define __not_in_flash(x)
 #define __in_flash(group)
-
-#ifndef __APPLE__
-/* On Apple, __attribute__ is left as-is; the mach-o section warning from
-   pico_mocks.h applies only to the C++ build so we skip it here. */
 #define __time_critical_func(x) x
+
+#ifdef __APPLE__
+#define __attribute__(x)
 #endif
 
 /* Memory barrier / DMB mock */
@@ -32,6 +31,12 @@
 /* Interrupt mock stubs — no-ops on host */
 static inline uint32_t save_and_disable_interrupts(void) { return 0; }
 static inline void restore_interrupts(uint32_t state) { (void)state; }
+static inline unsigned int get_core_num(void) { return 0; }
+static inline uint32_t time_us_32(void) { return 0; }
+static inline uint64_t time_us_64(void) { return 0; }
+static inline void sleep_ms(uint32_t ms) { (void)ms; }
+static inline void sleep_us(uint64_t us) { (void)us; }
+static inline void busy_wait_us_32(uint32_t us) { (void)us; }
 
 /* Flash / XIP layout constants */
 #define XIP_BASE              0x10000000u
