@@ -214,6 +214,8 @@ public:
 
     void PulseOut1(bool val) { PulseOut(0, val); }
     void PulseOut2(bool val) { PulseOut(1, val); }
+    void PulseCVOut1(bool val, bool is_bipolar = false) { (void)is_bipolar; PulseOut(0, val); }
+    void PulseCVOut2(bool val, bool is_bipolar = false) { (void)is_bipolar; PulseOut(1, val); }
 
     // Connected & Disconnected check stubs
     bool Connected(Input i) {

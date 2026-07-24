@@ -276,6 +276,7 @@ struct ProgramCardWidget : Widget {
                 }
             };
             for (size_t i = 0; i < g_card_registry.size(); i++) {
+                if (!g_card_registry[i].visible) continue;
                 int num = -1;
                 try { num = std::stoi(g_card_registry[i].number); }
                 catch (...) { continue; }
@@ -323,7 +324,19 @@ struct ProgramCardWidget : Widget {
             catch (...) { return false; }
         };
 
+        auto has_visible_cards_in_range = [&](int min_n, int max_n) -> bool {
+            for (size_t i = 0; i < g_card_registry.size(); i++) {
+                if (!g_card_registry[i].visible) continue;
+                try {
+                    int num = std::stoi(g_card_registry[i].number);
+                    if (num >= min_n && num <= max_n) return true;
+                } catch (...) {}
+            }
+            return false;
+        };
+
         auto make_group = [&](const char* label, int lo, int hi) {
+            if (!has_visible_cards_in_range(lo, hi)) return;
             auto* g = new CardGroupSubmenuItem();
             g->text = label;
             g->computerModule = computerModule;

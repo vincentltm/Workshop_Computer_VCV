@@ -8,6 +8,7 @@ struct CardMetadata {
     std::string number;
     std::string description;
     std::string creator;
+    bool visible = true;
 };
 
 extern std::vector<CardMetadata> g_card_registry;

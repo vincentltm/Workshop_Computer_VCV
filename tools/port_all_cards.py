@@ -3,6 +3,7 @@ import os
 import re
 import importlib
 import sys
+import json
 
 # Source workspace paths
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -87,13 +88,6 @@ CARD_WHITELIST = [
         "ns": "Card_Od",
         "num": "38",
         "sources": ["od.cpp"]
-    },
-    {
-        "id": "bends",
-        "dir": os.path.join(VCV_PROJECT_DIR, "deps", "external", "45_bends"),
-        "ns": "Card_Bends",
-        "num": "45",
-        "sources": ["bends.cpp"]
     },
     {
         "id": "backyard_rain",
@@ -269,20 +263,6 @@ CARD_WHITELIST = [
         "ns": "Card_ESP",
         "num": "31",
         "sources": ["main.cpp"]
-    },
-    {
-        "id": "modes",
-        "dir": os.path.join(VCV_PROJECT_DIR, "deps", "external", "49_modes"),
-        "ns": "Card_Modes",
-        "num": "49",
-        "sources": ["modes.cpp", "resonator_q15.cpp", "resources_q15.cpp", "samples_flash.cpp", "string_q15.cpp"]
-    },
-    {
-        "id": "rompler",
-        "dir": os.path.join(VCV_PROJECT_DIR, "deps", "external", "46_rompler"),
-        "ns": "Card_Rompler",
-        "num": "46",
-        "sources": ["rompler.cpp"]
     },
     {
         "id": "trace",
@@ -587,6 +567,42 @@ CARD_WHITELIST = [
             "runtime/thirdparty/braids/settings.cc",
             "runtime/thirdparty/stmlib/utils/random.cc"
         ]
+    },
+    {
+        "id": "ca_sequencer",
+        "dir": "releases/19_CA_Sequencer",
+        "ns": "Card_CASequencer",
+        "num": "19",
+        "sources": ["main.cpp"]
+    },
+    {
+        "id": "fragments",
+        "dir": "releases/67_Fragments",
+        "ns": "Card_Fragments",
+        "num": "67",
+        "sources": ["src/fragments.cpp"]
+    },
+    {
+        "id": "turing_clouds",
+        "dir": "releases/75_Turing_Clouds",
+        "ns": "Card_TuringClouds",
+        "num": "75",
+        "sources": ["main.cpp"]
+    },
+    {
+        "id": "alloy",
+        "dir": "releases/97_alloy",
+        "ns": "Card_Alloy",
+        "num": "97",
+        "sources": ["main.cpp"]
+    },
+    {
+        "id": "sense_of_space",
+        "dir": "releases/433_sense_of_space",
+        "ns": "Card_SenseOfSpace",
+        "num": "433",
+        "sources": ["main.cpp", "reverb_dsp.c"],
+        "flags": ["-DFOUR33_SAMPLE_RATE=10000"]
     }
 ]
 
@@ -636,6 +652,10 @@ def fix_main_return(content):
     return content
 
 def run_card_post_process(card_id, src_content, src_rel):
+    if card_id == "sense_of_space":
+        src_content = src_content.replace("db->buffer = malloc(", "db->buffer = (int32_t*)malloc(")
+        src_content = src_content.replace("reverb *v = malloc(", "reverb *v = (reverb*)malloc(")
+        src_content = "#ifndef FOUR33_SAMPLE_RATE\n#define FOUR33_SAMPLE_RATE 10000\n#endif\n" + src_content
     try:
         mod = importlib.import_module(f"porting.{card_id}")
         if hasattr(mod, "post_process"):
@@ -665,6 +685,30 @@ def run_card_extra_definitions(card_id):
 def main():
     os.makedirs(CARDS_SRC_DIR, exist_ok=True)
     
+    # Load visible_cards.json configuration if present
+    visible_config_path = os.path.join(SCRIPT_DIR, "visible_cards.json")
+    visible_config = {}
+    if os.path.exists(visible_config_path):
+        try:
+            with open(visible_config_path, 'r') as vf:
+                visible_config = json.load(vf)
+            print(f"Loaded card visibility configuration from {visible_config_path}")
+        except Exception as e:
+            print(f"Warning: could not parse {visible_config_path}: {e}")
+
+    def is_card_visible(card):
+        if not visible_config.get("enabled", True):
+            return card.get("visible", True)
+        cid = card["id"]
+        cnum = str(card["num"]).zfill(2)
+        excluded = set(str(x) for x in visible_config.get("excluded_cards", []))
+        allowed = set(str(x) for x in visible_config.get("allowed_cards", []))
+        if cid in excluded or cnum in excluded or card["num"] in excluded:
+            return False
+        if allowed and (cid not in allowed and cnum not in allowed and card["num"] not in allowed):
+            return False
+        return card.get("visible", True)
+
     # Sort whitelist by card number
     CARD_WHITELIST.sort(key=lambda x: int(x["num"]))
     
@@ -682,7 +726,8 @@ def main():
                 "name": "USB Audio Bridge",
                 "num": card["num"],
                 "desc": "Direct hardware bridge for the Workshop System Computer USB Audio card",
-                "creator": "Music Thing Modular"
+                "creator": "Music Thing Modular",
+                "visible": is_card_visible(card)
             })
             continue
 
@@ -696,7 +741,8 @@ def main():
                 "name": "Compulidean",
                 "num": card["num"],
                 "desc": "Drum machine / Euclidean generated drum patterns + drum machine.",
-                "creator": "Tristan Rowley (semi-rewrite by Antigravity)"
+                "creator": "Tristan Rowley (semi-rewrite by Antigravity)",
+                "visible": is_card_visible(card)
             })
             continue
 
@@ -792,22 +838,53 @@ def main():
         
         if os.path.exists(info_path):
             try:
-                with open(info_path, 'r') as f:
-                    for line in f:
-                        line_rstrip = line.rstrip()
-                        if not line_rstrip.strip() or line_rstrip.strip().startswith('#'):
-                            continue
-                        indent = len(line_rstrip) - len(line_rstrip.lstrip())
-                        if indent == 0 and ":" in line_rstrip:
-                            key, val = line_rstrip.split(":", 1)
-                            key = key.strip().lower()
-                            val = val.strip().strip('"').strip("'")
-                            if key == "name":
-                                metadata["name"] = val
-                            elif key == "description":
+                with open(info_path, 'r', encoding='utf-8', errors='ignore') as f:
+                    lines = f.readlines()
+                i = 0
+                while i < len(lines):
+                    line_rstrip = lines[i].rstrip()
+                    stripped = line_rstrip.strip()
+                    if not stripped or stripped.startswith('#'):
+                        i += 1
+                        continue
+                    indent = len(line_rstrip) - len(line_rstrip.lstrip())
+                    if ":" in line_rstrip:
+                        key, val = line_rstrip.split(":", 1)
+                        key = key.strip().lower()
+                        val = val.strip().strip('"').strip("'")
+
+                        if key in ["title", "name"] and val and not metadata.get("found_title"):
+                            metadata["name"] = val
+                            metadata["found_title"] = True
+                        elif key in ["short-description", "summary", "description"] and not metadata.get("found_desc"):
+                            if val in ["|", ">", "|-", ">-"] or not val:
+                                multiline_val = []
+                                i += 1
+                                while i < len(lines):
+                                    sub_line = lines[i].rstrip()
+                                    sub_stripped = sub_line.strip()
+                                    if not sub_stripped:
+                                        multiline_val.append("")
+                                        i += 1
+                                        continue
+                                    sub_indent = len(sub_line) - len(sub_line.lstrip())
+                                    if sub_indent > indent:
+                                        multiline_val.append(sub_stripped)
+                                        i += 1
+                                    else:
+                                        i -= 1
+                                        break
+                                res_desc = " ".join(" ".join(multiline_val).split())
+                                if res_desc:
+                                    metadata["desc"] = res_desc
+                                    metadata["found_desc"] = True
+                            else:
                                 metadata["desc"] = val
-                            elif key == "creator":
-                                metadata["creator"] = val
+                                metadata["found_desc"] = True
+                        elif key == "creator" and val and not metadata.get("found_creator"):
+                            metadata["creator"] = val
+                            metadata["found_creator"] = True
+                    i += 1
             except Exception as e:
                 print(f"Error parsing info.yaml for {card['id']}: {e}")
                 
@@ -1196,7 +1273,8 @@ def main():
             "name": metadata["name"],
             "num": card["num"],
             "desc": metadata["desc"].replace("\n", "\\n").replace('"', '\\"'),
-            "creator": metadata["creator"]
+            "creator": metadata["creator"],
+            "visible": is_card_visible(card)
         })
         
     # Write CardRegistry.hpp
@@ -1211,6 +1289,7 @@ def main():
         f.write("    std::string number;\n")
         f.write("    std::string description;\n")
         f.write("    std::string creator;\n")
+        f.write("    bool visible = true;\n")
         f.write("};\n\n")
         f.write("extern std::vector<CardMetadata> g_card_registry;\n")
         f.write("void register_all_cards();\n")
@@ -1223,12 +1302,16 @@ def main():
         f.write("void register_all_cards() {\n")
         f.write("    g_card_registry.clear();\n")
         for card in registry_entries:
+            vis_str = "true" if card.get("visible", True) else "false"
+            def escape_cpp_string(s):
+                return s.replace('\\', '\\\\').replace('"', '\\"').replace('\n', '\\n')
             f.write(f"    g_card_registry.push_back({{\n")
-            f.write(f"        \"{card['id']}\",\n")
-            f.write(f"        \"{card['name']}\",\n")
-            f.write(f"        \"{card['num']}\",\n")
-            f.write(f"        \"{card['desc']}\",\n")
-            f.write(f"        \"{card['creator']}\"\n")
+            f.write(f"        \"{escape_cpp_string(card['id'])}\",\n")
+            f.write(f"        \"{escape_cpp_string(card['name'])}\",\n")
+            f.write(f"        \"{escape_cpp_string(card['num'])}\",\n")
+            f.write(f"        \"{escape_cpp_string(card['desc'])}\",\n")
+            f.write(f"        \"{escape_cpp_string(card['creator'])}\",\n")
+            f.write(f"        {vis_str}\n")
             f.write("    });\n")
         f.write("}\n")
         

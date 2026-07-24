@@ -479,6 +479,7 @@ public:
     // ---- Startup / Initialization ----
     if (!initialized) {
       if (startupFrames > 0) {
+        #if !defined(VCV_PORT) && !defined(__EMSCRIPTEN__)
         int16_t inL_raw = AudioIn1() << 4;
         int16_t inR_raw = AudioIn2() << 4;
         int32_t absL = (inL_raw > 0 ? inL_raw : -inL_raw);
@@ -487,6 +488,10 @@ public:
           noiseFloorL = absL;
         if (absR > noiseFloorR)
           noiseFloorR = absR;
+        #else
+        noiseFloorL = 0;
+        noiseFloorR = 0;
+        #endif
         startupFrames--;
         return;
       }

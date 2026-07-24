@@ -135,7 +135,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Workshop Computer Card",
                 "Music Thing Modular",
                 "",
-                "Resonant 4-stage phaser for the Workshop Computer with deep notch filtering, wide modulation sweeps, controllable resonance, tremolo blending, and digital Burst-mode degradation.",
+                "Resonant 4-stage phaser with wide modulation sweeps, tremolo blending, and Burst-mode degradation",
                 "",
                 "https://github.com/TomWhitwell/Workshop_Computer/tree/main/releases/59_BitPhase",
                 {
@@ -640,74 +640,6 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Simulates a Lorenz attractor to generate loopable CV and pulse signals.\nThis release folder is a stub; documentation and UF2 builds are maintained in the external repository.",
                 "MIT",
                 "https://github.com/MJLMills/mtmws_od",
-                {
-                    {
-                        { "any", "", "", "Audio 1 Input", "Audio input 1" },
-                    },
-                    {
-                        { "any", "", "", "Audio 2 Input", "Audio input 2" },
-                    },
-                    {
-                        { "any", "", "", "CV 1 Input", "CV input 1" },
-                    },
-                    {
-                        { "any", "", "", "CV 2 Input", "CV input 2" },
-                    },
-                    {
-                        { "any", "", "", "Pulse 1 Input", "Pulse input 1" },
-                    },
-                    {
-                        { "any", "", "", "Pulse 2 Input", "Pulse input 2" },
-                    },
-                },
-                {
-                    {
-                        { "any", "", "", "Audio 1 Output", "Audio output 1" },
-                    },
-                    {
-                        { "any", "", "", "Audio 2 Output", "Audio output 2" },
-                    },
-                    {
-                        { "any", "", "", "CV 1 Output", "CV output 1" },
-                    },
-                    {
-                        { "any", "", "", "CV 2 Output", "CV output 2" },
-                    },
-                    {
-                        { "any", "", "", "Pulse 1 Output", "Pulse output 1" },
-                    },
-                    {
-                        { "any", "", "", "Pulse 2 Output", "Pulse output 2" },
-                    },
-                },
-                {
-                    {
-                    },
-                    {
-                    },
-                    {
-                    },
-                },
-                {
-                    "Z",
-                    { "Up", "Switch position Up" },
-                    { "Middle", "Switch position Middle" },
-                    { "Down", "Switch position Down" }
-                },
-                false
-            }
-        },
-        {
-            "bends",
-            {
-                "bends",
-                "Bends",
-                "Workshop Computer Card",
-                "Vincent Maurer (vincentmaurer.de) with Advanced Agentic Coding",
-                "",
-                "Stereo Multi-FX, Glitch, and Codec Demolisher Card",
-                "",
-                "",
                 {
                     {
                         { "any", "", "", "Audio 1 Input", "Audio input 1" },
@@ -1293,7 +1225,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "WorkshopSystem",
                 "",
                 "Multi-FX and Synth Firmware",
-                "",
+                "GPL-3.0",
                 "",
                 {
                     {
@@ -2302,142 +2234,6 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                     },
                     {
                         { "up", "", "", "Bandpass High Cut", "Upper cutoff index for low-pass stage" },
-                    },
-                },
-                {
-                    "Z",
-                    { "Up", "Switch position Up" },
-                    { "Middle", "Switch position Middle" },
-                    { "Down", "Switch position Down" }
-                },
-                false
-            }
-        },
-        {
-            "modes",
-            {
-                "modes",
-                "Modes",
-                "Workshop Computer Card",
-                "Vincent Maurer",
-                "",
-                "Physical Modeling Voice (Mutable Instruments Elements port)",
-                "",
-                "",
-                {
-                    {
-                        { "any", "", "", "Audio 1 Input", "Audio input 1" },
-                    },
-                    {
-                        { "any", "", "", "Audio 2 Input", "Audio input 2" },
-                    },
-                    {
-                        { "any", "", "", "CV 1 Input", "CV input 1" },
-                    },
-                    {
-                        { "any", "", "", "CV 2 Input", "CV input 2" },
-                    },
-                    {
-                        { "any", "", "", "Pulse 1 Input", "Pulse input 1" },
-                    },
-                    {
-                        { "any", "", "", "Pulse 2 Input", "Pulse input 2" },
-                    },
-                },
-                {
-                    {
-                        { "any", "", "", "Audio 1 Output", "Audio output 1" },
-                    },
-                    {
-                        { "any", "", "", "Audio 2 Output", "Audio output 2" },
-                    },
-                    {
-                        { "any", "", "", "CV 1 Output", "CV output 1" },
-                    },
-                    {
-                        { "any", "", "", "CV 2 Output", "CV output 2" },
-                    },
-                    {
-                        { "any", "", "", "Pulse 1 Output", "Pulse output 1" },
-                    },
-                    {
-                        { "any", "", "", "Pulse 2 Output", "Pulse output 2" },
-                    },
-                },
-                {
-                    {
-                    },
-                    {
-                    },
-                    {
-                    },
-                },
-                {
-                    "Z",
-                    { "Up", "Switch position Up" },
-                    { "Middle", "Switch position Middle" },
-                    { "Down", "Switch position Down" }
-                },
-                false
-            }
-        },
-        {
-            "rompler",
-            {
-                "rompler",
-                "Rompler",
-                "Workshop Computer Card",
-                "Vincent Maurer & Antigravity",
-                "",
-                "General MIDI SF2 Polyphonic Multisampler",
-                "",
-                "",
-                {
-                    {
-                        { "any", "", "", "Audio 1 Input", "Audio input 1" },
-                    },
-                    {
-                        { "any", "", "", "Audio 2 Input", "Audio input 2" },
-                    },
-                    {
-                        { "any", "", "", "CV 1 Input", "CV input 1" },
-                    },
-                    {
-                        { "any", "", "", "CV 2 Input", "CV input 2" },
-                    },
-                    {
-                        { "any", "", "", "Pulse 1 Input", "Pulse input 1" },
-                    },
-                    {
-                        { "any", "", "", "Pulse 2 Input", "Pulse input 2" },
-                    },
-                },
-                {
-                    {
-                        { "any", "", "", "Audio 1 Output", "Audio output 1" },
-                    },
-                    {
-                        { "any", "", "", "Audio 2 Output", "Audio output 2" },
-                    },
-                    {
-                        { "any", "", "", "CV 1 Output", "CV output 1" },
-                    },
-                    {
-                        { "any", "", "", "CV 2 Output", "CV output 2" },
-                    },
-                    {
-                        { "any", "", "", "Pulse 1 Output", "Pulse output 1" },
-                    },
-                    {
-                        { "any", "", "", "Pulse 2 Output", "Pulse output 2" },
-                    },
-                },
-                {
-                    {
-                    },
-                    {
-                    },
-                    {
                     },
                 },
                 {
@@ -4147,10 +3943,10 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                         { "any", "", "", "Out 4\n(CV Out 2)", "Channel 4 CV/Gate output (PWM)" },
                     },
                     {
-                        { "any", "", "", "Out 5\n(Pulse Out 1)", "Channel 5 Digital Gate output (GPIO)" },
+                        { "any", "", "", "Out 5\n(Pulse Out 1)", "Channel 5 Digital Gate / PWM CV output (0-5V, slightly lower resolution/quality)" },
                     },
                     {
-                        { "any", "", "", "Out 6\n(Pulse Out 2)", "Channel 6 Digital Gate output (GPIO)" },
+                        { "any", "", "", "Out 6\n(Pulse Out 2)", "Channel 6 Digital Gate / PWM CV output (0-5V, slightly lower resolution/quality)" },
                     },
                 },
                 {
@@ -4180,7 +3976,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Workshop Computer Card",
                 "Adrian Vos",
                 "",
-                "Fort Processor-inspired harsh noise processor with chopped external audio and a bass pulse voice",
+                "Castle Process is a performance card built around chopped external audio, crude\ninternal squarewave energy, aggressive switching between sources, and a separate\nbass pulse layer. It is designed as a playable sound-destruction tool rather than\na clean effect or faithful clone.",
                 "MIT",
                 "https://github.com/TomWhitwell/Workshop_Computer/tree/main/releases/43_Castle_Process",
                 {
@@ -4387,7 +4183,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Workshop Computer Card",
                 "Music Thing Modular",
                 "",
-                "Stable phase-distortion synthesiser and Turing machine firmware with Web MIDI\nenvelope readback, PD, detune, eight waveform families, hosted CZ patch\nimport, USB MIDI device/host operation, and optional Turing MIDI output.",
+                "Stable phase-distortion synthesiser and Turing machine firmware with gate-held\nlooping Web MIDI envelopes, envelope readback, PD, detune, eight waveform\nfamilies, hosted CZ patch import, USB MIDI device/host operation, and optional\nTuring MIDI output.",
                 "",
                 "https://github.com/TomWhitwell/Workshop_Computer/tree/main/releases/84_CosmikC1zzl3",
                 {
@@ -4407,7 +4203,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                         { "any", "", "", "Ext Turing\nClock", "External Turing clock in switch-up mode" },
                     },
                     {
-                        { "any", "", "", "Envelope\nTrig", "Triggers selected envelope and oscillator sync in synth mode when preset is\nactive" },
+                        { "any", "", "", "Envelope\nTrig", "Triggers selected envelope and oscillator sync in synth mode; held gates loop\nsupported envelopes and gate-off lets them complete" },
                     },
                 },
                 {
@@ -4457,7 +4253,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Workshop Computer Card",
                 "Music Thing Modular",
                 "",
-                "Hardware-tested acid bass synthesiser with selectable saw or square oscillator, switchable 18 or 24 dB diode-style filtering, accent and glide, distortion, USB MIDI device/host operation, and a persistent editable sequencer.",
+                "Performance-focused acid voice with diode filtering, distortion, MIDI, and a persistent sequencer",
                 "",
                 "https://github.com/TomWhitwell/Workshop_Computer/tree/main/releases/87_fr330hfr33",
                 {
@@ -4527,7 +4323,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Workshop Computer Card",
                 "Kenny Shen",
                 "",
-                "Pantograph lets you trace a performance on the X and Y knobs (e.g. oscillator pitch + filter\ncutoff), record it, then loop it back out the two CV outputs at variable speeds.\n\nSwitch UP auditions live; hold DOWN to record (monitored, so you hear it as you play);\nrelease to MIDDLE and it loops exactly that length. The Main\nknob sets playback speed: centre = freeze, left = reverse, right = faster.\n\nPatch a gate into PULSE IN 1 and MIDDLE becomes a triggered enveloped; unpatched it free-loops.\nPULSE OUT 1 fires a trigger at the end of a recording.\nPULSE OUT 2 runs a gate from the shape of the recording.",
+                "Pantograph lets you trace a performance on the X and Y knobs (e.g. oscillator pitch + filter\ncutoff), record it, then loop it back out the two CV outputs at variable speeds.\n\nSwitch UP auditions live; hold DOWN to record (monitored, so you hear it as you play);\nrelease to MIDDLE and it loops exactly that length. The Main\nknob sets playback speed: centre = freeze, left = reverse, right = faster.\n\nPatch a gate into PULSE IN 1 and MIDDLE becomes a triggered envelope; unpatched it free-loops.\nPULSE OUT 1 fires a trigger at the end of a recording.\nPULSE OUT 2 runs a gate from the shape of the recording.",
                 "",
                 "https://github.com/TomWhitwell/Workshop_Computer/tree/main/releases/90_Pantograph",
                 {
@@ -4867,6 +4663,352 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                     },
                     {
                         { "any", "", "", "Parameter Y", "Tertiary assignable knob (knob :y)" },
+                    },
+                },
+                {
+                    "Z",
+                    { "Up", "Switch position Up" },
+                    { "Middle", "Switch position Middle" },
+                    { "Down", "Switch position Down" }
+                },
+                false
+            }
+        },
+        {
+            "ca_sequencer",
+            {
+                "ca_sequencer",
+                "Cellular Automata Sequencer",
+                "Workshop Computer Card",
+                "Ainews",
+                "",
+                "16-cell gate and quantized CV melody generator inspired by NLC Cellular Automata, using CA rules 90 & 150 on a 4x4 grid",
+                "MIT",
+                "https://github.com/TomWhitwell/Workshop_Computer/tree/main/releases/19_CA_Sequencer",
+                {
+                    {
+                        { "any", "", "", "Audio 1 Input", "Audio input 1" },
+                    },
+                    {
+                        { "any", "", "", "Audio 2 Input", "Audio input 2" },
+                    },
+                    {
+                        { "any", "", "", "CV 1 Input", "CV input 1" },
+                    },
+                    {
+                        { "any", "", "", "CV 2 Input", "CV input 2" },
+                    },
+                    {
+                        { "any", "", "", "Pulse 1 Input", "Pulse input 1" },
+                    },
+                    {
+                        { "any", "", "", "Pulse 2 Input", "Pulse input 2" },
+                    },
+                },
+                {
+                    {
+                        { "any", "", "", "Audio 1 Output", "Audio output 1" },
+                    },
+                    {
+                        { "any", "", "", "Audio 2 Output", "Audio output 2" },
+                    },
+                    {
+                        { "any", "", "", "CV 1 Output", "CV output 1" },
+                    },
+                    {
+                        { "any", "", "", "CV 2 Output", "CV output 2" },
+                    },
+                    {
+                        { "any", "", "", "Pulse 1 Output", "Pulse output 1" },
+                    },
+                    {
+                        { "any", "", "", "Pulse 2 Output", "Pulse output 2" },
+                    },
+                },
+                {
+                    {
+                    },
+                    {
+                    },
+                    {
+                    },
+                },
+                {
+                    "Z",
+                    { "Up", "Switch position Up" },
+                    { "Middle", "Switch position Middle" },
+                    { "Down", "Switch position Down" }
+                },
+                false
+            }
+        },
+        {
+            "fragments",
+            {
+                "fragments",
+                "Fragments",
+                "Workshop Computer Card",
+                "Max Harnishfeger",
+                "web",
+                "Six-slot audio recorder and clocked fragment sequencer with browser librarian, MIDI pitch control, random CV outputs, and an alternate long-sample variation mode.",
+                "",
+                "https://github.com/TomWhitwell/Workshop_Computer/tree/main/releases/67_Fragments",
+                {
+                    {
+                        { "any", "", "", "Audio 1 Input", "Audio input 1" },
+                    },
+                    {
+                        { "any", "", "", "Audio 2 Input", "Audio input 2" },
+                    },
+                    {
+                        { "any", "", "", "CV 1 Input", "CV input 1" },
+                    },
+                    {
+                        { "any", "", "", "CV 2 Input", "CV input 2" },
+                    },
+                    {
+                        { "any", "", "", "Pulse 1 Input", "Pulse input 1" },
+                    },
+                    {
+                        { "any", "", "", "Pulse 2 Input", "Pulse input 2" },
+                    },
+                },
+                {
+                    {
+                        { "any", "", "", "Audio 1 Output", "Audio output 1" },
+                    },
+                    {
+                        { "any", "", "", "Audio 2 Output", "Audio output 2" },
+                    },
+                    {
+                        { "any", "", "", "CV 1 Output", "CV output 1" },
+                    },
+                    {
+                        { "any", "", "", "CV 2 Output", "CV output 2" },
+                    },
+                    {
+                        { "any", "", "", "Pulse 1 Output", "Pulse output 1" },
+                    },
+                    {
+                        { "any", "", "", "Pulse 2 Output", "Pulse output 2" },
+                    },
+                },
+                {
+                    {
+                    },
+                    {
+                    },
+                    {
+                    },
+                },
+                {
+                    "Z",
+                    { "Up", "Switch position Up" },
+                    { "Middle", "Switch position Middle" },
+                    { "Down", "Switch position Down" }
+                },
+                false
+            }
+        },
+        {
+            "turing_clouds",
+            {
+                "turing_clouds",
+                "Turing Clouds",
+                "Workshop Computer Card",
+                "Ainews",
+                "",
+                "Turing Machine-driven granular texture generator and rhythmic delay for the Workshop Computer",
+                "MIT",
+                "https://github.com/TomWhitwell/Workshop_Computer/tree/main/releases/75_Turing_Clouds",
+                {
+                    {
+                        { "any", "", "", "Audio 1 Input", "Audio input 1" },
+                    },
+                    {
+                        { "any", "", "", "Audio 2 Input", "Audio input 2" },
+                    },
+                    {
+                        { "any", "", "", "CV 1 Input", "CV input 1" },
+                    },
+                    {
+                        { "any", "", "", "CV 2 Input", "CV input 2" },
+                    },
+                    {
+                        { "any", "", "", "Pulse 1 Input", "Pulse input 1" },
+                    },
+                    {
+                        { "any", "", "", "Pulse 2 Input", "Pulse input 2" },
+                    },
+                },
+                {
+                    {
+                        { "any", "", "", "Audio 1 Output", "Audio output 1" },
+                    },
+                    {
+                        { "any", "", "", "Audio 2 Output", "Audio output 2" },
+                    },
+                    {
+                        { "any", "", "", "CV 1 Output", "CV output 1" },
+                    },
+                    {
+                        { "any", "", "", "CV 2 Output", "CV output 2" },
+                    },
+                    {
+                        { "any", "", "", "Pulse 1 Output", "Pulse output 1" },
+                    },
+                    {
+                        { "any", "", "", "Pulse 2 Output", "Pulse output 2" },
+                    },
+                },
+                {
+                    {
+                    },
+                    {
+                    },
+                    {
+                    },
+                },
+                {
+                    "Z",
+                    { "Up", "Switch position Up" },
+                    { "Middle", "Switch position Middle" },
+                    { "Down", "Switch position Down" }
+                },
+                false
+            }
+        },
+        {
+            "alloy",
+            {
+                "alloy",
+                "Alloy",
+                "Workshop Computer Card",
+                "Eric Gao",
+                "",
+                "Two audio inputs fused through 15 crossfaded cross-modulation algorithms -\nring mods, wavefolder, comparators, bitcrusher, frequency shifter, delay,\nbinaural doppler, and a 20-band vocoder - with a clocked Turing machine\ndriving pitch, CV, and gates underneath.",
+                "MIT",
+                "https://github.com/Ericxgao/Workshop_Computer/tree/eric/warps-port/releases/97_alloy",
+                {
+                    {
+                        { "any", "", "", "Carrier", "External carrier input" },
+                    },
+                    {
+                        { "any", "", "", "Modulator", "Modulator input" },
+                    },
+                    {
+                        { "any", "", "", "Algorithm CV", "Bipolar modulation added to the held Main value" },
+                    },
+                    {
+                        { "any", "", "", "Timbre CV", "Bipolar modulation added to the held X value" },
+                    },
+                    {
+                        { "any", "", "", "Clock", "External Turing clock; overrides the internal clock" },
+                    },
+                    {
+                        { "any", "", "", "Reset", "Turing reset on rising edge" },
+                    },
+                },
+                {
+                    {
+                        { "any", "", "", "Main", "Cross-modulated output" },
+                    },
+                    {
+                        { "any", "", "", "Aux / Right", "Dry sum; doppler right channel, shifter opposite sideband, or bitcrushed dry mix in those zones" },
+                    },
+                    {
+                        { "any", "", "", "Turing Pitch", "C-minor-pentatonic quantized pitch" },
+                    },
+                    {
+                        { "any", "", "", "Turing CV", "Bipolar stepped modulation" },
+                    },
+                    {
+                        { "any", "", "", "Turing Gate A", "First register bit gate" },
+                    },
+                    {
+                        { "any", "", "", "Turing Gate B", "Length-aware second register bit gate" },
+                    },
+                },
+                {
+                    {
+                    },
+                    {
+                    },
+                    {
+                    },
+                },
+                {
+                    "Z",
+                    { "Up", "Switch position Up" },
+                    { "Middle", "Switch position Middle" },
+                    { "Down", "Switch position Down" }
+                },
+                false
+            }
+        },
+        {
+            "sense_of_space",
+            {
+                "sense_of_space",
+                "433 Sense of Space",
+                "Workshop Computer Card",
+                "Music Thing Modular / AI-assisted",
+                "",
+                "433 Sense of Space is supplied as 2 MB and 16 MB builds. The 2 MB build uses a\ncompact 10 kHz stereo 8-bit ambience asset, while the 16 MB build uses a cleaner\n24 kHz stereo 16-bit ambience asset.\nSwitch Up stops and arms the performance, Switch Middle starts three 91 second\nloops sourced from 1:30-3:01 of the BBC recording, and the left column LEDs count\ndown from three loops to zero. Switch Down or Pulse In 1 triggers a short\nchair/stool creak one-shot representing the musician shifting in their seat.\nPulse In 2 restarts the full performance from the beginning.",
+                "Mixed - source code/reverb components follow their original project licences; embedded BBC Sound Effects audio is subject to BBC Sound Effects Archive licensing",
+                "https://github.com/TomWhitwell/Workshop_Computer/tree/main/releases/433_sense_of_space",
+                {
+                    {
+                        { "any", "", "", "Audio 1 Input", "Audio input 1" },
+                    },
+                    {
+                        { "any", "", "", "Audio 2 Input", "Audio input 2" },
+                    },
+                    {
+                        { "any", "", "", "CV 1 Input", "CV input 1" },
+                    },
+                    {
+                        { "any", "", "", "CV 2 Input", "CV input 2" },
+                    },
+                    {
+                        { "any", "", "", "Pulse 1 Input", "Pulse input 1" },
+                    },
+                    {
+                        { "any", "", "", "Pulse 2 Input", "Pulse input 2" },
+                    },
+                },
+                {
+                    {
+                        { "any", "", "", "Left", "Left stereo output" },
+                    },
+                    {
+                        { "any", "", "", "Right", "Right stereo output" },
+                    },
+                    {
+                        { "any", "", "", "CV 1 Output", "CV output 1" },
+                    },
+                    {
+                        { "any", "", "", "CV 2 Output", "CV output 2" },
+                    },
+                    {
+                        { "any", "", "", "Pulse 1 Output", "Pulse output 1" },
+                    },
+                    {
+                        { "any", "", "", "Pulse 2 Output", "Pulse output 2" },
+                    },
+                },
+                {
+                    {
+                        { "any", "", "", "Restlessness", "Adds occasional quieter automatic chair/stool creaks" },
+                        { "down", "momentary", "", "Seat Creak", "Trigger a short chair/stool creak one-shot" },
+                        { "up", "", "", "Stop / Arm", "Stop playback, reset to the beginning, and light all three countdown LEDs" },
+                        { "middle", "", "", "Start", "Start a three-loop 4'33\" performance from the beginning" },
+                    },
+                    {
+                        { "any", "", "", "Space", "Reverb character, from small room to a restrained cathedral-like hall" },
+                    },
+                    {
+                        { "any", "", "", "Amount", "Dry/wet reverb amount" },
                     },
                 },
                 {

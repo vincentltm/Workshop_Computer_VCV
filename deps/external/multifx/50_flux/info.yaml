@@ -4,3 +4,4 @@ Language: C++ (RP2040 SDK)
 Creator: WorkshopSystem
 Version: 1.0
 Status: Release
+license: GPL-3.0

@@ -929,6 +929,15 @@ struct pico_unique_board_id_t {
 inline void pico_get_unique_board_id(pico_unique_board_id_t* id_out) {
     memset(id_out->id, 0, PICO_UNIQUE_BOARD_ID_SIZE_BYTES);
 }
+#ifndef SIO_IRQ_PROC0
+#define SIO_IRQ_PROC0 0
+#endif
+inline void irq_set_priority(unsigned int, unsigned int) {}
+inline void flash_safe_execute_core_init() {}
+template<typename F, typename... Args>
+inline void flash_safe_execute(F&& f, Args&&... args) { f(std::forward<Args>(args)...); }
+inline void __mem_fence_release() { std::atomic_thread_fence(std::memory_order_release); }
+inline void __mem_fence_acquire() { std::atomic_thread_fence(std::memory_order_acquire); }
 
 // ──────────────────────────────────────────────────────────────────────────────
 // DMA (dma_hw macro already defined via t_instance->dma_hw above)
@@ -1065,7 +1074,9 @@ inline void tight_loop_contents() {
     std::this_thread::sleep_for(std::chrono::microseconds(10));
 }
 
-inline bool tuh_midi_packet_read(uint8_t, uint8_t*) { return false; }
+extern "C" {
+    bool tuh_midi_packet_read(uint8_t, uint8_t*);
+}
 
 struct watchdog_hw_t {
     uint32_t scratch[8];

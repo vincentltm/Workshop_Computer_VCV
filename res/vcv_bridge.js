@@ -45,8 +45,8 @@
     };
     
     const activeName = CARD_MIDI_NAMES[cardId] || "Workshop Computer";
-    const deviceName = `${activeName} Input`;
-    const deviceNameOut = `${activeName} Output`;
+    const deviceName = `MTMComputer ${activeName} Input`;
+    const deviceNameOut = `MTMComputer ${activeName} Output`;
 
     const mockMidiInput = {
         name: deviceName,
