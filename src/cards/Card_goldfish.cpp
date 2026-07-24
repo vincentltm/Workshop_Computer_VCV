@@ -66,7 +66,7 @@ namespace Card_Goldfish {
 /* stripped ComputerCard include */
 #include "quantiser.h"
 #include "divider.h"
-#include "goldfish_stream.h"
+
 #include "goldfish_debug.h"
 /* stripped pico include */
 /* stripped hardware include */
