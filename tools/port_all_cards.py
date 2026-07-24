@@ -1327,15 +1327,6 @@ def main():
         lib_list = " ".join([f"res/cards/libcard_{cid}.$(CARD_LIB_EXT)" for cid in card_data.keys()])
         f.write(f"CARD_LIBS := {lib_list}\n\n")
 
-        # Collect all unique include flags across all cards so CardRegistry.cpp has full include access
-        all_include_flags = []
-        for cid, data in card_data.items():
-            for flag in data["flags"]:
-                if flag not in all_include_flags:
-                    all_include_flags.append(flag)
-        flags_all_str = " ".join([f'"{flag}"' for flag in all_include_flags])
-        f.write(f"FLAGS += {flags_all_str}\n\n")
-        
         # Compile targets
         for cid, data in card_data.items():
             srcs = " ".join(data["sources"])
