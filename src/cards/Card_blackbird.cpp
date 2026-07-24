@@ -1707,7 +1707,7 @@ public:
         // Load only essential libraries (sequins before public!)
         load_lib("sequins.lua", "sequins", sequins, sequins_len);
         load_lib("public.lua", "public", public_lua, public_len);
-        load_lib("clock.lua", "clock", clock, clock_len);
+        load_lib("clock.lua", "clock", crow_lua_clock_data, crow_lua_clock_data_len);
         
         // Optional libraries - comment these out to save memory:
         // load_lib("calibrate.lua", "cal", calibrate, calibrate_len);

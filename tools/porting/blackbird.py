@@ -95,6 +95,8 @@ def post_process(content, src_rel):
         content = content.replace('extern "C" {\nextern const unsigned char clock[];\nextern const unsigned int clock_len;\n}', 'extern const unsigned char crow_lua_clock_data[];\nextern const unsigned int crow_lua_clock_data_len;')
         content = content.replace('extern const unsigned char clock[];', 'extern const unsigned char crow_lua_clock_data[];')
         content = content.replace('extern const unsigned int clock_len;', 'extern const unsigned int crow_lua_clock_data_len;')
+        content = content.replace('load_lib("clock.lua", "clock", clock,', 'load_lib("clock.lua", "clock", crow_lua_clock_data,')
+        content = content.replace('clock_len', 'crow_lua_clock_data_len')
         content = content.replace('extern "C" {\nstatic volatile uint32_t g_hardfault_stack[8];', 'static volatile uint32_t g_hardfault_stack[8];')
         content = content.replace('static volatile uint32_t g_hardfault_icsr = 0;\n}', 'static volatile uint32_t g_hardfault_icsr = 0;')
         content = content.replace('extern "C" {\n    int l_crowlib_crow_reset(lua_State* L);\n}', '    int l_crowlib_crow_reset(lua_State* L);')

@@ -1184,10 +1184,7 @@ def main():
             
         # Now process separate_sources (if any)
         for sep_src in separate_sources:
-            is_c_source = sep_src.endswith(".c")
-            # .c sources get a .c wrapper (compiled by CC as C99); .cpp sources get a .cpp wrapper (compiled by CXX)
-            wrapper_ext = ".c" if is_c_source else ".cpp"
-            sep_filename = f"Card_{card['id']}_" + sep_src.replace("/", "_").replace(".", "_") + wrapper_ext
+            sep_filename = f"Card_{card['id']}_" + sep_src.replace("/", "_").replace(".", "_") + ".cpp"
             sep_path = os.path.join(CARDS_SRC_DIR, sep_filename)
             sep_path_abs = get_source_path(sep_src)
             
@@ -1209,6 +1206,8 @@ def main():
                 src_content = src_content.replace('__asm volatile("dmb");', 'asm volatile("" ::: "memory");')
                 src_content = src_content.replace('const unsigned char clock[', 'const unsigned char crow_lua_clock_data[')
                 src_content = src_content.replace('extern const unsigned char clock[', 'extern const unsigned char crow_lua_clock_data[')
+                src_content = src_content.replace('extern const unsigned int clock_len;', 'extern const unsigned int crow_lua_clock_data_len;')
+                src_content = src_content.replace('clock_len', 'crow_lua_clock_data_len')
                 src_content = src_content.replace('"lua_clock"     , clock', '"lua_clock"     , crow_lua_clock_data')
                 src_content = src_content.replace('"lua_clock"   , clock', '"lua_clock"   , crow_lua_clock_data')
                 src_content = src_content.replace('"lua_clock", clock', '"lua_clock", crow_lua_clock_data')
@@ -1219,8 +1218,8 @@ def main():
                 src_content = re.sub(r'#include\s+"hardware/[^"]+"', '/* stripped hardware include */', src_content)
                 src_content = re.sub(r'#include\s+"bsp/[^"]+"', '/* stripped bsp include */', src_content)
                 src_content = re.sub(r'#include\s+"usb_midi_host\.h"', '/* stripped usb_midi_host include */', src_content)
-                src_content = re.sub(r'#include\s+"ComputerCard.h"', '/* stripped ComputerCard include */', src_content)
-                src_content = re.sub(r'#include\s+"ComputerCard/ComputerCard.h"', '/* stripped ComputerCard include */', src_content)
+                src_content = re.sub(r'#include\s+"ComputerCard\.h"', '/* stripped ComputerCard include */', src_content)
+                src_content = re.sub(r'#include\s+"ComputerCard/ComputerCard\.h"', '/* stripped ComputerCard include */', src_content)
                 src_content = re.sub(r'#include\s+"tusb\.h"', '/* stripped tusb include */', src_content)
                 src_content = re.sub(r'#include\s+<tusb\.h>', '/* stripped tusb include */', src_content)
                 src_content = re.sub(r'#include\s+"tusb_config\.h"', '/* stripped tusb_config include */', src_content)
@@ -1229,65 +1228,41 @@ def main():
                 src_content = run_card_post_process(card["id"], src_content, sep_src)
                 
                 with open(sep_path, 'w') as sep_f:
-                    if is_c_source:
-                        # Pure C wrapper: no C++ headers, compiled with $(CC) -std=gnu99
-                        # This avoids GCC C++ "non-trivial designated initializers not supported"
-                        # on old Ubuntu16.04 cross-compiler used by CI.
-                        # Note: pico_mocks_c.h is the C-compatible subset of pico_mocks.h.
-                        sep_f.write("/* Automatically generated C wrapper (compiled as C99, not C++) */\n")
-                        sep_f.write("#include <stdint.h>\n")
-                        sep_f.write("#include <stddef.h>\n")
-                        sep_f.write("#include <stdlib.h>\n")
-                        sep_f.write("#include <math.h>\n")
-                        sep_f.write("#include <stdio.h>\n")
-                        sep_f.write("#include <string.h>\n")
-                        sep_f.write("#include <stdarg.h>\n")
-                        sep_f.write("#include <limits.h>\n")
-                        sep_f.write("#include <float.h>\n")
-                        sep_f.write("#include <setjmp.h>\n")
-                        sep_f.write("#include <time.h>\n")
-                        sep_f.write("#include <errno.h>\n")
-                        sep_f.write("#include <locale.h>\n")
-                        sep_f.write("#include <inttypes.h>\n")
-                        sep_f.write("#include \"pico_mocks_c.h\"\n\n")
-                        sep_f.write(src_content)
-                        sep_f.write("\n")
-                    else:
-                        # C++ wrapper: full C++ headers
-                        sep_f.write("// Automatically generated separate compilation wrapper\n")
-                        sep_f.write("#include <stdint.h>\n")
-                        sep_f.write("#include <stddef.h>\n")
-                        sep_f.write("#include <stdlib.h>\n")
-                        sep_f.write("#include <math.h>\n")
-                        sep_f.write("#include <algorithm>\n")
-                        sep_f.write("#include <vector>\n")
-                        sep_f.write("#include <string>\n")
-                        sep_f.write("#include <atomic>\n")
-                        sep_f.write("#include <thread>\n")
-                        sep_f.write("#include <stdio.h>\n")
-                        sep_f.write("#include <string.h>\n")
-                        sep_f.write("#include <cstring>\n")
-                        sep_f.write("#include <stdarg.h>\n")
-                        sep_f.write("#include <limits.h>\n")
-                        sep_f.write("#include <float.h>\n")
-                        sep_f.write("#include <setjmp.h>\n")
-                        sep_f.write("#include <time.h>\n")
-                        sep_f.write("#include <errno.h>\n")
-                        sep_f.write("#include <locale.h>\n")
-                        sep_f.write("#include <inttypes.h>\n")
-                        sep_f.write("#include <cinttypes>\n")
-                        sep_f.write("#include \"pico_mocks.h\"\n")
-                        sep_f.write("#include \"tusb.h\"\n")
-                        sep_f.write("#define while(...) while((__VA_ARGS__) && !g_cancellation_requested.load(std::memory_order_relaxed))\n\n")
-                        sep_f.write("#include \"ComputerCard.h\"\n\n")
-                        sep_f.write(f"namespace {card['ns']} {{\n")
-                        if card["id"] == "flux":
-                            sep_f.write("    extern const int16_t exptable_impl[];\n")
-                            sep_f.write("    extern const int16_t logtable_impl[];\n")
-                        sep_f.write(src_content)
-                        sep_f.write(f"\n}} // namespace {card['ns']}\n")
-                    
-                sources_to_compile.append(os.path.join("src", "cards", sep_filename))
+                    # C++ wrapper: full C++ headers wrapped in card namespace
+                    sep_f.write("// Automatically generated separate compilation wrapper\n")
+                    sep_f.write("#include <stdint.h>\n")
+                    sep_f.write("#include <stddef.h>\n")
+                    sep_f.write("#include <stdlib.h>\n")
+                    sep_f.write("#include <math.h>\n")
+                    sep_f.write("#include <algorithm>\n")
+                    sep_f.write("#include <vector>\n")
+                    sep_f.write("#include <string>\n")
+                    sep_f.write("#include <atomic>\n")
+                    sep_f.write("#include <thread>\n")
+                    sep_f.write("#include <stdio.h>\n")
+                    sep_f.write("#include <string.h>\n")
+                    sep_f.write("#include <cstring>\n")
+                    sep_f.write("#include <stdarg.h>\n")
+                    sep_f.write("#include <limits.h>\n")
+                    sep_f.write("#include <float.h>\n")
+                    sep_f.write("#include <setjmp.h>\n")
+                    sep_f.write("#include <time.h>\n")
+                    sep_f.write("#include <errno.h>\n")
+                    sep_f.write("#include <locale.h>\n")
+                    sep_f.write("#include <inttypes.h>\n")
+                    sep_f.write("#include <cinttypes>\n")
+                    sep_f.write("#include \"pico_mocks.h\"\n")
+                    sep_f.write("#include \"tusb.h\"\n")
+                    sep_f.write("#define while(...) while((__VA_ARGS__) && !g_cancellation_requested.load(std::memory_order_relaxed))\n\n")
+                    sep_f.write("#include \"ComputerCard.h\"\n\n")
+                    sep_f.write(f"namespace {card['ns']} {{\n")
+                    if card["id"] == "flux":
+                        sep_f.write("    extern const int16_t exptable_impl[];\n")
+                        sep_f.write("    extern const int16_t logtable_impl[];\n")
+                    sep_f.write(src_content)
+                    sep_f.write(f"\n}} // namespace {card['ns']}\n")
+                
+            sources_to_compile.append(os.path.join("src", "cards", sep_filename))
                 
         # Store for Makefile.cards generation
         card_data[card["id"]] = {

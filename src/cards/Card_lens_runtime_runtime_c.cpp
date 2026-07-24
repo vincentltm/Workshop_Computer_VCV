@@ -1,10 +1,16 @@
-/* Automatically generated C wrapper (compiled as C99, not C++) */
+// Automatically generated separate compilation wrapper
 #include <stdint.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <math.h>
+#include <algorithm>
+#include <vector>
+#include <string>
+#include <atomic>
+#include <thread>
 #include <stdio.h>
 #include <string.h>
+#include <cstring>
 #include <stdarg.h>
 #include <limits.h>
 #include <float.h>
@@ -13,8 +19,14 @@
 #include <errno.h>
 #include <locale.h>
 #include <inttypes.h>
-#include "pico_mocks_c.h"
+#include <cinttypes>
+#include "pico_mocks.h"
+#include "tusb.h"
+#define while(...) while((__VA_ARGS__) && !g_cancellation_requested.load(std::memory_order_relaxed))
 
+#include "ComputerCard.h"
+
+namespace Card_Lens {
 /*
  * runtime.c: merged audio runtime.
  *
@@ -3541,87 +3553,89 @@ void runtime_slot_wire_fn(struct Slot* s) {
 /* Per-kernel NodeState size = sizeof the struct the kernel casts to. The C struct
  * is the single source of truth for state layout. Kernels with no struct (pure
  * value ops) default to 4 (value). */
-static const uint16_t KSTATE_BYTES[KID_COUNT] = {
-    [KID_OP_AUDIO_IN]                     = sizeof(struct LeafState),
-    [KID_OP_AVERAGE]                      = sizeof(struct OnePoleState),
-    [KID_OP_CHANCE]                       = sizeof(struct ChanceState),
-    [KID_OP_COUNTER]                      = sizeof(struct CounterState),
-    [KID_OP_CRUSH]                        = sizeof(struct CrushState),
-    [KID_OP_CV_IN]                        = sizeof(struct LeafState),
-    [KID_OP_DEGREE]                       = sizeof(struct DegreeState),
-    [KID_OP_DETENT]                       = sizeof(struct LeafState),
-    [KID_OP_DIFF]                         = sizeof(struct DiffState),
-    [KID_OP_EDGE]                         = sizeof(struct EdgeState),
-    [KID_OP_ENVELOPE]                     = sizeof(struct EnvelopeState),
-    [KID_OP_ENVFOLLOW]                    = sizeof(struct EnvFollowState),
-    [KID_OP_EUCLID]                       = sizeof(struct EuclidState),
-    [KID_OP_EVERY]                        = sizeof(struct EveryState),
-    [KID_OP_FALL]                         = sizeof(struct FallState),
-    [KID_OP_FOLLOW]                       = sizeof(struct FollowState),
-    [KID_OP_GATE]                         = sizeof(struct GateState),
-    [KID_OP_GATES]                        = sizeof(struct GatesState),
-    [KID_OP_HAT]                          = sizeof(struct HatState),
-    [KID_OP_HITS]                         = sizeof(struct HitsState),
-    [KID_OP_HOLD]                         = sizeof(struct HoldState),
-    [KID_OP_PICKUP]                       = sizeof(struct PickupState),
-    [KID_OP_MIDI_CC]                      = sizeof(struct LeafState),
-    [KID_OP_LATEST]                       = sizeof(struct LatestState),
-    [KID_OP_CHORUS]                       = sizeof(struct ChorusState),
-    [KID_OP_FLANGER]                      = sizeof(struct ChorusState),
-    [KID_OP_COMPRESSOR]                   = sizeof(struct CompressorState),
-    [KID_OP_REVERB]                       = sizeof(struct ReverbState),
-    [KID_OP_ECHO]                         = sizeof(struct EchoState),
-    [KID_OP_WAVETABLE]                    = sizeof(WavetableState),
-    [KID_OP_KICK]                         = sizeof(struct KickState),
-    [KID_OP_KNOB]                         = sizeof(struct LeafState),
-    [KID_OP_MIDI]                         = sizeof(struct LeafState),
-    [KID_OP_LOOKUP]                       = sizeof(struct LookupState),
-    [KID_OP_LPF]                          = sizeof(struct OnePoleState),
-    [KID_OP_LPG]                          = sizeof(struct LpgState),
-    [KID_OP_NOISE]                        = sizeof(struct NoiseState),
-    [KID_OP_ONSETS]                       = sizeof(struct OnsetsState),
-    [KID_OP_PHASOR]                       = sizeof(struct PhasorState),
-    [KID_OP_PITCH]                        = sizeof(struct PitchState),
-    [KID_OP_PULSE_IN]                     = sizeof(struct LeafState),
-    [KID_OP_RANDOM]                       = sizeof(struct RandomState),
-    [KID_OP_RECORDHEAD_GATED]             = sizeof(struct RecordheadGatedState),
-    [KID_OP_RECORDHEAD_LEN_CAPPED]        = sizeof(struct RecordheadLenCappedState),
-    [KID_OP_RECORDHEAD_LEN_CAPPED_GATED]  = sizeof(struct RecordheadLenCappedGatedState),
-    [KID_OP_RECORDHEAD_SEEK]              = sizeof(struct RecordheadSeekState),
-    [KID_OP_RECORDHEAD_PER_CELL]          = sizeof(struct RecordheadPerCellState),
-    [KID_OP_RECORDHEAD_PER_SAMPLE]        = sizeof(struct RecordheadPerSampleState),
-    [KID_OP_SAW]                          = sizeof(struct SawState),
-    [KID_OP_SCHMITT]                      = sizeof(struct SchmittState),
-    [KID_OP_SEEK]                         = sizeof(struct SeekState),
-    [KID_OP_SINE]                         = sizeof(struct SineState),
-    [KID_OP_SLEW]                         = sizeof(struct OnePoleState),
-    [KID_OP_SNARE]                        = sizeof(struct SnareState),
-    [KID_OP_SQUARE]                       = sizeof(struct SquareState),
-    [KID_OP_STEP]                         = sizeof(struct StepState),
-    [KID_OP_SWITCH]                       = sizeof(struct LeafState),
-    [KID_OP_TAP]                          = sizeof(struct TapState),
-    [KID_OP_THRU]                         = sizeof(struct ThruState),
-    [KID_OP_TOGGLE]                       = sizeof(struct ToggleState),
-    [KID_OP_TRIANGLE]                     = sizeof(struct TriangleState),
-    [KID_OP_TURNS]                        = sizeof(struct TurnsState),
-    [KID_OP_VCF]                          = sizeof(struct VcfState),
-    [KID_OP_WALK]                         = sizeof(struct WalkState),
-    [KID_OP_WAVE]                         = sizeof(struct WaveState),
-    [KID_OP_WAVE_DRUMRACK]                = sizeof(struct WaveDrumrackState),
-    [KID_OP_WAVEFOLD]                     = sizeof(struct WavefoldState),
-    [KID_OP_Z1]                           = sizeof(struct Z1State),
-    [KID_OP_MIDI_NOTE_OUT]                = sizeof(MidiNoteOutState),
-    [KID_OP_MIDI_CC_OUT]                  = sizeof(MidiCcOutState),
-    [KID_OP_MIDI_CLOCK_OUT]               = sizeof(MidiClockOutState),
-    [KID_OP_ADSR]                         = sizeof(struct AdsrState),
-    [KID_OP_DXEG]                         = sizeof(struct DxEgState),
-    [KID_OP_PLUCK]                        = sizeof(struct PluckState),
-    [KID_OP_SVF]                          = sizeof(struct SvfState),
-    [KID_OP_SHAPE]                        = sizeof(struct ShapeState),
-    [KID_OP_DX]                           = sizeof(struct FmState),
+static uint16_t KSTATE_BYTES[KID_COUNT];
+static void init_kstate_bytes() {
+    KSTATE_BYTES[KID_OP_AUDIO_IN] = sizeof(struct LeafState);
+    KSTATE_BYTES[KID_OP_AVERAGE] = sizeof(struct OnePoleState);
+    KSTATE_BYTES[KID_OP_CHANCE] = sizeof(struct ChanceState);
+    KSTATE_BYTES[KID_OP_COUNTER] = sizeof(struct CounterState);
+    KSTATE_BYTES[KID_OP_CRUSH] = sizeof(struct CrushState);
+    KSTATE_BYTES[KID_OP_CV_IN] = sizeof(struct LeafState);
+    KSTATE_BYTES[KID_OP_DEGREE] = sizeof(struct DegreeState);
+    KSTATE_BYTES[KID_OP_DETENT] = sizeof(struct LeafState);
+    KSTATE_BYTES[KID_OP_DIFF] = sizeof(struct DiffState);
+    KSTATE_BYTES[KID_OP_EDGE] = sizeof(struct EdgeState);
+    KSTATE_BYTES[KID_OP_ENVELOPE] = sizeof(struct EnvelopeState);
+    KSTATE_BYTES[KID_OP_ENVFOLLOW] = sizeof(struct EnvFollowState);
+    KSTATE_BYTES[KID_OP_EUCLID] = sizeof(struct EuclidState);
+    KSTATE_BYTES[KID_OP_EVERY] = sizeof(struct EveryState);
+    KSTATE_BYTES[KID_OP_FALL] = sizeof(struct FallState);
+    KSTATE_BYTES[KID_OP_FOLLOW] = sizeof(struct FollowState);
+    KSTATE_BYTES[KID_OP_GATE] = sizeof(struct GateState);
+    KSTATE_BYTES[KID_OP_GATES] = sizeof(struct GatesState);
+    KSTATE_BYTES[KID_OP_HAT] = sizeof(struct HatState);
+    KSTATE_BYTES[KID_OP_HITS] = sizeof(struct HitsState);
+    KSTATE_BYTES[KID_OP_HOLD] = sizeof(struct HoldState);
+    KSTATE_BYTES[KID_OP_PICKUP] = sizeof(struct PickupState);
+    KSTATE_BYTES[KID_OP_MIDI_CC] = sizeof(struct LeafState);
+    KSTATE_BYTES[KID_OP_LATEST] = sizeof(struct LatestState);
+    KSTATE_BYTES[KID_OP_CHORUS] = sizeof(struct ChorusState);
+    KSTATE_BYTES[KID_OP_FLANGER] = sizeof(struct ChorusState);
+    KSTATE_BYTES[KID_OP_COMPRESSOR] = sizeof(struct CompressorState);
+    KSTATE_BYTES[KID_OP_REVERB] = sizeof(struct ReverbState);
+    KSTATE_BYTES[KID_OP_ECHO] = sizeof(struct EchoState);
+    KSTATE_BYTES[KID_OP_WAVETABLE] = sizeof(WavetableState);
+    KSTATE_BYTES[KID_OP_KICK] = sizeof(struct KickState);
+    KSTATE_BYTES[KID_OP_KNOB] = sizeof(struct LeafState);
+    KSTATE_BYTES[KID_OP_MIDI] = sizeof(struct LeafState);
+    KSTATE_BYTES[KID_OP_LOOKUP] = sizeof(struct LookupState);
+    KSTATE_BYTES[KID_OP_LPF] = sizeof(struct OnePoleState);
+    KSTATE_BYTES[KID_OP_LPG] = sizeof(struct LpgState);
+    KSTATE_BYTES[KID_OP_NOISE] = sizeof(struct NoiseState);
+    KSTATE_BYTES[KID_OP_ONSETS] = sizeof(struct OnsetsState);
+    KSTATE_BYTES[KID_OP_PHASOR] = sizeof(struct PhasorState);
+    KSTATE_BYTES[KID_OP_PITCH] = sizeof(struct PitchState);
+    KSTATE_BYTES[KID_OP_PULSE_IN] = sizeof(struct LeafState);
+    KSTATE_BYTES[KID_OP_RANDOM] = sizeof(struct RandomState);
+    KSTATE_BYTES[KID_OP_RECORDHEAD_GATED] = sizeof(struct RecordheadGatedState);
+    KSTATE_BYTES[KID_OP_RECORDHEAD_LEN_CAPPED] = sizeof(struct RecordheadLenCappedState);
+    KSTATE_BYTES[KID_OP_RECORDHEAD_LEN_CAPPED_GATED] = sizeof(struct RecordheadLenCappedGatedState);
+    KSTATE_BYTES[KID_OP_RECORDHEAD_SEEK] = sizeof(struct RecordheadSeekState);
+    KSTATE_BYTES[KID_OP_RECORDHEAD_PER_CELL] = sizeof(struct RecordheadPerCellState);
+    KSTATE_BYTES[KID_OP_RECORDHEAD_PER_SAMPLE] = sizeof(struct RecordheadPerSampleState);
+    KSTATE_BYTES[KID_OP_SAW] = sizeof(struct SawState);
+    KSTATE_BYTES[KID_OP_SCHMITT] = sizeof(struct SchmittState);
+    KSTATE_BYTES[KID_OP_SEEK] = sizeof(struct SeekState);
+    KSTATE_BYTES[KID_OP_SINE] = sizeof(struct SineState);
+    KSTATE_BYTES[KID_OP_SLEW] = sizeof(struct OnePoleState);
+    KSTATE_BYTES[KID_OP_SNARE] = sizeof(struct SnareState);
+    KSTATE_BYTES[KID_OP_SQUARE] = sizeof(struct SquareState);
+    KSTATE_BYTES[KID_OP_STEP] = sizeof(struct StepState);
+    KSTATE_BYTES[KID_OP_SWITCH] = sizeof(struct LeafState);
+    KSTATE_BYTES[KID_OP_TAP] = sizeof(struct TapState);
+    KSTATE_BYTES[KID_OP_THRU] = sizeof(struct ThruState);
+    KSTATE_BYTES[KID_OP_TOGGLE] = sizeof(struct ToggleState);
+    KSTATE_BYTES[KID_OP_TRIANGLE] = sizeof(struct TriangleState);
+    KSTATE_BYTES[KID_OP_TURNS] = sizeof(struct TurnsState);
+    KSTATE_BYTES[KID_OP_VCF] = sizeof(struct VcfState);
+    KSTATE_BYTES[KID_OP_WALK] = sizeof(struct WalkState);
+    KSTATE_BYTES[KID_OP_WAVE] = sizeof(struct WaveState);
+    KSTATE_BYTES[KID_OP_WAVE_DRUMRACK] = sizeof(struct WaveDrumrackState);
+    KSTATE_BYTES[KID_OP_WAVEFOLD] = sizeof(struct WavefoldState);
+    KSTATE_BYTES[KID_OP_Z1] = sizeof(struct Z1State);
+    KSTATE_BYTES[KID_OP_MIDI_NOTE_OUT] = sizeof(MidiNoteOutState);
+    KSTATE_BYTES[KID_OP_MIDI_CC_OUT] = sizeof(MidiCcOutState);
+    KSTATE_BYTES[KID_OP_MIDI_CLOCK_OUT] = sizeof(MidiClockOutState);
+    KSTATE_BYTES[KID_OP_ADSR] = sizeof(struct AdsrState);
+    KSTATE_BYTES[KID_OP_DXEG] = sizeof(struct DxEgState);
+    KSTATE_BYTES[KID_OP_PLUCK] = sizeof(struct PluckState);
+    KSTATE_BYTES[KID_OP_SVF] = sizeof(struct SvfState);
+    KSTATE_BYTES[KID_OP_SHAPE] = sizeof(struct ShapeState);
+    KSTATE_BYTES[KID_OP_DX] = sizeof(struct FmState);
 };
 
 uint32_t runtime_kernel_state_bytes(uint8_t kid) {
+    init_kstate_bytes();
     uint16_t b = (kid < KID_COUNT) ? KSTATE_BYTES[kid] : 0;
     return b ? b : 4u;   /* stateless: value only */
 }
@@ -3957,3 +3971,4 @@ void __not_in_flash_func(runtime_walk_core1)(struct LensRuntime* rt, uint32_t se
     for (struct Slot** p = rt->core1_slots; p < end; p++) step_slot(*p);
 }
 
+} // namespace Card_Lens
