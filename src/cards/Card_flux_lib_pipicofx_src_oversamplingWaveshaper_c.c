@@ -13,6 +13,7 @@
 #include <errno.h>
 #include <locale.h>
 #include <inttypes.h>
+#include "pico_mocks_c.h"
 
 #include "audio/oversamplingWaveshaper.h"
 #include "audio/secondOrderIirFilter.h"

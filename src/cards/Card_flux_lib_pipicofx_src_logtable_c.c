@@ -13,6 +13,7 @@
 #include <errno.h>
 #include <locale.h>
 #include <inttypes.h>
+#include "pico_mocks_c.h"
 
 #include "stdint.h"
 // logarithm table covering the range of 1/32768 up to 32767/32768 typicall expressed as fixed point 2byte (q15) integers as 32768 + 7256.64*log10(x) 

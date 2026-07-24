@@ -13,6 +13,7 @@
 #include <errno.h>
 #include <locale.h>
 #include <inttypes.h>
+#include "pico_mocks_c.h"
 
 #include "stdint.h"
 // exponential function table covering the range of 1/32768 up to 32767/32768 typically expressed as fixed point 2byte (q15) integers as 10^((x-32768)/7256.64) 

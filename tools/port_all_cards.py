@@ -1225,7 +1225,7 @@ def main():
                         # Pure C wrapper: no C++ headers, compiled with $(CC) -std=gnu99
                         # This avoids GCC C++ "non-trivial designated initializers not supported"
                         # on old Ubuntu16.04 cross-compiler used by CI.
-                        # Note: runtime.c defines __not_in_flash_func itself, no pico_mocks.h needed.
+                        # Note: pico_mocks_c.h is the C-compatible subset of pico_mocks.h.
                         sep_f.write("/* Automatically generated C wrapper (compiled as C99, not C++) */\n")
                         sep_f.write("#include <stdint.h>\n")
                         sep_f.write("#include <stddef.h>\n")
@@ -1240,7 +1240,8 @@ def main():
                         sep_f.write("#include <time.h>\n")
                         sep_f.write("#include <errno.h>\n")
                         sep_f.write("#include <locale.h>\n")
-                        sep_f.write("#include <inttypes.h>\n\n")
+                        sep_f.write("#include <inttypes.h>\n")
+                        sep_f.write("#include \"pico_mocks_c.h\"\n\n")
                         sep_f.write(src_content)
                         sep_f.write("\n")
                     else:
