@@ -202,7 +202,7 @@ CARD_WHITELIST = [
         "dir": "releases/11_goldfish",
         "ns": "Card_Goldfish",
         "num": "11",
-        "sources": ["main.cpp"]
+        "sources": ["main.cpp", "goldfish_stream.c"]
     },
     {
         "id": "bumpers",

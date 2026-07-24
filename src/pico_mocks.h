@@ -651,6 +651,7 @@ inline void busy_wait_us_32(uint32_t us) {
 #endif
 }
 inline void busy_wait_ms(uint32_t ms) { sleep_ms(ms); }
+inline void busy_wait_us(uint64_t us) { sleep_us(us); }
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Multicore API
@@ -931,6 +932,43 @@ inline void pico_get_unique_board_id(pico_unique_board_id_t* id_out) {
 }
 #ifndef SIO_IRQ_PROC0
 #define SIO_IRQ_PROC0 0
+#endif
+#ifndef SIO_IRQ_PROC1
+#define SIO_IRQ_PROC1 1
+#endif
+#ifndef _Static_assert
+#define _Static_assert(cond, msg) static_assert(cond, msg)
+#endif
+
+// Bootrom & SSI / IOQSPI Mocks
+#ifndef rom_table_code
+#define rom_table_code(c1, c2) ((uint16_t)(c1) | ((uint16_t)(c2) << 8))
+#endif
+inline void* rom_func_lookup(uint32_t) { return nullptr; }
+
+#ifndef IO_QSPI_GPIO_QSPI_SS_CTRL_OUTOVER_VALUE_HIGH
+#define IO_QSPI_GPIO_QSPI_SS_CTRL_OUTOVER_VALUE_HIGH 0
+#define IO_QSPI_GPIO_QSPI_SS_CTRL_OUTOVER_VALUE_LOW 0
+#define IO_QSPI_GPIO_QSPI_SS_CTRL_OUTOVER_LSB 0
+#define IO_QSPI_GPIO_QSPI_SS_CTRL_OUTOVER_BITS 0
+#endif
+
+#ifndef SSI_SR_TFNF_BITS
+#define SSI_SR_TFNF_BITS 1
+#define SSI_SR_RFNE_BITS 1
+#endif
+
+struct ssi_hw_t { uint32_t sr = 0; uint32_t dr0 = 0; };
+static ssi_hw_t mock_ssi_hw_inst;
+#ifndef ssi_hw
+#define ssi_hw (&mock_ssi_hw_inst)
+#endif
+
+struct ioqspi_hw_io_t { uint32_t ctrl = 0; };
+struct ioqspi_hw_t { ioqspi_hw_io_t io[2]; };
+static ioqspi_hw_t mock_ioqspi_hw_inst;
+#ifndef ioqspi_hw
+#define ioqspi_hw (&mock_ioqspi_hw_inst)
 #endif
 inline void irq_set_priority(unsigned int, unsigned int) {}
 inline void flash_safe_execute_core_init() {}
