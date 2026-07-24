@@ -39,6 +39,12 @@ static inline void sleep_ms(uint32_t ms) { (void)ms; }
 static inline void sleep_us(uint64_t us) { (void)us; }
 static inline uint32_t busy_wait_us_32(uint32_t us) { (void)us; return 0; }
 
+/* Spinlock stubs for host compilation */
+typedef uint32_t spin_lock_t;
+static inline spin_lock_t* spin_lock_init(unsigned int i) { (void)i; static spin_lock_t l; return &l; }
+static inline uint32_t spin_lock_blocking(spin_lock_t* lock) { (void)lock; return 0; }
+static inline void spin_unlock(spin_lock_t* lock, uint32_t num) { (void)lock; (void)num; }
+
 /* Time and absolute_time_t stubs */
 typedef uint64_t absolute_time_t;
 static inline absolute_time_t get_absolute_time(void) { return 0; }
