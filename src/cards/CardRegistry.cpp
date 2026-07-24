@@ -50,7 +50,7 @@ void register_all_cards() {
         "07",
         "Bouncing ball' style delay and trigger generators",
         "Chris Johnson",
-        true
+        false
     });
     g_card_registry.push_back({
         "bytebeat",
@@ -66,7 +66,7 @@ void register_all_cards() {
         "09",
         "Workshop Computer Card",
         "Music Thing Modular",
-        true
+        false
     });
     g_card_registry.push_back({
         "goldfish",
@@ -82,7 +82,7 @@ void register_all_cards() {
         "12",
         "AM radio transmitter / coupler",
         "Chris Johnson",
-        true
+        false
     });
     g_card_registry.push_back({
         "noisebox",
@@ -130,7 +130,7 @@ void register_all_cards() {
         "20",
         "Reverb effect, plus pulse/CV generators and MIDI-to-CV, configurable using web interface.",
         "Chris Johnson",
-        true
+        false
     });
     g_card_registry.push_back({
         "resonator",
@@ -154,7 +154,7 @@ void register_all_cards() {
         "23",
         "Workshop Computer Card",
         "Music Thing Modular",
-        true
+        false
     });
     g_card_registry.push_back({
         "crafted_volts",
@@ -242,7 +242,7 @@ void register_all_cards() {
         "35",
         "Dual Input Frequency Shifter for Feedback Experimentation",
         "Ben Regnier",
-        false
+        true
     });
     g_card_registry.push_back({
         "od",
@@ -386,7 +386,7 @@ void register_all_cards() {
         "60",
         "Dual generative Markov chain module — evolving melody (MarkoV) left side, rhythmic percussion patterns (MarkovPerc) right side, with internal synth voice",
         "Andy Jenkinson (uglifruit)",
-        true
+        false
     });
     g_card_registry.push_back({
         "voices_of_sid",
@@ -418,7 +418,7 @@ void register_all_cards() {
         "69",
         "Oscillograph stereo oscillator",
         "Ruiyang Wang",
-        true
+        false
     });
     g_card_registry.push_back({
         "degenerator",
@@ -466,7 +466,7 @@ void register_all_cards() {
         "81",
         "Dual vactrol-emulating low-pass gate (combined VCA + low-pass filter) with fast-attack/slow-decay 'plong', self-pinging percussion, and per-channel VCA/VCF/LPG modes.",
         "Jason Moore",
-        true
+        false
     });
     g_card_registry.push_back({
         "computer_grids",
@@ -482,7 +482,7 @@ void register_all_cards() {
         "83",
         "Dual oversampled wavefolder — triangle / sine / hard-clip folding with bias (even-harmonic) control and CV over fold depth, band-limited via 4x oversampling.",
         "Jason Moore",
-        true
+        false
     });
     g_card_registry.push_back({
         "cosmik_c1zzl3",
@@ -498,7 +498,7 @@ void register_all_cards() {
         "86",
         "Tesserae — Variable-voice (2-8) arpeggiated chord generator with 5 patterns, 10 scales, tap tempo, CV/audio transpose inputs, and dual CV + audio pitch outputs. Inspired by Laurie Spiegel's Music Mouse and Patchwork.",
         "MTM Community",
-        true
+        false
     });
     g_card_registry.push_back({
         "fr330hfr33",
@@ -522,7 +522,7 @@ void register_all_cards() {
         "91",
         "Chorgan — 6-voice chord synthesizer with morphing timbre, chord extension presets, and built-in chord sequencer. Two modes: normal (detune/chorus) and slew (portamento chord changes). Inspired by the Music Thing Modular Chord Organ.",
         "Andy Jenkinson (uglifruit)",
-        true
+        false
     });
     g_card_registry.push_back({
         "turing_matrix",
@@ -530,7 +530,7 @@ void register_all_cards() {
         "93",
         "Turing Machine sequencer with a switchable mixer layer inspired by the Music Thing Modular Turing Machine and Vactrol Mix combination",
         "Adrian Vos from initial code by Tom Whitwell / Music Thing Modular / Chris Johnson",
-        true
+        false
     });
     g_card_registry.push_back({
         "offair2",
@@ -562,7 +562,7 @@ void register_all_cards() {
         "99",
         "Workshop Computer Card",
         "Music Thing Modular",
-        true
+        false
     });
     g_card_registry.push_back({
         "sense_of_space",
