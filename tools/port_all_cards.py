@@ -1114,9 +1114,12 @@ def main():
                     # Replace flash macros for Flux: FLASH_SAMPLES_BASE -> (XIP_BASE + 0x00180000), FLASH_SETTINGS_BASE -> (XIP_BASE + 0x0017f000)
                     src_content = src_content.replace('FLASH_SAMPLES_BASE', '(XIP_BASE + 0x00180000)')
                     src_content = src_content.replace('FLASH_SETTINGS_BASE', '(XIP_BASE + 0x0017f000)')
-                    # Replace hardware dmb assembly blocks with portable memory barrier macros
-                    src_content = src_content.replace('__asm volatile("dmb" ::: "memory");', 'asm volatile("" ::: "memory");')
-                    src_content = src_content.replace('__asm volatile("dmb");', 'asm volatile("" ::: "memory");')
+                    # Rename embedded Lua clock bytecode array symbol to avoid colliding with C library clock(void) function
+                    src_content = src_content.replace('const unsigned char clock[', 'const unsigned char crow_lua_clock_data[')
+                    src_content = src_content.replace('extern const unsigned char clock[', 'extern const unsigned char crow_lua_clock_data[')
+                    src_content = src_content.replace('"lua_clock"     , clock', '"lua_clock"     , crow_lua_clock_data')
+                    src_content = src_content.replace('"lua_clock"   , clock', '"lua_clock"   , crow_lua_clock_data')
+                    src_content = src_content.replace('"lua_clock", clock', '"lua_clock", crow_lua_clock_data')
                     
                     # Fix missing return 0 in main() to avoid UB / EXC_BREAKPOINT under -O3
                     src_content = fix_main_return(src_content)
@@ -1204,6 +1207,11 @@ def main():
                 # Replace hardware dmb assembly blocks with portable memory barrier macros
                 src_content = src_content.replace('__asm volatile("dmb" ::: "memory");', 'asm volatile("" ::: "memory");')
                 src_content = src_content.replace('__asm volatile("dmb");', 'asm volatile("" ::: "memory");')
+                src_content = src_content.replace('const unsigned char clock[', 'const unsigned char crow_lua_clock_data[')
+                src_content = src_content.replace('extern const unsigned char clock[', 'extern const unsigned char crow_lua_clock_data[')
+                src_content = src_content.replace('"lua_clock"     , clock', '"lua_clock"     , crow_lua_clock_data')
+                src_content = src_content.replace('"lua_clock"   , clock', '"lua_clock"   , crow_lua_clock_data')
+                src_content = src_content.replace('"lua_clock", clock', '"lua_clock", crow_lua_clock_data')
                 
                 # Strip duplicate includes
                 src_content = re.sub(r'#include\s+<[^>]+>', '/* stripped system include */', src_content)

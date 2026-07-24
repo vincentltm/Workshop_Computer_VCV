@@ -857,7 +857,7 @@ bool breaky_audio_bank_mutating() {
 
 void breaky_audio_bank_set_mutating(bool mutating) {
   bank_mutating = mutating;
-  asm volatile("" ::: "memory");
+  __asm volatile("dmb" ::: "memory");
 }
 
 uint32_t breaky_audio_sample_count() {

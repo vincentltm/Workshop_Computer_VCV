@@ -135,7 +135,7 @@ const struct lua_lib_locator Lua_libs[] =
     { { "lua_crowlib"   , crowlib   , true, crowlib_len}
     , { "lua_asl"       , asl       , true, asl_len}
     , { "lua_asllib"    , asllib    , true, asllib_len}
-    , { "lua_clock"     , clock     , true, clock_len}
+    , { "lua_clock"     , crow_lua_clock_data     , true, clock_len}
     , { "lua_metro"     , metro     , true, metro_len}
     , { "lua_input"     , input     , true, input_len}
     , { "lua_output"    , output    , true, output_len}

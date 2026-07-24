@@ -12,6 +12,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
+#include <ctype.h>
 
 /* Compiler decorators */
 #define __not_in_flash_func(x) x
@@ -82,6 +83,3 @@ static inline void hw_write_masked(volatile uint32_t *addr, uint32_t values, uin
 #ifndef u_int16_t
 typedef uint16_t u_int16_t;
 #endif
-
-/* Avoid collision with C library clock(void) function in <time.h> for C-mode card source files */
-#define clock lua_clock_bytecode_blob
