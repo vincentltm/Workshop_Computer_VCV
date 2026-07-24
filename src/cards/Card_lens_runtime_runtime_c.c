@@ -15,7 +15,6 @@
 #include <inttypes.h>
 #include "pico_mocks_c.h"
 
-extern "C" {
 /*
  * runtime.c: merged audio runtime.
  *
@@ -3958,4 +3957,3 @@ void __not_in_flash_func(runtime_walk_core1)(struct LensRuntime* rt, uint32_t se
     for (struct Slot** p = rt->core1_slots; p < end; p++) step_slot(*p);
 }
 
-}

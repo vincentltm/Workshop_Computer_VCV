@@ -36,7 +36,14 @@ static inline uint32_t time_us_32(void) { return 0; }
 static inline uint64_t time_us_64(void) { return 0; }
 static inline void sleep_ms(uint32_t ms) { (void)ms; }
 static inline void sleep_us(uint64_t us) { (void)us; }
-static inline void busy_wait_us_32(uint32_t us) { (void)us; }
+static inline uint32_t busy_wait_us_32(uint32_t us) { (void)us; return 0; }
+
+/* TinyUSB CDC stubs for host compilation */
+static inline bool tud_cdc_connected(void) { return false; }
+static inline uint32_t tud_cdc_write(const void *buffer, uint32_t bufsize) { (void)buffer; (void)bufsize; return 0; }
+static inline uint32_t tud_cdc_write_flush(void) { return 0; }
+static inline uint32_t tud_cdc_read(void *buffer, uint32_t bufsize) { (void)buffer; (void)bufsize; return 0; }
+static inline uint32_t tud_cdc_available(void) { return 0; }
 
 /* Flash / XIP layout constants */
 #define XIP_BASE              0x10000000u

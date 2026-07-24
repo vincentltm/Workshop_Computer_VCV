@@ -15,7 +15,6 @@
 #include <inttypes.h>
 #include "pico_mocks_c.h"
 
-extern "C" {
 /* midi.c -- MIDI channel-voice parser; single writer of midi_scratch[].
  * No USB/TinyUSB dependencies; call midi_feed_byte once per incoming byte.
  * int32_t writes are atomic on M0+; no latch needed (one-sample skew is fine). */
@@ -298,4 +297,3 @@ uint8_t midi_out_pop(uint8_t* out) {
     return len;
 }
 
-}

@@ -10,9 +10,6 @@ def get_extra_include_dirs(card_dir_abs):
     ]
 
 def post_process(src_content, src_rel):
-    # Wrap C files in extern "C" to match the C-linkage declarations in main C++ headers
-    if src_rel.endswith(".c"):
-        src_content = 'extern "C" {\n' + src_content + '\n}'
 
     if src_rel.endswith("snapshot_apply.c"):
         src_content = src_content.replace(

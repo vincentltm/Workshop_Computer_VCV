@@ -15,7 +15,6 @@
 #include <inttypes.h>
 #include "pico_mocks_c.h"
 
-extern "C" {
 #include "runtime.h"
 #include "kernel_ids.h"
 #include "midi.h"
@@ -621,4 +620,3 @@ int snapshot_apply(struct LensRuntime** out_rt, const uint8_t* bytes, size_t len
     return 0;
 }
 
-}
