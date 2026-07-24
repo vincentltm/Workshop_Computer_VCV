@@ -53,6 +53,13 @@ def convert_lua_files(blackbird_dir, duo_midi_dir, wrapper_dir):
         import subprocess
         cmd = [sys.executable, lua2header_path, in_file, out_file]
         subprocess.run(cmd, check=True, capture_output=True)
+        if filename_we == "clock" and os.path.exists(out_file):
+            with open(out_file, 'r') as hf:
+                hdata = hf.read()
+            hdata = hdata.replace('const unsigned char clock[', 'const unsigned char crow_lua_clock_data[')
+            hdata = hdata.replace('unsigned int clock_len', 'unsigned int crow_lua_clock_data_len')
+            with open(out_file, 'w') as hf:
+                hf.write(hdata)
         
     duo_midi_lua = os.path.join(duo_midi_dir, "duo_midi.lua")
     temp_dir = tempfile.mkdtemp()

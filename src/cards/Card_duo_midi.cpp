@@ -142,7 +142,7 @@ License is GPLv3 or later- see LICENSE file for details.
 #undef public
 extern "C" {
 extern const unsigned char crow_lua_clock_data[];
-extern const unsigned int clock_len;
+extern const unsigned int crow_lua_clock_data_len;
 }
 #include "build/quote.h"
 #include "build/timeline.h"

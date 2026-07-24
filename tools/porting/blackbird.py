@@ -61,6 +61,13 @@ def convert_lua_files(card_dir_abs, wrapper_dir):
         print(f"Running conversion: {' '.join(cmd)}")
         try:
             subprocess.run(cmd, check=True, capture_output=True)
+            if filename_we == "clock" and os.path.exists(out_file):
+                with open(out_file, 'r') as hf:
+                    hdata = hf.read()
+                hdata = hdata.replace('const unsigned char clock[', 'const unsigned char crow_lua_clock_data[')
+                hdata = hdata.replace('unsigned int clock_len', 'unsigned int crow_lua_clock_data_len')
+                with open(out_file, 'w') as hf:
+                    hf.write(hdata)
         except subprocess.CalledProcessError as e:
             print(f"Error converting {rel_path} to header: {e.stderr.decode()}", file=sys.stderr)
             raise e
@@ -85,7 +92,9 @@ def post_process(content, src_rel):
         )
         content = content.replace('extern "C" {\n#include "lib/ashapes.h"', '#include "lib/ashapes.h"')
         content = content.replace('#include "lib/sample_rate.h"\n}', '#include "lib/sample_rate.h"')
-        content = content.replace('extern "C" {\nextern const unsigned char clock[];\nextern const unsigned int clock_len;\n}', 'extern const unsigned char clock[];\nextern const unsigned int clock_len;')
+        content = content.replace('extern "C" {\nextern const unsigned char clock[];\nextern const unsigned int clock_len;\n}', 'extern const unsigned char crow_lua_clock_data[];\nextern const unsigned int crow_lua_clock_data_len;')
+        content = content.replace('extern const unsigned char clock[];', 'extern const unsigned char crow_lua_clock_data[];')
+        content = content.replace('extern const unsigned int clock_len;', 'extern const unsigned int crow_lua_clock_data_len;')
         content = content.replace('extern "C" {\nstatic volatile uint32_t g_hardfault_stack[8];', 'static volatile uint32_t g_hardfault_stack[8];')
         content = content.replace('static volatile uint32_t g_hardfault_icsr = 0;\n}', 'static volatile uint32_t g_hardfault_icsr = 0;')
         content = content.replace('extern "C" {\n    int l_crowlib_crow_reset(lua_State* L);\n}', '    int l_crowlib_crow_reset(lua_State* L);')
