@@ -42,6 +42,7 @@ static inline uint32_t busy_wait_us_32(uint32_t us) { (void)us; return 0; }
 /* Spinlock stubs for host compilation */
 typedef uint32_t spin_lock_t;
 static inline spin_lock_t* spin_lock_init(unsigned int i) { (void)i; static spin_lock_t l; return &l; }
+static inline spin_lock_t* spin_lock_instance(unsigned int i) { (void)i; static spin_lock_t l; return &l; }
 static inline uint32_t spin_lock_blocking(spin_lock_t* lock) { (void)lock; return 0; }
 static inline void spin_unlock(spin_lock_t* lock, uint32_t num) { (void)lock; (void)num; }
 
