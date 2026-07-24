@@ -970,6 +970,14 @@ static ioqspi_hw_t mock_ioqspi_hw_inst;
 #ifndef ioqspi_hw
 #define ioqspi_hw (&mock_ioqspi_hw_inst)
 #endif
+
+inline void hw_write_masked(volatile uint32_t *addr, uint32_t values, uint32_t write_mask) {
+    if (addr) *addr = (*addr & ~write_mask) | (values & write_mask);
+}
+
+typedef uint8_t  u_int8_t;
+typedef uint16_t u_int16_t;
+typedef uint32_t u_int32_t;
 inline void irq_set_priority(unsigned int, unsigned int) {}
 inline void flash_safe_execute_core_init() {}
 template<typename F, typename... Args>
