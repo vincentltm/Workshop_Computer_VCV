@@ -1181,7 +1181,10 @@ def main():
             
         # Now process separate_sources (if any)
         for sep_src in separate_sources:
-            sep_filename = f"Card_{card['id']}_" + sep_src.replace("/", "_").replace(".", "_") + ".cpp"
+            is_c_source = sep_src.endswith(".c")
+            # .c sources get a .c wrapper (compiled by CC as C99); .cpp sources get a .cpp wrapper (compiled by CXX)
+            wrapper_ext = ".c" if is_c_source else ".cpp"
+            sep_filename = f"Card_{card['id']}_" + sep_src.replace("/", "_").replace(".", "_") + wrapper_ext
             sep_path = os.path.join(CARDS_SRC_DIR, sep_filename)
             sep_path_abs = get_source_path(sep_src)
             
@@ -1218,38 +1221,62 @@ def main():
                 src_content = run_card_post_process(card["id"], src_content, sep_src)
                 
                 with open(sep_path, 'w') as sep_f:
-                    sep_f.write("// Automatically generated separate compilation wrapper\n")
-                    sep_f.write("#include <stdint.h>\n")
-                    sep_f.write("#include <stddef.h>\n")
-                    sep_f.write("#include <stdlib.h>\n")
-                    sep_f.write("#include <math.h>\n")
-                    sep_f.write("#include <algorithm>\n")
-                    sep_f.write("#include <vector>\n")
-                    sep_f.write("#include <string>\n")
-                    sep_f.write("#include <atomic>\n")
-                    sep_f.write("#include <thread>\n")
-                    sep_f.write("#include <stdio.h>\n")
-                    sep_f.write("#include <string.h>\n")
-                    sep_f.write("#include <cstring>\n")
-                    sep_f.write("#include <stdarg.h>\n")
-                    sep_f.write("#include <limits.h>\n")
-                    sep_f.write("#include <float.h>\n")
-                    sep_f.write("#include <setjmp.h>\n")
-                    sep_f.write("#include <time.h>\n")
-                    sep_f.write("#include <errno.h>\n")
-                    sep_f.write("#include <locale.h>\n")
-                    sep_f.write("#include <inttypes.h>\n")
-                    sep_f.write("#include <cinttypes>\n")
-                    sep_f.write("#include \"pico_mocks.h\"\n")
-                    sep_f.write("#include \"tusb.h\"\n")
-                    sep_f.write("#define while(...) while((__VA_ARGS__) && !g_cancellation_requested.load(std::memory_order_relaxed))\n\n")
-                    sep_f.write("#include \"ComputerCard.h\"\n\n")
-                    sep_f.write(f"namespace {card['ns']} {{\n")
-                    if card["id"] == "flux":
-                        sep_f.write("    extern const int16_t exptable_impl[];\n")
-                        sep_f.write("    extern const int16_t logtable_impl[];\n")
-                    sep_f.write(src_content)
-                    sep_f.write(f"\n}} // namespace {card['ns']}\n")
+                    if is_c_source:
+                        # Pure C wrapper: no C++ headers, compiled with $(CC) -std=gnu99
+                        # This avoids GCC C++ "non-trivial designated initializers not supported"
+                        # on old Ubuntu16.04 cross-compiler used by CI.
+                        # Note: runtime.c defines __not_in_flash_func itself, no pico_mocks.h needed.
+                        sep_f.write("/* Automatically generated C wrapper (compiled as C99, not C++) */\n")
+                        sep_f.write("#include <stdint.h>\n")
+                        sep_f.write("#include <stddef.h>\n")
+                        sep_f.write("#include <stdlib.h>\n")
+                        sep_f.write("#include <math.h>\n")
+                        sep_f.write("#include <stdio.h>\n")
+                        sep_f.write("#include <string.h>\n")
+                        sep_f.write("#include <stdarg.h>\n")
+                        sep_f.write("#include <limits.h>\n")
+                        sep_f.write("#include <float.h>\n")
+                        sep_f.write("#include <setjmp.h>\n")
+                        sep_f.write("#include <time.h>\n")
+                        sep_f.write("#include <errno.h>\n")
+                        sep_f.write("#include <locale.h>\n")
+                        sep_f.write("#include <inttypes.h>\n\n")
+                        sep_f.write(src_content)
+                        sep_f.write("\n")
+                    else:
+                        # C++ wrapper: full C++ headers
+                        sep_f.write("// Automatically generated separate compilation wrapper\n")
+                        sep_f.write("#include <stdint.h>\n")
+                        sep_f.write("#include <stddef.h>\n")
+                        sep_f.write("#include <stdlib.h>\n")
+                        sep_f.write("#include <math.h>\n")
+                        sep_f.write("#include <algorithm>\n")
+                        sep_f.write("#include <vector>\n")
+                        sep_f.write("#include <string>\n")
+                        sep_f.write("#include <atomic>\n")
+                        sep_f.write("#include <thread>\n")
+                        sep_f.write("#include <stdio.h>\n")
+                        sep_f.write("#include <string.h>\n")
+                        sep_f.write("#include <cstring>\n")
+                        sep_f.write("#include <stdarg.h>\n")
+                        sep_f.write("#include <limits.h>\n")
+                        sep_f.write("#include <float.h>\n")
+                        sep_f.write("#include <setjmp.h>\n")
+                        sep_f.write("#include <time.h>\n")
+                        sep_f.write("#include <errno.h>\n")
+                        sep_f.write("#include <locale.h>\n")
+                        sep_f.write("#include <inttypes.h>\n")
+                        sep_f.write("#include <cinttypes>\n")
+                        sep_f.write("#include \"pico_mocks.h\"\n")
+                        sep_f.write("#include \"tusb.h\"\n")
+                        sep_f.write("#define while(...) while((__VA_ARGS__) && !g_cancellation_requested.load(std::memory_order_relaxed))\n\n")
+                        sep_f.write("#include \"ComputerCard.h\"\n\n")
+                        sep_f.write(f"namespace {card['ns']} {{\n")
+                        if card["id"] == "flux":
+                            sep_f.write("    extern const int16_t exptable_impl[];\n")
+                            sep_f.write("    extern const int16_t logtable_impl[];\n")
+                        sep_f.write(src_content)
+                        sep_f.write(f"\n}} // namespace {card['ns']}\n")
                     
                 sources_to_compile.append(os.path.join("src", "cards", sep_filename))
                 
@@ -1329,11 +1356,38 @@ def main():
 
         # Compile targets
         for cid, data in card_data.items():
-            srcs = " ".join(data["sources"])
+            all_srcs = data["sources"]
+            c_srcs = [s for s in all_srcs if s.endswith(".c")]
+            cxx_srcs = [s for s in all_srcs if not s.endswith(".c")]
             flags_str = " ".join([f'"{flag}"' for flag in data["flags"]])
-            f.write(f"res/cards/libcard_{cid}.$(CARD_LIB_EXT): {srcs}\n")
-            f.write(f"\t@mkdir -p res/cards\n")
-            f.write(f"\t$(CXX) $(CXXFLAGS) $(FLAGS) {flags_str} $(CARD_LDFLAGS_SHARED) -o $@ {srcs}\n\n")
+            
+            if c_srcs:
+                # Mixed C/C++ card: compile .c files as C (gnu99) to avoid GCC C++ designated-initializer errors
+                # on the old Ubuntu16.04 cross-compiler toolchain used by CI
+                c_objs = []
+                all_objs = []
+                f.write(f"res/cards/libcard_{cid}.$(CARD_LIB_EXT): {' '.join(all_srcs)}\n")
+                f.write(f"\t@mkdir -p res/cards\n")
+                for src in c_srcs:
+                    obj = src.replace("/", "_").replace(".", "_") + f"_{cid}.o"
+                    obj_path = f"res/cards/{obj}"
+                    f.write(f"\t$(CC) -std=gnu99 -fPIC $(FLAGS) {flags_str} -c -o {obj_path} {src}\n")
+                    c_objs.append(obj_path)
+                    all_objs.append(obj_path)
+                for src in cxx_srcs:
+                    obj = src.replace("/", "_").replace(".", "_") + f"_{cid}.o"
+                    obj_path = f"res/cards/{obj}"
+                    f.write(f"\t$(CXX) $(CXXFLAGS) $(FLAGS) {flags_str} -c -o {obj_path} {src}\n")
+                    all_objs.append(obj_path)
+                objs_str = " ".join(all_objs)
+                f.write(f"\t$(CXX) $(CXXFLAGS) $(FLAGS) {flags_str} $(CARD_LDFLAGS_SHARED) -o $@ {objs_str}\n")
+                f.write(f"\t@rm -f {objs_str}\n\n")
+            else:
+                # Pure C++ card: compile all at once with CXX
+                srcs = " ".join(all_srcs)
+                f.write(f"res/cards/libcard_{cid}.$(CARD_LIB_EXT): {srcs}\n")
+                f.write(f"\t@mkdir -p res/cards\n")
+                f.write(f"\t$(CXX) $(CXXFLAGS) $(FLAGS) {flags_str} $(CARD_LDFLAGS_SHARED) -o $@ {srcs}\n\n")
             
         f.write("SOURCES += src/cards/CardRegistry.cpp\n")
         # Copy wav files for compulidean

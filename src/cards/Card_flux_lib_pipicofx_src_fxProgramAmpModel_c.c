@@ -1,0 +1,281 @@
+/* Automatically generated C wrapper (compiled as C99, not C++) */
+#include <stdint.h>
+#include <stddef.h>
+#include <stdlib.h>
+#include <math.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdarg.h>
+#include <limits.h>
+#include <float.h>
+#include <setjmp.h>
+#include <time.h>
+#include <errno.h>
+#include <locale.h>
+#include <inttypes.h>
+
+#include "pipicofx/fxPrograms.h"
+#include "stringFunctions.h"
+#include "romfunc.h"
+#include "audio/gainstage.h"
+
+#define FXPROGRAM1_HIGHCUT_VAL1 20000
+#define FXPROGRAM1_HIGHCUT_VAL2 31500
+
+#define FXPROGRAM1_HIGHCUT_DELTA (FXPROGRAM1_HIGHCUT_VAL2-FXPROGRAM1_HIGHCUT_VAL1)
+static int16_t fxProgram1processSample(int16_t sampleIn,void*data)
+{
+    int16_t out;
+    FxProgram1DataType* pData = (FxProgram1DataType*)data;
+
+    // Highpass filter with safe arithmetic (64-bit intermediate to prevent overflow)
+    int32_t alpha = ((1 << 15) + pData->highpassCutoff) >> 1;  // Max ~32134
+    int32_t diff = sampleIn - pData->highpass_old_in;          // Max ±65534
+    int64_t term1 = ((int64_t)alpha * diff) >> 15;
+    int64_t term2 = ((int64_t)pData->highpassCutoff * pData->highpass_old_out) >> 15;
+    int32_t hpResult = (int32_t)(term1 + term2);
+    // Clamp to int16_t range to prevent wraparound
+    if (hpResult > 32767) hpResult = 32767;
+    else if (hpResult < -32768) hpResult = -32768;
+    pData->highpass_out = (int16_t)hpResult;
+    pData->highpass_old_in = sampleIn;
+    pData->highpass_old_out = pData->highpass_out;
+
+    out = pData->highpass_out;
+    for (uint8_t c=0;c<pData->nWaveshapers;c++)
+    {
+        out = waveShaperProcessSample(out,&pData->waveshaper1);
+    }
+
+    out = gainStageProcessSample(out,&pData->presetVolume);
+
+    out = out >> 1;
+
+    out = secondOrderIirFilterProcessSample(out,&pData->filter1);
+    // out >>= 2; // Removed to boost gain (+12dB)
+    out = firFilterProcessSample(out,&pData->filter3);
+    out = delayLineProcessSample(out, &pData->delay);
+    return out;
+}
+
+static int16_t analogDelayFeedbackFunction(int16_t sampleIn,void*fbkFilterData,volatile uint32_t*audioStatePtr)
+{
+    FirstOrderIirType* tData = (FirstOrderIirType*)fbkFilterData;
+    return firstOrderIirLowpassProcessSample(sampleIn,tData);
+}
+
+
+static void fxProgram1Param1Callback(uint16_t val,void*data) // highpass cutoff before the nonlinear stage
+{
+    uint32_t dval;
+    FxProgram1DataType* pData = (FxProgram1DataType*)data;
+    dval = ((FXPROGRAM1_HIGHCUT_DELTA*val) >> 12);
+    pData->highpassCutoff = FXPROGRAM1_HIGHCUT_VAL1 + (int16_t)dval;
+    fxProgramAmpModel.parameters[0].rawValue=val;
+}
+
+static void fxProgram1Param1Display(void*data,char*res)
+{
+    FxProgram1DataType* pData = (FxProgram1DataType*)data;
+    Int16ToChar(pData->highpassCutoff,res);
+}
+
+static void fxProgram1Param2Callback(uint16_t val,void*data) // number of waveshaper (more means more distortion)
+{
+    FxProgram1DataType* pData = (FxProgram1DataType*)data;
+    fxProgramAmpModel.parameters[1].rawValue=val;
+    // map 0-4095 to 1-8
+    val >>= 9;
+    val += 1; 
+    pData->nWaveshapers = val;
+}
+
+static void fxProgram1Param2Display(void*data,char*res)
+{
+    FxProgram1DataType* pData = (FxProgram1DataType*)data;
+    UInt8ToChar(pData->nWaveshapers,res);
+}
+
+
+static void fxProgram1Param3Callback(uint16_t val,void*data) // delay intensity
+{
+    FxProgram1DataType* pData = (FxProgram1DataType*)data;
+    pData->delay.delayInSamples = 9600 + (val << 2);
+    pData->delay.mix = val << 2; // up to 100%
+    pData->delay.feedback = (1<< 13);
+    fxProgramAmpModel.parameters[2].rawValue=val;
+}
+
+static void fxProgram1Param3Display(void*data,char*res)
+{
+    int16_t dVal;
+    FxProgram1DataType* pData = (FxProgram1DataType*)data;
+    dVal=pData->delay.mix/164;
+    Int16ToChar(dVal,res);
+    for (uint8_t c=0;c<PARAMETER_NAME_MAXLEN-1;c++)
+    {
+        if(*(res+c)==0)
+        {
+            *(res+c)='%';
+            *(res+c+1)=(char)0;
+            break;
+        }
+    }
+}
+
+static void fxProgramPresetVolumeCallback(uint16_t val,void*data)
+{
+    FxProgram1DataType* pData = (FxProgram1DataType*)data;
+    pData->presetVolume.gain = val >> 2; // 0 to 1024
+    fxProgramAmpModel.parameters[3].rawValue=val;
+}
+
+static void fxProgramPresetVolumeDisplay(void*data,char*res)
+{
+    FxProgram1DataType* pData = (FxProgram1DataType*)data;
+    int16_t dVal;
+    dVal = pData->presetVolume.gain*39; // percent with two decimal points
+    decimalInt16ToChar(dVal,res,2);
+        for (uint8_t c=0;c<PARAMETER_NAME_MAXLEN-1;c++)
+    {
+        if(*(res+c)==0)
+        {
+            *(res+c)='%';
+            *(res+c+1)=(char)0;
+            break;
+        }
+    }
+}
+
+static void fxProgram1Setup(void*data)
+{
+    FxProgram1DataType* pData = (FxProgram1DataType*)data;
+    initfirFilter(&pData->filter3);
+    initWaveShaper(&pData->waveshaper1,&waveShaperDefaultOverdrive);
+    initDelay(&pData->delay,getDelayMemoryPointer(),DELAY_LINE_LENGTH);
+    pData->delay.feebackData = (void*)&pData->feedbackFilter;
+}
+
+
+static void fxProgram1Reset(void*data)
+{
+    FxProgram1DataType* pData = (FxProgram1DataType*)data;
+    pData->highpass_old_in=0;
+    pData->highpass_old_out=0;
+    secondOrderIirFilterReset(&pData->filter1);
+    firFilterReset(&pData->filter3);
+}
+
+FxProgram1DataType fxProgram1data = {
+    .highpassCutoff = 31000,
+    .nWaveshapers = 1,
+    .highpass_out = 0,
+    .highpass_old_out = 0,
+    .highpass_old_in = 0,
+    .filter3 = {
+        .coefficients = {0x62c, 0x674, 0x7d6, 0xbc4, 0x1312, 0x1ea7, 0x2e33, 0x3b3a, 0x3a9e, 0x29bf, 0x15f5, 0x878, 0xf984, 0xebee, 0xe813, 0xe93e, 0xec34, 0xf3d3, 0xfd12, 0x312, 0x5bf, 0x6eb, 0x5da, 0x487, 0x614, 0x771, 0x837, 0x784, 0x299, 0xfc8e, 0xf9f8, 0xfbd5, 0x2b, 0x44c, 0x599, 0x2f3, 0x43, 0x2, 0xfe5b, 0xfc3c, 0xfd4d, 0xb7, 0x4ac, 0x823, 0xa3b, 0xa6a, 0x915, 0x74c, 0x69c, 0x6e5, 0x73e, 0x6cc, 0x4bf, 0x215, 0xffae, 0xfd9b, 0xfde5, 0xffd2, 0x222, 0x3cd, 0x50d, 0x5fa, 0x659, 0x61f}
+    },
+    .filter1 = {
+        .x1 = 0,
+        .x2 = 0,
+        .y1 = 0,
+        .y2 = 0,
+        .acc = 0,
+        .coeffA = {-15446, 5461},
+        .coeffB = {1599, 3199, 1599}
+    },
+    .delay = {
+        .feedbackFunction = &analogDelayFeedbackFunction
+    },
+    .feedbackFilter = {
+        .oldVal = 0,
+        .oldXVal = 0,
+        .alpha = 14000
+    },
+    .presetVolume = {
+        .gain = 0xff,
+        .offset = 0
+    }
+};
+FxProgramType fxProgramAmpModel = {
+    .name = "Amp-Simulator",
+    .parameters = {
+        {
+            .name = "Hi-Cut         ",
+            .control = 0,
+            .rawValue = 31500,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgram1Param1Display,
+            .setParameter = &fxProgram1Param1Callback
+        },
+        {
+            .name = "Gain/Stages    ",
+            .control = 1,
+            .rawValue = 0,
+            .increment = 512,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgram1Param2Display,
+            .setParameter = &fxProgram1Param2Callback
+        },
+        {
+            .name = "Delay Intensity",
+            .control = 2,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = &fxProgram1Param3Display,
+            .setParameter = &fxProgram1Param3Callback
+        },
+        {
+            .name = "Volume",
+            .control = 0xff,
+            .rawValue = 0x3FF,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = fxProgramPresetVolumeDisplay,
+            .setParameter = fxProgramPresetVolumeCallback
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        },
+        {
+            .name = "",
+            .control = 255,
+            .rawValue = 0,
+            .increment = 1,
+            .getParameterValue = 0,
+            .getParameterDisplay = 0,
+            .setParameter = 0
+        }
+    },
+    .processSample = &fxProgram1processSample,
+    .setup = &fxProgram1Setup,
+    .reset = &fxProgram1Reset,
+    .nParameters = 4,
+    .data = (void*)&fxProgram1data
+};

@@ -1,16 +1,10 @@
-// Automatically generated separate compilation wrapper
+/* Automatically generated C wrapper (compiled as C99, not C++) */
 #include <stdint.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <math.h>
-#include <algorithm>
-#include <vector>
-#include <string>
-#include <atomic>
-#include <thread>
 #include <stdio.h>
 #include <string.h>
-#include <cstring>
 #include <stdarg.h>
 #include <limits.h>
 #include <float.h>
@@ -19,14 +13,7 @@
 #include <errno.h>
 #include <locale.h>
 #include <inttypes.h>
-#include <cinttypes>
-#include "pico_mocks.h"
-#include "tusb.h"
-#define while(...) while((__VA_ARGS__) && !g_cancellation_requested.load(std::memory_order_relaxed))
 
-#include "ComputerCard.h"
-
-namespace Card_Lens {
 extern "C" {
 /* midi.c -- MIDI channel-voice parser; single writer of midi_scratch[].
  * No USB/TinyUSB dependencies; call midi_feed_byte once per incoming byte.
@@ -311,4 +298,3 @@ uint8_t midi_out_pop(uint8_t* out) {
 }
 
 }
-} // namespace Card_Lens
