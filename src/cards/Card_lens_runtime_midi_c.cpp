@@ -152,11 +152,8 @@ static void do_note_on(uint8_t ch, uint8_t note, uint8_t vel) {
     update_note_gate(ch);
 }
 
-static uint8_t cc_raw[128];
-
 static void do_control_change(uint8_t ccnum, uint8_t val) {
-    if (cc_raw[ccnum] == val) return;
-    cc_raw[ccnum] = val;
+    /* 0..127 -> 0..4095; 32-bit integer only. */
     midi_scratch[CC_BASE + ccnum] = ((int32_t)val * 4095) / 127;
 }
 
@@ -211,7 +208,6 @@ void midi_reset(void) {
     /* CC words rest at -1 ("no message yet") so a midi-cc :init can hold
        until the first CC lands. Readers map the sentinel, never expose it. */
     for (int i = 0; i < 128; i++) midi_scratch[CC_BASE + i] = -1;
-    memset(cc_raw, 0xFF, sizeof(cc_raw));
     clock_phase    = 0;
     transport_on   = 0;
     running_status = 0;

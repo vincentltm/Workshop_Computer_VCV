@@ -291,7 +291,7 @@ static void do_flash_save(void) {
        takeover values) and the small control pool (registers / short tapes). */
     size_t nd_len = lens_nodestate_used();
     size_t ct_len = lens_control_used();
-    if (nd_len > LENS_AUDIO_BUFFER_BYTES)      nd_len = LENS_AUDIO_BUFFER_BYTES;
+    if (nd_len > LENS_NODESTATE_BYTES)      nd_len = LENS_NODESTATE_BYTES;
     if (ct_len > LENS_CONTROL_BUFFER_BYTES) ct_len = LENS_CONTROL_BUFFER_BYTES;
 
     /* If snapshot + live state overflow the slot or the 8 KB staging buffer, fall back
@@ -334,7 +334,7 @@ static void do_flash_save(void) {
     /* Write snapshot bytes, then the live pools. */
     uint8_t* w = buf + HDR_LEN;
     memcpy(w, g_last_snapshot,    snap_len); w += snap_len;
-    memcpy(w, lens_nodestate_base(), nd_len);  w += nd_len;
+    memcpy(w, lens_nodestate_pool, nd_len);  w += nd_len;
     memcpy(w, lens_control_pool,   ct_len);  w += ct_len;
 
     uint32_t final_crc = save_crc32(buf, payload_len);
@@ -380,7 +380,7 @@ public:
             /* Reject a snapshot saved by a different build (struct layout may have
              * changed): fall through to the baked factory instead of applying stale. */
             if (stored_hash == g_build_hash && slen > 0 && slen <= LENS_SNAPSHOT_CACHE
-                && nd_len <= LENS_AUDIO_BUFFER_BYTES && ct_len <= LENS_CONTROL_BUFFER_BYTES) {
+                && nd_len <= LENS_NODESTATE_BYTES && ct_len <= LENS_CONTROL_BUFFER_BYTES) {
                 const size_t payload_len = HDR_LEN + slen + nd_len + ct_len;
                 uint32_t stored_crc =
                     (uint32_t)slot[payload_len + 0]        |
@@ -397,7 +397,7 @@ public:
                            pools: same snapshot -> same offsets, so raw bytes line up.
                            Runs before the first ProcessSample, so ops see the restored
                            state (e.g. pickup keeps its taken-over value, not init). */
-                        if (nd_len) memcpy(lens_nodestate_base(), slot + HDR_LEN + slen, nd_len);
+                        if (nd_len) memcpy(lens_nodestate_pool, slot + HDR_LEN + slen, nd_len);
                         if (ct_len) memcpy(lens_control_pool,   slot + HDR_LEN + slen + nd_len, ct_len);
                         memcpy(g_last_snapshot, slot + HDR_LEN, slen);
                         g_last_snapshot_len = slen;
@@ -476,9 +476,6 @@ protected:
             __dmb();   /* pair with the Core 1 writer: read len after seeing ready */
             struct LensRuntime* new_rt = nullptr;
             size_t plen = g_pending.len;
-            struct LensRuntime* old_rt = g_rt;
-            g_rt = nullptr; /* Temporarily disable audio walk during apply to prevent race conditions/crashes */
-            __dmb();
             int rc = snapshot_apply(&new_rt, g_pending.bytes, plen);
             g_apply_attempts++;
             g_last_apply_rc = rc;
@@ -489,15 +486,12 @@ protected:
                 }
                 g_snapshot_crc = snapshot_trailer_crc(g_pending.bytes, plen);
                 g_apply_count++;
-                g_last_apply_sample = old_rt ? old_rt->sample_counter : 0u;
+                g_last_apply_sample = g_rt ? g_rt->sample_counter : 0u;
+                struct LensRuntime* old_rt = g_rt;
                 g_rt = new_rt;
                 if (old_rt) runtime_destroy(old_rt);
                 /* New patch starts at its own downbeat: restart beat tracking. */
                 g_master_prev = 0; g_beat_count = 0; g_beat_now = false;
-            } else {
-                /* Apply failed: restore the previous runtime so audio keeps running.
-                 * Do NOT destroy old_rt — it is still live and valid. */
-                g_rt = old_rt;
             }
             g_pending.ready = false;
         } else if (g_pending.ready) {
@@ -572,16 +566,7 @@ protected:
             uint32_t seq = rt->sample_counter;
             runtime_update_hw_scratch(&hw_in);  /* both cores read scratch */
             __dmb();                            /* scratch + Core 0 shadows visible before ring */
-#ifdef VCV_PORT
-            // Run Core 1 walk inline on Core 0 for 100% synchronous, crackle-free execution
-            runtime_walk_core1(rt, seq);
-            recordhead_sweep_core1(rt);
-            runtime_publish_shadows_core1(rt);
-#else
-            if (multicore_fifo_wready()) {
-                sio_hw->fifo_wr = seq;              /* triggers SIO_IRQ_PROC1 on Core 1 */
-            }
-#endif
+            sio_hw->fifo_wr = seq;              /* triggers SIO_IRQ_PROC1 on Core 1 */
             runtime_walk_core0(rt, seq);
             recordhead_sweep_core0(rt);
             runtime_publish_shadows_core0(rt);
@@ -696,15 +681,8 @@ protected:
 #if LENS_PERF_PROBE
         uint32_t t_io_out_start = dwt_read();
 #endif
-        int32_t out1 = hw_out.audio_out_1;
-        if (out1 < -2048) out1 = -2048;
-        else if (out1 > 2047) out1 = 2047;
-        AudioOut1(static_cast<int16_t>(out1));
-
-        int32_t out2 = hw_out.audio_out_2;
-        if (out2 < -2048) out2 = -2048;
-        else if (out2 > 2047) out2 = 2047;
-        AudioOut2(static_cast<int16_t>(out2));
+        AudioOut1(static_cast<int16_t>(hw_out.audio_out_1));
+        AudioOut2(static_cast<int16_t>(hw_out.audio_out_2));
         /* Remember this sample's audio out so the next pending swap can wait for a
            zero crossing (see the click-free swap gate at the top of ProcessSample). */
         g_last_out_1 = hw_out.audio_out_1;
@@ -770,39 +748,34 @@ protected:
    we can tell a real dual-core run (>0) from a silent Core 1 (==0). */
 static volatile uint32_t g_core1_loops = 0;
 
-static void __not_in_flash_func(poll_core1_walk)(struct LensRuntime* rt) {
-    if (multicore_fifo_rvalid()) {
-        uint32_t seq = sio_hw->fifo_rd;
-        if (rt) {
-            runtime_walk_core1(rt, seq);
-            recordhead_sweep_core1(rt);
-            runtime_publish_shadows_core1(rt);
-            g_core1_loops++;
-            rt->core1_done = seq;
-        }
+static void __not_in_flash_func(core1_doorbell_irq)(void) {
+    uint32_t seq = 0;
+    bool got = false;
+    while (multicore_fifo_rvalid()) { seq = sio_hw->fifo_rd; got = true; }
+    multicore_fifo_clear_irq();
+    if (!got) return;
+    struct LensRuntime* rt = g_rt;
+    if (rt) {
+        /* Self-contained frame: walk Core 1's slots, commit ITS recordheads, and
+         * publish ITS shadows. Core 0 only ever reads these shadows, never Core 1's
+         * live state, so there is nothing for Core 0 to wait on. */
+        runtime_walk_core1(rt, seq);
+        recordhead_sweep_core1(rt);
+        runtime_publish_shadows_core1(rt);
+        g_core1_loops++;
+        rt->core1_done = seq;
     }
 }
-
-static constexpr uint32_t kMidiDrainByteBudget = 64;
 
 /* The host MIDI driver calls this (weak) when a mounted device has RX packets.
- * The foreground host loop drains with a budget so MIDI cannot starve Core 1 audio. */
+ * Drain the decoded byte stream straight into the transport-independent parser. */
 extern "C" void tuh_midi_rx_cb(uint8_t dev_addr, uint32_t num_packets) {
-    (void)dev_addr;
     (void)num_packets;
-}
-
-static void __not_in_flash_func(drain_host_midi_budget)(uint8_t dev_addr) {
     uint8_t cable;
     uint8_t buf[64];
-    uint32_t budget = kMidiDrainByteBudget;
-    while (budget > 0) {
-        uint32_t want = budget < sizeof(buf) ? budget : (uint32_t)sizeof(buf);
-        uint32_t n = tuh_midi_stream_read(dev_addr, &cable, buf, (uint16_t)want);
-        if (n == 0) break;
+    uint32_t n;
+    while ((n = tuh_midi_stream_read(dev_addr, &cable, buf, sizeof(buf))) > 0)
         for (uint32_t i = 0; i < n; i++) midi_feed_byte(buf[i]);
-        budget -= n;
-    }
 }
 
 /* ---- USB foreground loops (called from core1_entry) ---- */
@@ -812,8 +785,6 @@ static void __not_in_flash_func(drain_host_midi_budget)(uint8_t dev_addr) {
 static void run_host_loop(void) {
     while (true) {
         tuh_task();
-        drain_host_midi_budget(1);
-        poll_core1_walk(g_rt);
     }
 }
 
@@ -831,13 +802,8 @@ static void run_device_loop(void) {
          * handles USB MIDI CIN tags and yields pure data bytes, including
          * CIN=0xF which macOS CoreMIDI uses to fragment large sysex transfers. */
         uint8_t in_buf[64];
-        bool sent_response = false;
-        uint32_t midi_budget = kMidiDrainByteBudget;
-        while (tud_midi_available() && !sent_response && midi_budget > 0) {
-            uint32_t want = midi_budget < sizeof(in_buf) ? midi_budget : (uint32_t)sizeof(in_buf);
-            uint32_t n = tud_midi_stream_read(in_buf, want);
-            if (n == 0) break;
-            midi_budget -= n;
+        while (tud_midi_available()) {
+            uint32_t n = tud_midi_stream_read(in_buf, sizeof(in_buf));
             for (uint32_t bi = 0; bi < n; bi++) {
                 midi_feed_byte(in_buf[bi]);
                 if (lenssysex::feed_byte(&parser, in_buf[bi])) {
@@ -864,14 +830,10 @@ static void run_device_loop(void) {
                                                             lenssysex::NACK_BAD_LENGTH);
                             }
                         }
-                        /* Break out of the drain loop so tud_task() runs next and
-                         * delivers the queued ACK/NACK to the host immediately. */
-                        sent_response = true;
                         break;
 
                     case lenssysex::CMD_PING:
                         lenssysex::sysex_send_frame(lenssysex::CMD_ACK, nullptr, 0);
-                        sent_response = true;
                         break;
 
                     case lenssysex::CMD_SWAP_MODE: {
@@ -881,7 +843,6 @@ static void run_device_loop(void) {
                         size_t n = lenssysex::get_payload(&parser, mb, sizeof(mb));
                         if (n >= 1 && mb[0] <= SWAP_AT_BAR) g_swap_mode = mb[0];
                         lenssysex::sysex_send_frame(lenssysex::CMD_ACK, nullptr, 0);
-                        sent_response = true;
                         break;
                     }
 
@@ -977,7 +938,6 @@ static void run_device_loop(void) {
                         u32(0); u32(0); u32(0); u32(0); u32(0); u32(0);
 #endif
                         lenssysex::sysex_send_frame(lenssysex::CMD_DIAG_DUMP, d, sizeof(d));
-                        sent_response = true;
                         break;
                     }
 
@@ -985,13 +945,11 @@ static void run_device_loop(void) {
                         /* ACK first, then signal Core 0 to perform the flash write. */
                         lenssysex::sysex_send_frame(lenssysex::CMD_ACK, nullptr, 0);
                         lens_request_save();
-                        sent_response = true;
                         break;
 
                     case lenssysex::CMD_FACTORY_RESET:
                         lenssysex::sysex_send_frame(lenssysex::CMD_ACK, nullptr, 0);
                         lens_request_factory_reset();
-                        sent_response = true;
                         break;
 
                     case lenssysex::CMD_READ_PERF: {
@@ -1075,7 +1033,6 @@ static void run_device_loop(void) {
                         /* SPEC: perf ring not compiled in; reply ACK stub. */
                         lenssysex::sysex_send_frame(lenssysex::CMD_ACK, nullptr, 0);
 #endif
-                        sent_response = true;
                         break;
                     }
 
@@ -1114,13 +1071,12 @@ static void run_device_loop(void) {
 #else
                         lenssysex::sysex_send_frame(lenssysex::CMD_ACK, nullptr, 0);
 #endif
-                        sent_response = true;
                         break;
                     }
+
                     default:
                         /* Unknown command: NACK with reason. */
                         lenssysex::sysex_send_nack(cmd, lenssysex::NACK_UNKNOWN_CMD);
-                        sent_response = true;
                         break;
                     }
                 }
@@ -1135,7 +1091,8 @@ static void run_device_loop(void) {
                 tud_midi_stream_write(0, midi_tx_buf, midi_tx_len);
         }
 
-        poll_core1_walk(g_rt);
+        /* Audio work is in the FIFO doorbell IRQ (see core1_doorbell_irq).
+         * The foreground loop owns USB only. */
     }
 }
 
@@ -1145,9 +1102,6 @@ static void run_device_loop(void) {
 /* ---- Core 1 entry ---- */
 
 static void __not_in_flash_func(core1_entry)(void) {
-#if LENS_PERF_PROBE
-    dwt_enable();
-#endif
     /* USB stack init runs on Core 1 so the USB IRQ lands on Core 1's NVIC.
      * board_init() runs here in host mode, on Core 0 in device mode (role split
      * below and in main()). 33_drumdrum inits the device stack on Core 0 instead.
@@ -1157,6 +1111,9 @@ static void __not_in_flash_func(core1_entry)(void) {
     if (host) { board_init(); tusb_init(); } else tud_init(0);
 
     multicore_fifo_clear_irq();
+    irq_set_exclusive_handler(SIO_IRQ_PROC1, core1_doorbell_irq);
+    irq_set_priority(SIO_IRQ_PROC1, 0xC0);
+    irq_set_enabled(SIO_IRQ_PROC1, true);
 
     midi_reset();
 

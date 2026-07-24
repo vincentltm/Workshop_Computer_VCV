@@ -79,15 +79,9 @@ static uint8_t  g_have_last_nodestate = 0;
 /* ---- Static pools ---- */
 /* Sizes come from runtime.h. Audio pool is 128 KB: 12-bit cells pack 2 per
    3 bytes, so 128 KB / 1.5 = 87381 cells = 1.82 s @ 48 kHz. */
-/* lens_audio_pool is a bidirectional arena:
-   - Audio buffers (tape loops etc.) allocate from the BOTTOM upward (audio_bump).
-   - Node state (op structs like WeaveState/MacroOscillator) allocates from the TOP
-     downward (nodestate_top). They share the same 104 KB block and never overlap
-     as long as audio_bump + nodestate_used <= LENS_AUDIO_BUFFER_BYTES.
-   This means: no Weave = full 104 KB tape; three Weaves = 104 KB - 3*17 KB tape.
-   No wasted fixed allocation. */
 uint8_t  lens_audio_pool[LENS_AUDIO_BUFFER_BYTES] __attribute__((aligned(4)));
-uint8_t  lens_control_pool[LENS_CONTROL_BUFFER_BYTES] __attribute__((aligned(4)));
+uint8_t  lens_control_pool[LENS_CONTROL_BUFFER_BYTES];
+uint8_t  lens_nodestate_pool[LENS_NODESTATE_BYTES];
 struct Slot   lens_slot_pool[LENS_MAX_SLOTS];
 struct Buffer lens_buffer_pool[LENS_MAX_BUFFERS];
 struct RuntimeTerminal lens_terminal_pool[LENS_MAX_TERMINALS];
@@ -129,54 +123,47 @@ static int buffer_input_index(uint8_t kid) {
             return 0;
         case KID_OP_DEGREE: case KID_OP_PITCH:
             return 1;
-        case KID_OP_PLUCK:  case KID_OP_REVERB:
-            return 3;
-        case KID_OP_CHORUS: case KID_OP_FLANGER: case KID_OP_ECHO:
-            return 4;
         default:
             return -1;
     }
 }
 
 /* ---- Bump allocators ---- */
-static size_t   audio_bump;       /* bytes used from bottom of lens_audio_pool */
-static size_t   nodestate_top;    /* bytes used from top of lens_audio_pool (grows downward) */
+static size_t   audio_bump;
 static size_t   control_bump;
+static size_t   nodestate_bump;
 static uint16_t slot_bump;
 static uint8_t  buffer_bump;
 static uint8_t  terminal_bump;
 static uint16_t const_bump;
 
-/* Expose for the settings-save overlay in main.cpp. nodestate lives at the
-   top of lens_audio_pool, so we expose its base pointer and size. */
-size_t lens_nodestate_used(void)   { return nodestate_top; }
-size_t lens_control_used(void)     { return control_bump; }
-uint8_t* lens_nodestate_base(void) { return lens_audio_pool + LENS_AUDIO_BUFFER_BYTES - nodestate_top; }
+/* Live used bytes of each pool, for the settings-save overlay. The pool layout is a
+   deterministic function of the snapshot, so the same snapshot re-bumps to the same
+   sizes and per-slot offsets; saving these bytes and copying them back after an apply
+   restores live state without interpreting any per-kernel struct. */
+size_t lens_nodestate_used(void) { return nodestate_bump; }
+size_t lens_control_used(void)   { return control_bump; }
 
 static void* alloc_audio(size_t n) {
     /* Word-align every allocation: a kernel may address its ring as int16
        (reverb) and Cortex-M0+ faults on unaligned halfword access. The JS
        encoder's pool accounting rounds identically. */
     n = (n + 3u) & ~3u;
-    if (audio_bump + nodestate_top + n > LENS_AUDIO_BUFFER_BYTES) return NULL;
+    if (audio_bump + n > LENS_AUDIO_BUFFER_BYTES) return NULL;
     void* p = &lens_audio_pool[audio_bump];
     audio_bump += n;
     return p;
 }
 static void* alloc_control(size_t n) {
-    n = (n + 3u) & ~3u;
     if (control_bump + n > LENS_CONTROL_BUFFER_BYTES) return NULL;
     void* p = &lens_control_pool[control_bump];
     control_bump += n;
     return p;
 }
 static void* alloc_nodestate(size_t n) {
-    /* Allocate from the TOP of lens_audio_pool downward. Grows toward audio_bump.
-       Naturally shares the same 104 KB arena with audio buffers. */
-    n = (n + 3u) & ~3u;
-    if (audio_bump + nodestate_top + n > LENS_AUDIO_BUFFER_BYTES) return NULL;
-    nodestate_top += n;
-    void* p = &lens_audio_pool[LENS_AUDIO_BUFFER_BYTES - nodestate_top];
+    if (nodestate_bump + n > LENS_NODESTATE_BYTES) return NULL;
+    void* p = &lens_nodestate_pool[nodestate_bump];
+    nodestate_bump += n;
     return p;
 }
 
@@ -227,7 +214,7 @@ int snapshot_apply(struct LensRuntime** out_rt, const uint8_t* bytes, size_t len
     uint8_t  bc  = u8(&c);            /* buffer_count */
     uint8_t  tc  = u8(&c);            /* terminal_count */
     uint8_t  kc  = u8(&c);            /* kernel_id_count */
-    uint8_t  cc_init_count = u8(&c);  /* cc_init_count */
+    u8(&c);                            /* reserved */
 
     /* Pool limit checks. */
     if (sc > LENS_MAX_SLOTS)     return -6;
@@ -235,7 +222,7 @@ int snapshot_apply(struct LensRuntime** out_rt, const uint8_t* bytes, size_t len
     if (tc > LENS_MAX_TERMINALS) return -6;
 
     /* Reset bump pointers. */
-    audio_bump = control_bump = nodestate_top = 0;
+    audio_bump = control_bump = nodestate_bump = 0;
     slot_bump = buffer_bump = terminal_bump = const_bump = 0;
 
     /* Clear static runtime + slot/buffer/terminal pools. The node-state pool is
@@ -276,14 +263,6 @@ int snapshot_apply(struct LensRuntime** out_rt, const uint8_t* bytes, size_t len
         kkids[i] = kid;
     }
 
-    /* CC INIT TABLE: initialize midi_scratch CC values on patch load. */
-    for (uint8_t i = 0; i < cc_init_count; i++) {
-        if (!ok(&c, 3)) return -1;
-        uint8_t cc_num = u8(&c);
-        uint16_t init_val = u16(&c);
-        *runtime_midi_jack_ptr(CC_BASE + cc_num) = init_val;
-    }
-
     /* --- Two-pass slot table parse ---
        Pass 1: compute pool_size and const count, record per-slot offsets.
        Pass 2: wire slots. */
@@ -308,7 +287,7 @@ int snapshot_apply(struct LensRuntime** out_rt, const uint8_t* bytes, size_t len
             if (!ok((s1_), 1)) return -1; \
             uint8_t tag_ = u8((s1_)); \
             if (tag_ == LENS_TAG_SLOT || tag_ == LENS_TAG_BUFFER || \
-                tag_ == LENS_TAG_SLOT_OUT2 || tag_ == LENS_TAG_MIDI_JACK) { \
+                tag_ == LENS_TAG_SLOT_OUT2) { \
                 if (!ok((s1_), 2)) return -1; \
                 (s1_)->p += 2; \
             } else if (tag_ == LENS_TAG_CONST_U8) { \
@@ -406,10 +385,6 @@ int snapshot_apply(struct LensRuntime** out_rt, const uint8_t* bytes, size_t len
                 if (!ok(&c, 4)) return -1; \
                 int ci_ = lens_intern_const(rt, i32(&c)); \
                 *inp_[j_] = (ci_ >= 0) ? (void*)&rt->const_pool[ci_] : (void*)&g_zero; \
-            } else if (tag_ == LENS_TAG_MIDI_JACK) { \
-                if (!ok(&c, 2)) return -1; \
-                uint16_t idx_ = u16(&c); \
-                *inp_[j_] = (void*)runtime_midi_jack_ptr(idx_); \
             } else { return -5; } \
         } \
         if (!ok(&c, 6)) return -1; \

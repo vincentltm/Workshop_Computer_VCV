@@ -5,7 +5,7 @@
 "use strict";
 
 const $ = (id) => document.getElementById(id);
-const editor = $("editor"), hl = $("hl"), statusEl = $("status"), cpuStatusEl = $("cpu-status"), memStatusEl = $("mem-status"), picker = $("picker");
+const editor = $("editor"), hl = $("hl"), statusEl = $("status"), picker = $("picker");
 const btnConnect = $("connect"), btnSend = $("send"), btnSaveCard = $("savecard");
 const btnOpen = $("open"), btnSave = $("save"), filePick = $("filepick");
 const liveToggle = $("live");
@@ -18,12 +18,6 @@ let lastSent = null;        // bytes confirmed on the card (skip-identical + syn
 const history = [];         // ring of { bytes, text } sent patches, for revert
 let histPos = -1;           // current position in history
 let hushBytes = null;       // compiled silent patch, built on first hush
-let nodesCount = 0;
-
-function sayStatus(msg, cls) {
-  const prefix = snapshot ? `${nodesCount} nodes · ${snapshot.length} B · ` : "";
-  say(prefix + msg, cls);
-}
 
 function bytesEq(a, b) {
   if (!a || !b || a.length !== b.length) return false;
@@ -97,33 +91,13 @@ async function refresh() {
     const lowered    = Lens.lower(expanded);
     const scheduled  = Lens.schedule(lowered);
     snapshot = Lens.encode(scheduled, lowered);
-    nodesCount = lowered.slots ? lowered.slots.length : 0;
-    const budget = scheduled.budget;
-    const c0Pct = (budget.core0.total / budget.core0.budget * 100).toFixed(0);
-    const c1Pct = (budget.core1.total / budget.core1.budget * 100).toFixed(0);
-    if (cpuStatusEl) {
-      const over = !budget.ok ? " (OVER BUDGET!)" : "";
-      cpuStatusEl.textContent = `CPU: ${c0Pct}%/${c1Pct}%${over}`;
-      cpuStatusEl.className = !budget.ok ? "err" : "";
-      cpuStatusEl.style.display = "inline";
-    }
-    const mem = scheduled.memory;
-    const audioPct = (mem.audio.total / mem.audio.budget * 100).toFixed(0);
-    const statePct = (mem.nodestate.total / mem.nodestate.budget * 100).toFixed(0);
-    if (memStatusEl) {
-      const over = !mem.ok ? " (OVER MEMORY!)" : "";
-      memStatusEl.textContent = `MEM: Audio ${audioPct}% · State ${statePct}%${over}`;
-      memStatusEl.className = !mem.ok ? "err" : "";
-      memStatusEl.style.display = "inline";
-    }
-    const sync = !midiOut ? "not connected"
-               : bytesEq(snapshot, lastSent) ? "on card" : "unsent edits";
-    sayStatus(sync, "ok");
+    const nodeCount = lowered.slots ? lowered.slots.length : 0;
+    const sync = !midiOut ? " · not connected"
+               : bytesEq(snapshot, lastSent) ? " · on card" : " · unsent edits";
+    say(nodeCount + " nodes · " + snapshot.length + " B" + sync, "ok");
   } catch (e) {
     snapshot = null;
     say(e.message, "err");
-    if (cpuStatusEl) cpuStatusEl.style.display = "none";
-    if (memStatusEl) memStatusEl.style.display = "none";
   }
   btnSend.disabled = btnSaveCard.disabled = !(snapshot && midiOut);
   // live mode: push every good compile straight to the card (same WRITE_STATE path
@@ -202,14 +176,14 @@ async function sendSwapMode() {
 
 async function send() {
   if (!snapshot || !midiOut || sending) return;
-  if (bytesEq(snapshot, lastSent)) { sayStatus("on card · unchanged", "ok"); return; }
+  if (bytesEq(snapshot, lastSent)) { say("on card · unchanged", "ok"); return; }
   sending = true;
   btnSend.disabled = true;
   try {
     await pushBytes(snapshot);
     lastSent = snapshot;
     pushHistory(snapshot, editor.value);
-    sayStatus("sent · playing", "ok");
+    say("sent · playing", "ok");
   }
   catch (e) { say(e.message, "err"); }
   finally { sending = false; btnSend.disabled = !(snapshot && midiOut); }

@@ -57,10 +57,9 @@ extern "C" {
    binary -- is bank-free: op_dx falls back to zero banks and stays silent until the
    user generates their own and rebuilds with the flag. This keeps copyrighted voice
    data out of every distributed binary. */
-#if defined(__has_include)
+#if defined(LENS_WITH_DX7_BANKS) && defined(__has_include)
 #  if __has_include("dx7banks.h")
 #    include "dx7banks.h"
-#    define LENS_WITH_DX7_BANKS
 #  endif
 #endif
 #ifndef NUM_DX7_BANKS
@@ -91,23 +90,6 @@ struct NodeStateBase {
 struct LeafState {
     int32_t value;
 };
-
-struct MidiCcState {
-    int32_t value;
-    int32_t current_q16;
-    uint8_t initialized;
-};
-
-struct WeaveState {
-    int32_t  value;                 /* Output sample (signed 12-bit) */
-    char     osc_storage[900];      /* braids::MacroOscillator (no inline delay) */
-    void*    delay_lines;           /* Points to delay buffer after this struct */
-    uint8_t  initialized;
-    uint8_t  last_trig;
-};
-/* Delay buffer sits immediately after WeaveState in the same nodestate block.
-   runtime_kernel_state_bytes(KID_OP_WEAVE) returns the combined size. */
-#define WEAVE_DELAY_BYTES 8192  /* sizeof(DigitalOscillator::DelayLines) at kCombDelayLength=4096 */
 
 struct PhasorState {
     int32_t value;        /* +0  phase ramp output (0..VMAX) */
@@ -361,14 +343,11 @@ struct CompressorState {
     int32_t envelope;     /* peak follower */
 };
 
+/* echo: stereo delay unit. */
 struct EchoState {
     int32_t  value;       /* +0 left (signed audio) */
     int32_t  value_r;     /* +4 right (signed audio) */
     uint32_t head;
-    int32_t  dc_x_L;
-    int32_t  dc_y_L;
-    int32_t  dc_x_R;
-    int32_t  dc_y_R;
 };
 
 /* EnvFollow: full-wave rectify then one-pole LP.
@@ -404,7 +383,6 @@ struct ShapeState {
     int32_t value;
     int32_t lastx;
 };
-
 
 /* ===== drum state structs ===== */
 
@@ -702,7 +680,7 @@ static inline int32_t pack12_read(const uint8_t* buf, uint32_t idx) {
    this). 0..2047 stay positive; 2048..4095 become -2048..-1. */
 static inline int32_t pack12_read_signed(const uint8_t* buf, uint32_t idx) {
     int32_t c = pack12_read(buf, idx);
-    return (int32_t)((uint32_t)c << 20) >> 20;
+    return (c >= 2048) ? (c - 4096) : c;
 }
 
 __attribute__((always_inline))
@@ -866,48 +844,22 @@ static inline int32_t snap_to_mask(int32_t note, int32_t mask) {
     if (!mask) return note;
     int32_t pc = (note >= 0 && note < 256) ? (int32_t)pc12_lut[note]
                                             : ((note % 12) + 12) % 12;
-    if ((mask >> pc) & 1) return note;
-
-    // check distance 1
-    int32_t r1 = pc + 1; if (r1 >= 12) r1 -= 12;
-    int32_t l1 = pc - 1; if (l1 < 0) l1 += 12;
-    if (((mask >> r1) & 1) || ((mask >> l1) & 1)) {
-        return ((mask >> r1) & 1) ? note + 1 : note - 1;
+    int32_t best = pc, bestDist = 12;
+    for (int32_t d = 0; d < 12; d++) {
+        if ((mask >> d) & 1) {
+            int32_t dist = d - pc;
+            if (dist < 0) dist = -dist;
+            if (12 - dist < dist) dist = 12 - dist;
+            if (dist < bestDist) { bestDist = dist; best = d; }
+        }
     }
-
-    // check distance 2
-    int32_t r2 = pc + 2; if (r2 >= 12) r2 -= 12;
-    int32_t l2 = pc - 2; if (l2 < 0) l2 += 12;
-    if (((mask >> r2) & 1) || ((mask >> l2) & 1)) {
-        return ((mask >> r2) & 1) ? note + 2 : note - 2;
-    }
-
-    // check distance 3
-    int32_t r3 = pc + 3; if (r3 >= 12) r3 -= 12;
-    int32_t l3 = pc - 3; if (l3 < 0) l3 += 12;
-    if (((mask >> r3) & 1) || ((mask >> l3) & 1)) {
-        return ((mask >> r3) & 1) ? note + 3 : note - 3;
-    }
-
-    // check distance 4
-    int32_t r4 = pc + 4; if (r4 >= 12) r4 -= 12;
-    int32_t l4 = pc - 4; if (l4 < 0) l4 += 12;
-    if (((mask >> r4) & 1) || ((mask >> l4) & 1)) {
-        return ((mask >> r4) & 1) ? note + 4 : note - 4;
-    }
-
-    // check distance 5
-    int32_t r5 = pc + 5; if (r5 >= 12) r5 -= 12;
-    int32_t l5 = pc - 5; if (l5 < 0) l5 += 12;
-    if (((mask >> r5) & 1) || ((mask >> l5) & 1)) {
-        return ((mask >> r5) & 1) ? note + 5 : note - 5;
-    }
-
-    // check distance 6
-    int32_t r6 = pc + 6; if (r6 >= 12) r6 -= 12;
-    if ((mask >> r6) & 1) return note + 6;
-
-    return note;
+    /* Move to the nearest scale tone in the minimal SIGNED direction. A linear
+     * (best - pc) shift drops a full octave when the nearest tone is across the
+     * octave wrap (e.g. B -> the C above), so fold the delta into [-6, +6]. */
+    int32_t delta = best - pc;
+    if (delta >  6) delta -= 12;
+    if (delta < -6) delta += 12;
+    return note + delta;
 }
 
 /* ===== stateful helpers ===== */
@@ -1036,16 +988,17 @@ static inline uint32_t pm_offset(int32_t pm) {
     return ((uint32_t)pm) << 21;
 }
 
-/* round(val * depth / VMAX): optimized to use geometric shift-add approximation
- * to avoid software division/modulo on Cortex-M0+. */
+/* round(val * depth / VMAX): the shared 12-bit-normalised product used by vca,
+ * ring, lpg and sine depth. The %/correction gives round-half-up for both signs. */
 static inline int32_t scale_depth(int32_t val, int32_t depth) {
     int32_t n = val * depth;
-    if (n >= 0) {
-        return (n + (n >> 12) + 2048) >> 12;
-    } else {
-        int32_t abs_n = -n;
-        return -((abs_n + (abs_n >> 12) + 2048) >> 12);
-    }
+    int32_t b = VMAX;
+    int32_t n2 = n * 2 + b;
+    int32_t d2 = b * 2;
+    int32_t q = n2 / d2;
+    int32_t r = n2 % d2;
+    if (r != 0 && ((n2 ^ d2) < 0)) q--;
+    return q;
 }
 
 /* ===== filters helpers ===== */
@@ -1188,14 +1141,15 @@ static inline uint32_t inc_detune(uint32_t inc, int32_t v) {
 static inline int32_t log2_fixed(int32_t x) {
     if (x <= 0) x = 1;
     uint32_t v = (uint32_t)x;
-    int clz = __builtin_clz(v);
-    int n = 31 - clz;
-    uint32_t mant = v << (clz - 1);
-    uint32_t f = (mant >> 14) & 0xFFFFu;
+    int n = 0;                                  /* MSB index 0..30 */
+    while (v > 1u) { v >>= 1; n++; }
+    uint32_t mant = (n <= 30) ? ((uint32_t)x << (30 - n))   /* align MSB to bit 30 */
+                              : ((uint32_t)x >> (n - 30));
+    uint32_t f = (mant >> 14) & 0xFFFFu;        /* 16 fractional bits below leading 1 */
     int32_t a = LOG2_FRAC_LUT[f >> 8];
     int32_t b = LOG2_FRAC_LUT[(f >> 8) + 1];
-    int32_t frac = a + (((b - a) * (int32_t)(f & 0xFF)) >> 8);
-    return ((n - 16) << 16) + frac;
+    int32_t frac = a + (((b - a) * (int32_t)(f & 0xFF)) >> 8);  /* log2(mant) frac Q16 */
+    return ((n - 16) << 16) + frac;             /* log2(x_real) in Q16 */
 }
 
 /* exp2: exponential CV/VCA transfer over ~8 octaves. :in 0..VMAX (clamped) maps
@@ -1257,7 +1211,7 @@ void OP_FN(op_cv)(struct Slot* s) {
     if (s->param0 & 1u) {
         st->value = x - VMID;
     } else {
-        st->value = scale_depth(x, 2047);
+        st->value = js_round_div(x * 2047, VMAX);
     }
 }
 void OP_FN(op_snap)(struct Slot* s) {
@@ -1269,12 +1223,10 @@ void OP_FN(op_snap)(struct Slot* s) {
 void OP_FN(op_quantise)(struct Slot* s) {
     struct NodeStateBase* st = (struct NodeStateBase*)s->out;
     int32_t val  = *(int32_t*)s->in0;
-    // Division-less: js_round_div(val * 127, 4095)
-    int32_t midi = (int32_t)(((int64_t)(2 * val * 127 + 4095) * 131104) >> 30);
+    int32_t midi = js_round_div(val * 127, VMAX);
     int32_t mask = s->param0 ? (int32_t)s->param0 : *(int32_t*)s->in1;
     int32_t note = snap_to_mask(midi, mask & 0xFFF);
-    // Division-less: js_round_div(note * 4095, 127)
-    st->value = (int32_t)(((int64_t)(2 * note * 4095 + 127) * 16909320) >> 32);
+    st->value = js_round_div(note * VMAX, 127);   /* MIDI 127 -> VMAX */
 }
 void OP_FN(op_transpose)(struct Slot* s) {
     ((struct NodeStateBase*)s->out)->value = vclamp(*(int32_t*)s->in0 + *(int32_t*)s->in1);
@@ -1316,10 +1268,10 @@ void OP_FN(op_morph)(struct Slot* s) {
     };
     int32_t pos = *(ins[nsig]);
     if (nsig <= 1) { st->value = *(ins[0]); return; }
-    int32_t raw = pos * (nsig - 1);
-    int32_t i0  = (raw * 4098) >> 24;
-    int32_t rem = raw - i0 * 4095;
-    int32_t f16 = (rem * 1048832) >> 16;
+    int32_t nsig1 = nsig - 1;
+    int32_t raw = pos * nsig1;
+    int32_t i0  = raw / VMAX;
+    int32_t f16 = ((raw % VMAX) << 16) / VMAX;
     if (i0 < 0) i0 = 0;
     if (i0 >= nsig - 1) { st->value = *(ins[(nsig - 1) < 3 ? nsig - 1 : 3]); return; }
     int32_t a = mclamp_(*(ins[i0 < 4 ? i0 : 3]));
@@ -1340,17 +1292,10 @@ void OP_FN(op_midi)(struct Slot* s) {
     int32_t v = *(const int32_t*)s->in0;
     ((struct LeafState*)s->out)->value = (v < 0) ? 0 : v;   /* CC "no message" sentinel reads 0 */
 }
-/* midi-cc with a default: in1 (:init) holds until the first CC lands. Slewed. */
+/* midi-cc with a default: in1 (:init) holds until the first CC lands. */
 void OP_FN(op_midi_cc)(struct Slot* s) {
-    struct MidiCcState* st = (struct MidiCcState*)s->out;
     int32_t v = *(const int32_t*)s->in0;
-    int32_t target = (v < 0) ? *(const int32_t*)s->in1 : v;
-    if (!st->initialized) {
-        st->current_q16 = target << 16;
-        st->initialized = 1;
-    }
-    st->current_q16 += ((target << 16) - st->current_q16) >> 7;
-    st->value = round16(st->current_q16);
+    ((struct LeafState*)s->out)->value = (v < 0) ? *(const int32_t*)s->in1 : v;
 }
 /* latest: follow whichever control moved last. in0=a (a knob), in1=b (a CC or
  * other stream), in2=near. b owns at rest, so b's quiet value (a midi-cc
@@ -1477,16 +1422,7 @@ void OP_FN(op_echo)(struct Slot* s) {
         wet_L = w0 + (((w1 - w0) * fp) >> 16);
         wet_R = wet_L;
         int32_t in_sum = (in_l + in_r) / 2;
-        int32_t raw_fb = in_sum + (wet_L * fb) / 4096;
-
-        /* DC blocker on feedback write: removes slow bias before it accumulates
-         * in the ring buffer. Coefficient 4075/4096 ≈ 0.9948 → fc ≈ 2.5 Hz. */
-        int32_t dc_y = raw_fb - st->dc_x_L + ((st->dc_y_L * 4075) >> 12);
-        st->dc_x_L = raw_fb;
-        st->dc_y_L = sclamp_(dc_y);
-        int32_t write_val = st->dc_y_L;
-
-        pack12_write(buf->bytes, st->head, (uint32_t)write_val);
+        pack12_write(buf->bytes, st->head, (uint32_t)sclamp_(in_sum + (wet_L * fb) / 4096));
         st->head++; if (st->head >= (uint32_t)len) st->head = 0;
     } else {           /* stereo / ping-pong: split ring */
         int32_t half = (int32_t)(buf->length >> 1);
@@ -1510,25 +1446,13 @@ void OP_FN(op_echo)(struct Slot* s) {
 
         int32_t wL, wR;
         if (mode == 1) {   /* stereo: independent sides */
-            wL = in_l + (wet_L * fb) / 4096;
-            wR = in_r + (wet_R * fb) / 4096;
+            wL = sclamp_(in_l + (wet_L * fb) / 4096);
+            wR = sclamp_(in_r + (wet_R * fb) / 4096);
         } else {           /* ping-pong: mono in on the left, sides swap */
             int32_t in_sum = (in_l + in_r) / 2;
-            wL = in_sum + (wet_R * fb) / 4096;
-            wR = (wet_L * fb) / 4096;
+            wL = sclamp_(in_sum + (wet_R * fb) / 4096);
+            wR = sclamp_((wet_L * fb) / 4096);
         }
-
-        /* DC blockers on L and R feedback writes. */
-        int32_t dc_y_L = wL - st->dc_x_L + ((st->dc_y_L * 4075) >> 12);
-        st->dc_x_L = wL;
-        st->dc_y_L = sclamp_(dc_y_L);
-        wL = st->dc_y_L;
-
-        int32_t dc_y_R = wR - st->dc_x_R + ((st->dc_y_R * 4075) >> 12);
-        st->dc_x_R = wR;
-        st->dc_y_R = sclamp_(dc_y_R);
-        wR = st->dc_y_R;
-
         pack12_write(buf->bytes, st->head, (uint32_t)wL);
         pack12_write(buf->bytes, (uint32_t)((int32_t)st->head + half), (uint32_t)wR);
         st->head++; if (st->head >= (uint32_t)half) st->head = 0;
@@ -1547,9 +1471,9 @@ static inline int32_t comb_step16(int16_t* buf, uint32_t idx, int32_t inValShift
     /* Truncate toward zero (/, not >>) in every feedback product: an
      * arithmetic shift pins small negative values (-1 * 0.9 >> 12 = -1) and
      * the tail never dies. Toward-zero decay guarantees the ring empties. */
-    int32_t lp = (out + *p_comb_flt) / 2;
+    int32_t lp = sclamp_(out / 2 + (*p_comb_flt) / 2);
     *p_comb_flt = lp;
-    int32_t writ = inValShifted + (lp * cFb) / 4096;
+    int32_t writ = sclamp_(inValShifted + (lp * cFb) / 4096);
     buf[idx] = (int16_t)writ;
     return out;
 }
@@ -1557,9 +1481,9 @@ static inline int32_t comb_step16(int16_t* buf, uint32_t idx, int32_t inValShift
 __attribute__((always_inline))
 static inline int32_t ap_step16(int16_t* buf, uint32_t idx, int32_t wet) {
     int32_t buf_out = buf[idx];
-    int32_t writ = wet + buf_out / 2;
+    int32_t writ = sclamp_(wet + buf_out / 2);
     buf[idx] = (int16_t)writ;
-    return buf_out - writ / 2;
+    return sclamp_(buf_out - writ / 2);
 }
 
 void OP_FN(op_reverb)(struct Slot* s) {
@@ -1658,6 +1582,7 @@ void OP_FN(op_reverb)(struct Slot* s) {
     st->value   = sclamp_(((inVal * dryAmt) >> 12) + ((wetL * mix) >> 12));
     st->value_r = sclamp_(((inVal * dryAmt) >> 12) + ((wetR * mix) >> 12));
 }
+
 
 
 static inline int32_t midi_scale7(int32_t v) {
@@ -1950,6 +1875,11 @@ void OP_FN(op_pickup)(struct Slot* s) {
 typedef struct {
     int32_t  value;
     uint32_t phase;
+    int32_t  last_wave_lo;
+    int32_t  last_wave_hi;
+    uint32_t inited;
+    int16_t  buf_lo[WT_LEN];
+    int16_t  buf_hi[WT_LEN];
 } WavetableState;
 
 void OP_FN(op_wavetable)(struct Slot* s) {
@@ -1975,17 +1905,24 @@ void OP_FN(op_wavetable)(struct Slot* s) {
     if (table_idx >= WT_NUM_TABLES) table_idx = WT_NUM_TABLES - 1;
     const int16_t *table = WT_TABLES[table_idx];
 
+    if (!st->inited || wave_lo != st->last_wave_lo) {
+        memcpy(st->buf_lo, table + (uint32_t)wave_lo * WT_LEN, WT_LEN * 2);
+        st->last_wave_lo = wave_lo;
+    }
+    if (!st->inited || wave_hi != st->last_wave_hi) {
+        memcpy(st->buf_hi, table + (uint32_t)wave_hi * WT_LEN, WT_LEN * 2);
+        st->last_wave_hi = wave_hi;
+    }
+    st->inited = 1;
+
     uint32_t idx  = (phase_read >> 24) & 0xFFu;
     uint32_t frac = (phase_read >> 16) & 0xFFu;
-
-    const int16_t *lo_wave = table + (uint32_t)wave_lo * WT_LEN;
-    int32_t s0 = lo_wave[idx];
-    int32_t s1 = lo_wave[(idx + 1u) & 0xFFu];
+    int32_t s0 = st->buf_lo[idx];
+    int32_t s1 = st->buf_lo[(idx + 1u) & 0xFFu];
     int32_t lo_samp = s0 + ((s1 - s0) * (int32_t)frac >> 8);
 
-    const int16_t *hi_wave = table + (uint32_t)wave_hi * WT_LEN;
-    s0 = hi_wave[idx];
-    s1 = hi_wave[(idx + 1u) & 0xFFu];
+    s0 = st->buf_hi[idx];
+    s1 = st->buf_hi[(idx + 1u) & 0xFFu];
     int32_t hi_samp = s0 + ((s1 - s0) * (int32_t)frac >> 8);
 
     /* crossfade lo/hi; scale from int16 range to 12-bit audio */
@@ -2116,8 +2053,7 @@ void OP_FN(op_vcf)(struct Slot* s) {
     struct VcfState* st = (struct VcfState*)s->out;
     int32_t x   = *(const int32_t*)s->in0;
     int32_t cut = *(const int32_t*)s->in1;
-    int32_t res = *(const int32_t*)s->in2;
-    if (cut < 0) cut = 0; else if (cut > VMAX) cut = VMAX;
+    int32_t res  = *(const int32_t*)s->in2;
     if (res < 0) res = 0; else if (res > VMAX) res = VMAX;
     int32_t port = (int32_t)s->param0 & 3;
     int32_t k  = cut * 16;
@@ -2238,23 +2174,8 @@ void OP_FN(op_envfollow)(struct Slot* s) {
     if (cut < 0)     cut = 0;
     if (cut > VMAX) cut = VMAX;
     st->y_q16 = onepole_step(st->y_q16, x, cut);
-    int32_t out_val = round16(st->y_q16) * 2;
-    st->value = out_val > VMAX ? VMAX : out_val;
+    st->value = round16(st->y_q16);
 }
-extern void op_weave_process(struct WeaveState* st,
-    int32_t note, int32_t timbre, int32_t color, int32_t model, int32_t trig);
-
-void OP_FN(op_weave)(struct Slot* s) {
-    struct WeaveState* st = (struct WeaveState*)s->out;
-    int32_t note   = slot_in0(s);
-    int32_t timbre = slot_in1(s);
-    int32_t color  = slot_in2(s);
-    int32_t model  = slot_in3(s);
-    int32_t trig   = slot_in4(s);
-
-    op_weave_process(st, note, timbre, color, model, trig);
-}
-
 void OP_FN(op_wavefold)(struct Slot* s) {
     struct WavefoldState* st = (struct WavefoldState*)s->out;
     int32_t sig = *(const int32_t*)s->in0;
@@ -2528,8 +2449,7 @@ void OP_FN(op_adsr)(struct Slot* s) {
     if (d != st->cd) { st->kd = drumDecayK_(d, 10, 48); st->cd = d; }
     if (r != st->cr) { st->kr = drumDecayK_(r, 10, 48); st->cr = r; }
     int32_t peakL = peak << 8;
-    int32_t sus_div = (int32_t)(((int64_t)sus * peak * 1048833) >> 32);
-    int32_t susL  = sus_div << 8;
+    int32_t susL  = ((sus * peak) / VMAX) << 8;   /* sus*peak <= ~16.7M, fits int32 */
     int32_t target, k;
     if (st->phase == 1)      { target = peakL; k = st->ka; if (st->level >= peakL - (peakL >> 6)) st->phase = 2; }
     else if (st->phase == 2) { target = susL;  k = st->kd; }
@@ -2819,46 +2739,11 @@ void OP_FN(op_dx)(struct Slot* s) {
        tone:  0..4095, centre 2048=unity, scales modulator (non-carrier) outs. */
     int32_t decay = s->in0 ? slot_in0(s) : 2048;
     int32_t tone  = s->in4 ? slot_in4(s) : 2048;
-    uint8_t voice_bytes[128];
-    const uint8_t* vdata = NULL;
-    uint32_t checksum = 0;
-    int32_t p = 0;
-
-    if (s->param0 & 0x8000u) {
-        struct Buffer* buf = (struct Buffer*)s->in3;
-        if (buf && buf->length >= 128) {
-            /* Cache the buffer pointer: only re-read all 128 packed cells and
-             * recompute the checksum when the buffer address changes. Previously
-             * this loop ran on every single sample regardless, costing ~128
-             * pack12_read_signed calls + 128 multiplies per ISR call. */
-            if (buf->bytes != st->last_voice_buf) {
-                st->last_voice_buf = buf->bytes;
-                checksum = 0;
-                for (int j = 0; j < 128; j++) {
-                    voice_bytes[j] = (uint8_t)pack12_read_signed(buf->bytes, j);
-                    checksum = checksum * 33 + voice_bytes[j];
-                }
-            } else {
-                /* Pointer unchanged: reuse cached parse (checksum stays 0 here;
-                 * the cells_valid / cached_preset guard below will skip re-parse). */
-                checksum = (uint32_t)st->cached_preset;
-                for (int j = 0; j < 128; j++)
-                    voice_bytes[j] = (uint8_t)pack12_read_signed(buf->bytes, j);
-            }
-            vdata = voice_bytes;
-        }
-    } else {
-        const struct Dx7Bank* B = &DX7_BANKS[s->param0 % (uint32_t)NUM_DX7_BANKS];
-        if (B->data && B->nvoices > 0) {
-            p = preset < 0 ? 0 : preset >= (int32_t)B->nvoices ? (int32_t)B->nvoices - 1 : preset;
-            vdata = B->data + (uint32_t)p * 128u;
-            checksum = (uint32_t)p;
-        }
-    }
-
-    if (!vdata) { st->value = 0; return; }
-
-    if (!st->cells_valid || st->cached_bank != (int32_t)s->param0 || st->cached_preset != (int32_t)checksum) {
+    const struct Dx7Bank* B = &DX7_BANKS[s->param0 % (uint32_t)NUM_DX7_BANKS];
+    if (!B->data || B->nvoices == 0) { st->value = 0; return; }   /* no banks loaded: silent */
+    int32_t p = preset < 0 ? 0 : preset >= (int32_t)B->nvoices ? (int32_t)B->nvoices - 1 : preset;
+    if (!st->cells_valid || st->cached_bank != (int32_t)s->param0 || st->cached_preset != p) {
+        const uint8_t* vdata = B->data + (uint32_t)p * 128u;
         dx7_parse_voice(vdata, st->cells);
         pitchenv_load(&st->peg, vdata);
         /* per-op frequency (osc_freq logfreq base + ratio mask). Packed order
@@ -2874,14 +2759,14 @@ void OP_FN(op_dx)(struct Slot* s) {
             if (!mode) st->op_ratio |= 1 << op;
         }
         st->cached_bank   = (int32_t)s->param0;
-        st->cached_preset = (int32_t)checksum;
+        st->cached_preset = p;
         st->cells_valid   = 1;
         st->ks_pitch      = -1;        /* force keyscale recompute below */
-        st->cached_decay  = -1;        /* force decay recompute */
     }
     /* Keyboard level scaling depends on the played note: recompute the per-op
        gain multipliers only when the note (or voice) changes. */
     if (st->ks_pitch != pitch) {
+        const uint8_t* vdata = B->data + (uint32_t)p * 128u;
         int32_t nlf = midinote_to_logfreq(midi_clamp(pitch));
         for (int i = 0; i < 6; i++) {
             int op = 5 - i;
@@ -2908,36 +2793,25 @@ void OP_FN(op_dx)(struct Slot* s) {
     int32_t feedback = cells[1] / 585;          /* DX7 feedback 0..7 (cells[1] = 585*fb) */
     int32_t fb_shift = feedback ? (8 - feedback) : 16;   /* msfa FEEDBACK_BITDEPTH-feedback */
     const struct FmAlgo* A = &FM_ALGOS[algo];
-
-    if (st->cached_decay != decay) {
-        for (int op = 0; op < 6; op++) {
-            uint32_t ob = 2u + 9u * (uint32_t)op;
-            st->l_cached[op][0] = cells[ob+5u];
-            st->l_cached[op][1] = cells[ob+6u];
-            st->l_cached[op][2] = cells[ob+7u];
-            st->l_cached[op][3] = cells[ob+8u];
-
-            int32_t r0 = cells[ob+1u];
-            int32_t r1 = cells[ob+2u];
-            int32_t r2 = cells[ob+3u];
-            int32_t r3 = cells[ob+4u];
-            if (decay != 2048 && (A->carriers & (uint8_t)(1u << op))) {
-                int32_t rs1 = (r1 * decay) >> 11; r1 = rs1 < 0 ? 0 : rs1 > 99 ? 99 : rs1;
-                int32_t rs2 = (r2 * decay) >> 11; r2 = rs2 < 0 ? 0 : rs2 > 99 ? 99 : rs2;
-                int32_t rs3 = (r3 * decay) >> 11; r3 = rs3 < 0 ? 0 : rs3 > 99 ? 99 : rs3;
-            }
-            st->r_cached[op][0] = r0;
-            st->r_cached[op][1] = r1;
-            st->r_cached[op][2] = r2;
-            st->r_cached[op][3] = r3;
-        }
-        st->cached_decay = decay;
-    }
-
     int32_t out[6] = {0,0,0,0,0,0};
 
     for (int k = 0; k < 6; k++) {
         int op = A->order[k];
+        uint32_t ob = 2u + 9u * (uint32_t)op;
+        int32_t R[4] = { cells[ob+1u], cells[ob+2u], cells[ob+3u], cells[ob+4u] };
+        int32_t L[4] = { cells[ob+5u], cells[ob+6u], cells[ob+7u], cells[ob+8u] };
+
+        /* :decay scales only the CARRIER operators' decay/release rates (R2..R4), so it
+           sets how long the note rings without altering the modulator-driven timbre. A
+           carrier's EG is the amplitude envelope (FM has no separate amp EG); modulators
+           keep their rates so the timbre evolves as authored. 2048=unity, 0=slowest
+           (infinite sustain), 4095~2x speed. Attack (R1) is left crisp. */
+        if (decay != 2048 && (A->carriers & (uint8_t)(1u << op))) {
+            for (int r = 1; r < 4; r++) {
+                int32_t rs = (R[r] * decay) >> 11;
+                R[r] = rs < 0 ? 0 : rs > 99 ? 99 : rs;
+            }
+        }
 
         /* Frequency via msfa freqlut. Ratio ops add the played note + pitch envelope
            (the kick's thud); fixed ops use their absolute logfreq alone. inc is the
@@ -2951,17 +2825,13 @@ void OP_FN(op_dx)(struct Slot* s) {
            Summing, not averaging, is the faithful DX7 behaviour, and the 24-bit
            datapath is what stops FM coarseness from aliasing. */
         int32_t input = 0;
-        uint8_t mmask = A->modmask[op];
-        if (mmask & (1u << 0)) input += out[0];
-        if (mmask & (1u << 1)) input += out[1];
-        if (mmask & (1u << 2)) input += out[2];
-        if (mmask & (1u << 3)) input += out[3];
-        if (mmask & (1u << 4)) input += out[4];
-        if (mmask & (1u << 5)) input += out[5];
+        for (int m = 0; m < 6; m++) {
+            if (A->modmask[op] & (uint8_t)(1u << m)) input += out[m];
+        }
 
         /* Envelope -> Q24 linear gain. dxeg returns a linear amplitude with unity
            == VMAX; <<12 rescales unity to ~2^24 (msfa's Exp2 gain domain). */
-        int32_t env  = dxeg_step(&st->eg[op], gate, st->r_cached[op], st->l_cached[op], st->rate_scaling[op]);
+        int32_t env  = dxeg_step(&st->eg[op], gate, R, L, st->rate_scaling[op]);
         int32_t gain = env << 12;
         /* keyboard level scaling: gain *= ks_mult (Q16), 32-bit (gain >= 0). */
         { uint32_t g = (uint32_t)gain, k = (uint32_t)st->ks_mult[op];
@@ -2998,19 +2868,6 @@ void OP_FN(op_dx)(struct Slot* s) {
        Round to nearest (not truncate -- truncation adds a DC bias and asymmetric
        distortion that folds up as grit). No dither: it would hiss through decay tails. */
     st->value = sat_cubic((acc + (1 << 14)) >> 15);
-
-    /* DC-offset blocker on the carrier output (one-pole highpass, ~2.5 Hz @ 48 kHz).
-     * FM self-feedback operators accumulate a slow DC bias in the phase domain via
-     * the y0/y1 averaged feedback history. Without this, the bias bleeds into the
-     * carrier output and causes pitch instability that grows over time (audible as
-     * slow drift, especially with high-feedback voices). The hardware DX7 is AC-coupled
-     * at its DAC output; this filter faithfully recreates that behaviour.
-     * Coefficient 4075/4096 ≈ 0.9948 keeps the rolloff well below audible range. */
-    int32_t raw_out = st->value;
-    int32_t dc_y = raw_out - st->dc_x + ((st->dc_y * 4075) >> 12);
-    st->dc_x = raw_out;
-    st->dc_y = sclamp_(dc_y);
-    st->value = st->dc_y;
 }
 
 /* DX7 SysEx level-scaling LUT: indices 0..19 (port of Dexed/msfa scaleoutlevel).
@@ -3252,21 +3109,12 @@ void OP_FN(op_pluck)(struct Slot* s) {
         uint32_t n = inc ? (0xFFFFFFFFu / inc) : cap;
         if (n < 2u)   n = 2u;
         if (n > cap)  n = cap;
-        static const uint32_t PLUCK_MAX_FILL_CELLS = 512u;
-        uint32_t fill_n = (n < PLUCK_MAX_FILL_CELLS) ? n : PLUCK_MAX_FILL_CELLS;
         uint32_t r = st->rng ? st->rng : 0x1234567u;
-        for (uint32_t i = 0; i < fill_n; i++) {
+        for (uint32_t i = 0; i < n; i++) {
             r = lcg(r);
             int32_t noise = (int32_t)((r >> 20) & 0xFFFu) - 2048; /* -2048..2047 */
             noise -= noise >> 4;                                  /* ~15/16: keep off the rail */
             pack12_write(buf->bytes, i, noise);
-        }
-        /* Zero-fill the remainder so the ring buffer doesn't replay stale content. */
-        if (fill_n < n) {
-            size_t byte_start = ((size_t)fill_n * 3u) >> 1;
-            size_t byte_end   = (((size_t)n * 3u) + 1u) >> 1;
-            if (byte_end > byte_start)
-                memset(buf->bytes + byte_start, 0, byte_end - byte_start);
         }
         st->rng  = r;
         st->n    = n;
@@ -3693,7 +3541,6 @@ static void (* const KFN[KID_COUNT])(struct Slot*) = {
     /* 125 */ op_compressor,
     /* 126 */ op_reverb,
     /* 127 */ op_echo,
-    /* 128 */ op_weave,
 };
 _Static_assert(sizeof(KFN) / sizeof(KFN[0]) == KID_COUNT,
                "KFN entry count must equal KID_COUNT");
@@ -3730,7 +3577,7 @@ static const uint16_t KSTATE_BYTES[KID_COUNT] = {
     [KID_OP_HITS]                         = sizeof(struct HitsState),
     [KID_OP_HOLD]                         = sizeof(struct HoldState),
     [KID_OP_PICKUP]                       = sizeof(struct PickupState),
-    [KID_OP_MIDI_CC]                      = sizeof(struct MidiCcState),
+    [KID_OP_MIDI_CC]                      = sizeof(struct LeafState),
     [KID_OP_LATEST]                       = sizeof(struct LatestState),
     [KID_OP_CHORUS]                       = sizeof(struct ChorusState),
     [KID_OP_FLANGER]                      = sizeof(struct ChorusState),
@@ -3785,7 +3632,6 @@ static const uint16_t KSTATE_BYTES[KID_COUNT] = {
     [KID_OP_SVF]                          = sizeof(struct SvfState),
     [KID_OP_SHAPE]                        = sizeof(struct ShapeState),
     [KID_OP_DX]                           = sizeof(struct FmState),
-    [KID_OP_WEAVE]                        = sizeof(struct WeaveState) + WEAVE_DELAY_BYTES,
 };
 
 uint32_t runtime_kernel_state_bytes(uint8_t kid) {
@@ -3938,7 +3784,6 @@ static const KEntry KTABLE[] = {
     {"op_terminal_write_led_4",       KID_OP_TERMINAL_WRITE},
     {"op_terminal_write_led_5",       KID_OP_TERMINAL_WRITE},
     {"op_dx",    KID_OP_DX},
-    {"op_weave", KID_OP_WEAVE},
     {NULL, KID_UNKNOWN}
 };
 
@@ -4116,49 +3961,13 @@ void runtime_destroy(struct LensRuntime* rt) { (void)rt; }
 void __not_in_flash_func(runtime_walk_core0)(struct LensRuntime* rt, uint32_t seq) {
     (void)seq;
     struct Slot** const end = rt->core0_slots + rt->core0_count;
-#if LENS_PERF_PROBE
-    for (struct Slot** p = rt->core0_slots; p < end; p++) {
-        struct Slot* s = *p;
-        uint32_t start = M0P_SYSTICK_CVR;
-        if (s->fn) s->fn(s);
-        uint32_t end_val = M0P_SYSTICK_CVR;
-        uint32_t elapsed = (start - end_val) & 0x00FFFFFFu;
-        uint16_t si = (uint16_t)(s - rt->slots);
-        if (si < LENS_MAX_SLOTS) {
-            rt->slot_cycle_total[si] += elapsed;
-            if (elapsed > rt->slot_cycle_max[si]) {
-                rt->slot_cycle_max[si] = elapsed;
-            }
-            rt->slot_call_count[si]++;
-        }
-    }
-#else
     for (struct Slot** p = rt->core0_slots; p < end; p++) step_slot(*p);
-#endif
 }
 
 void __not_in_flash_func(runtime_walk_core1)(struct LensRuntime* rt, uint32_t seq) {
     (void)seq;
     struct Slot** const end = rt->core1_slots + rt->core1_count;
-#if LENS_PERF_PROBE
-    for (struct Slot** p = rt->core1_slots; p < end; p++) {
-        struct Slot* s = *p;
-        uint32_t start = M0P_SYSTICK_CVR;
-        if (s->fn) s->fn(s);
-        uint32_t end_val = M0P_SYSTICK_CVR;
-        uint32_t elapsed = (start - end_val) & 0x00FFFFFFu;
-        uint16_t si = (uint16_t)(s - rt->slots);
-        if (si < LENS_MAX_SLOTS) {
-            rt->slot_cycle_total[si] += elapsed;
-            if (elapsed > rt->slot_cycle_max[si]) {
-                rt->slot_cycle_max[si] = elapsed;
-            }
-            rt->slot_call_count[si]++;
-        }
-    }
-#else
     for (struct Slot** p = rt->core1_slots; p < end; p++) step_slot(*p);
-#endif
 }
 
 }

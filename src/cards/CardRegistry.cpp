@@ -320,7 +320,7 @@ void register_all_cards() {
         "lens",
         "Lens",
         "52",
-        "A programmable synth/sequencer running Loupe (Lisp) patches. Connect visually via the web editor to compile and upload.",
+        "A programmable synth. Write patches in Loupe (a tiny Lisp); sequences of values read through lenses become pitch, rhythm, CV and audio.",
         "Graham Ritchie",
         true
     });
@@ -488,7 +488,7 @@ void register_all_cards() {
         "cosmik_c1zzl3",
         "Cosmik C1ZZL3",
         "84",
-        "Stable phase-distortion synthesiser and Turing machine firmware with gate-held looping Web MIDI envelopes, envelope readback, PD, detune, eight waveform families, hosted CZ patch import, USB MIDI device/host operation, and optional Turing MIDI output.",
+        "Stable phase-distortion synthesiser and Turing machine firmware with Web MIDI envelope readback, PD, detune, eight waveform families, hosted CZ patch import, USB MIDI device/host operation, and optional Turing MIDI output.",
         "Adrian Vos",
         true
     });

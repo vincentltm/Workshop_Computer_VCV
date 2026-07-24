@@ -796,7 +796,11 @@ ClockworksCard::ClockworksCard() {
         states_[i].ext_sync_pulses = 4;
         states_[i].ext_pulse_ch_counter = 0;
         for (int j = 0; j < 64; j++) {
-            states_[i].random_history[j] = (int16_t)((rand() % 4096) - 2048);
+            if (i >= 4) {
+                states_[i].random_history[j] = (int16_t)(rand() % 256);
+            } else {
+                states_[i].random_history[j] = (int16_t)((rand() % 4096) - 2048);
+            }
         }
         states_[i].rand_current = states_[i].random_history[0];
         states_[i].rand_next = states_[i].random_history[1];
@@ -806,6 +810,9 @@ ClockworksCard::ClockworksCard() {
 }
 
 void ClockworksCard::calculate_state_inverses(int ch, uint8_t shape, uint8_t param) {
+    if (ch >= 4) {
+        return; // No pre-calculations needed for digital pulse outputs
+    }
     // Clamp parameters slightly to avoid division by 0
     uint32_t clamped_param = param;
     if (clamped_param < 2) clamped_param = 2;
@@ -896,11 +903,8 @@ void ClockworksCard::clear_midi_stacks_core0() {
 }
 
 void ClockworksCard::migrate_settings_format() {
-    for (int i = 4; i < 6; i++) {
-        if (settings_.channels[i].level == 0) {
-            settings_.channels[i].level = 200;
-        }
-    }
+    // Obsolete migration code made a no-op to prevent settings corruption
+    return;
 }
 
 void ClockworksCard::apply_default_settings() {
@@ -923,7 +927,7 @@ void ClockworksCard::apply_default_settings() {
         settings_.channels[i].set_quantizer_scale(SCALE_OFF);
         settings_.channels[i].set_euclidean_offset(0);
         settings_.channels[i].loop_length = 0;
-        settings_.channels[i].level = 200; // Default level 200 (+100% level) for all channels
+        settings_.channels[i].level = (i < 4) ? 200 : 0; // Default level 200 (+100% level) for analog, 0 (0% delay) for digital
         settings_.channels[i].glide = 0;                  // default 0 (instant)
         calculate_state_inverses(i, WAVE_GATE, 128);
     }
@@ -946,9 +950,17 @@ bool ClockworksCard::is_valid_settings(const SavedSettings& s) {
         if (s.channels[i].euclidean_steps > 0) {
             if (s.channels[i].euclidean_fills > 16) return false;
             if (s.channels[i].euclidean_fills > s.channels[i].euclidean_steps) return false;
+        } else {
+            if (i >= 4) {
+                if (s.channels[i].euclidean_fills > 16) return false;
+            }
         }
         if (s.channels[i].probability > 100) return false;
-        if (s.channels[i].wave_shape >= WAVE_NUM_SHAPES) return false;
+        if (i >= 4) {
+            if (s.channels[i].wave_shape >= 6) return false;
+        } else {
+            if (s.channels[i].wave_shape >= WAVE_NUM_SHAPES) return false;
+        }
         if (s.channels[i].get_quantizer_scale() >= SCALE_NUM_SCALES) return false;
         if (s.channels[i].euclidean_steps > 0 && s.channels[i].get_euclidean_offset() >= s.channels[i].euclidean_steps) return false;
         if (s.channels[i].loop_length > 64) return false;
@@ -1307,7 +1319,7 @@ void ClockworksCard::process_midi_cc(uint8_t midi_ch, uint8_t cc, uint8_t val) {
                 break;
             }
             case 2: { // Fills
-                uint8_t max_fills = (ch >= 6) ? 16 : 255;
+                uint8_t max_fills = (ch >= 4) ? 16 : 255;
                 uint8_t fills = (val * max_fills) / 127;
                 if (pending_y_.active && pending_y_.channel == ch && pending_y_.type == PENDING_FILLS) {
                     pending_y_.active = false;
@@ -1329,7 +1341,7 @@ void ClockworksCard::process_midi_cc(uint8_t midi_ch, uint8_t cc, uint8_t val) {
                 break;
             }
             case 3: { // Wave Shape
-                uint8_t max_shape = (ch >= 6) ? 5 : (WAVE_NUM_SHAPES - 1);
+                uint8_t max_shape = (ch >= 4) ? 5 : (WAVE_NUM_SHAPES - 1);
                 uint8_t shape = (val * max_shape) / 127;
                 if (pending_main_.active && pending_main_.channel == ch && pending_main_.type == PENDING_SHAPE) {
                     pending_main_.active = false;
@@ -1582,7 +1594,11 @@ void __not_in_flash_func(ClockworksCard::reset_channels_core1)(uint8_t global_se
         rand_seed = 0x12345678U + ((uint32_t)global_seed * 0x7FEDCBA9U) + (uint32_t)i * 0x13579BDFU;
 
         for (int j = 0; j < 64; j++) {
-            states_[i].random_history[j] = (int16_t)((fast_rand() & 0xFFF) - 2048);
+            if (i >= 4) {
+                states_[i].random_history[j] = (int16_t)(fast_rand() & 0xFF);
+            } else {
+                states_[i].random_history[j] = (int16_t)((fast_rand() & 0xFFF) - 2048);
+            }
         }
         states_[i].rand_current = states_[i].random_history[0];
         states_[i].rand_next = states_[i].random_history[1];
@@ -2206,7 +2222,11 @@ void __not_in_flash_func(ClockworksCard::ProcessSample)() {
 
                 // Populate random history on every step in infinite mode
                 if (ch_config.loop_length == 0) {
-                    state.random_history[state.loop_step_count & 63] = (int16_t)((fast_rand() & 0xFFF) - 2048);
+                    if (i >= 4) {
+                        state.random_history[state.loop_step_count & 63] = (int16_t)(fast_rand() & 0xFF);
+                    } else {
+                        state.random_history[state.loop_step_count & 63] = (int16_t)((fast_rand() & 0xFFF) - 2048);
+                    }
                 }
 
                 // Calculate Euclidean step state
@@ -2227,9 +2247,13 @@ void __not_in_flash_func(ClockworksCard::ProcessSample)() {
                         uint8_t roll;
                         if (ch_config.loop_length > 0) {
                             uint32_t hist_val = state.random_history[state.loop_step_count % ch_config.loop_length];
-                            int32_t val_abs = (int16_t)hist_val;
-                            if (val_abs < 0) val_abs = -val_abs;
-                            roll = (uint8_t)((val_abs * 100) >> 11);
+                            if (i < 4) {
+                                int32_t val_abs = (int16_t)hist_val;
+                                if (val_abs < 0) val_abs = -val_abs;
+                                roll = (uint8_t)((val_abs * 100) >> 11);
+                            } else {
+                                roll = (uint8_t)((hist_val * 100) >> 8);
+                            }
                         } else {
                             roll = mul_u32_u32_high(fast_rand(), 100);
                         }
@@ -2244,6 +2268,24 @@ void __not_in_flash_func(ClockworksCard::ProcessSample)() {
                     uint32_t mutate_chance = (cached_params.global_humanize - 50) / 2;
                     if (mul_u32_u32_high(fast_rand(), 100) < mutate_chance) {
                         state.step_active = !state.step_active;
+                    }
+                }
+
+                // Sample random gate width for RANDOM shape on Pulse outputs (Channels 4 & 5)
+                if (i >= 4 && ch_config.wave_shape == 4) {
+                    if (ch_config.loop_length > 0) {
+                        uint8_t loop_len_r = ch_config.loop_length;
+                        uint8_t idx = state.loop_step_count % loop_len_r;
+                        int16_t r_val = state.random_history[idx];
+                        if (cached_params.global_humanize > 50) {
+                            uint32_t mutate_chance = (cached_params.global_humanize - 50);
+                            if (mul_u32_u32_high(fast_rand(), 100) < mutate_chance) {
+                                r_val = (int16_t)(fast_rand() & 0xFF);
+                            }
+                        }
+                        state.rand_current = r_val;
+                    } else {
+                        state.rand_current = state.random_history[state.loop_step_count & 63];
                     }
                 }
 
@@ -2301,8 +2343,8 @@ void __not_in_flash_func(ClockworksCard::ProcessSample)() {
             // ==========================================
             uint32_t rendering_phase = state.phase;
             
-            if (i < 6) {
-                // Analog/CV/Pulse Outputs 0-5
+            if (i < 4) {
+                // Analog/CV Outputs 0-3
                 switch (ch_config.wave_shape) {
                     case WAVE_GATE: {
                         val = state.midi_note_active ? 2047 : 0;
@@ -2432,9 +2474,6 @@ void __not_in_flash_func(ClockworksCard::ProcessSample)() {
                         break;
                     }
                     case WAVE_CV_DELAY: {
-                        if (i >= 4) {
-                            val = 0;
-                        }
                         break;
                     }
                     case WAVE_MATH: {
@@ -2448,10 +2487,89 @@ void __not_in_flash_func(ClockworksCard::ProcessSample)() {
                         break;
                     }
                 }
+            } else {
+                // Digital Gate/Pulse Outputs 4-5
+                uint8_t scaled_delay = ch_config.level / 2;
+                uint32_t delay_phase = (uint32_t)scaled_delay * 42949672U;
+                if (rendering_phase < delay_phase) {
+                    val = 0;
+                } else {
+                    uint32_t shifted_phase = rendering_phase - delay_phase;
+                    switch (ch_config.wave_shape) {
+                        case 0: { // GATE
+                            val = state.midi_note_active ? 2047 : 0;
+                            break;
+                        }
+                        case 1: { // RATCHET
+                            uint32_t trig_width = 429496730;
+                            uint32_t min_delay = trig_width;
+                            uint32_t max_delay = 0xFFFFFFFF - trig_width;
+                            uint32_t delay = min_delay + mul_u32_u32_shift8(local_param, max_delay - min_delay);
+                            bool trig1 = shifted_phase < trig_width;
+                            bool trig2 = shifted_phase >= delay && shifted_phase < (delay + trig_width);
+                            bool high = state.midi_note_active && (trig1 || trig2);
+                            val = high ? 2047 : 0;
+                            break;
+                        }
+                        case 2: { // TRIGGER (DELAY)
+                            uint32_t trig_width = 288 * phase_inc;
+                            if (trig_width > 3865470565U) {
+                                trig_width = 3865470565U;
+                            }
+                            uint32_t max_extra_delay = 3865470565U - trig_width;
+                            uint32_t extra_delay = mul_u32_u32_shift8(local_param, max_extra_delay);
+                            bool high = state.midi_note_active && (shifted_phase >= extra_delay) && (shifted_phase < (extra_delay + trig_width));
+                            val = high ? 2047 : 0;
+                            break;
+                        }
+                        case 3: { // BURST
+                            uint32_t num_pulses = 1 + (((uint32_t)local_param * 7) >> 8);
+                            uint32_t W = segment_widths_ram[num_pulses - 1];
+                            uint32_t k = mul_u32_u32_high(shifted_phase, num_pulses);
+                            uint32_t phase_within_segment = shifted_phase - k * W;
+                            uint32_t pulse_width = W >> 1;
+                            uint32_t min_trig_phase = 288 * phase_inc;
+                            if (pulse_width < min_trig_phase) {
+                                pulse_width = min_trig_phase;
+                            }
+                            bool high = state.midi_note_active && (phase_within_segment < pulse_width);
+                            val = high ? 2047 : 0;
+                            break;
+                        }
+                        case 4: { // RANDOM
+                            val = state.midi_note_active ? ((state.midi_velocity * 2047) / 127) : 0;
+                            break;
+                        }
+                        case 5: { // UTILITY
+                            if (local_param >= 192) {
+                                val = (!run_gate_paused) ? 2047 : 0;
+                            } else {
+                                uint32_t N = 1;
+                                if (local_param >= 128)      N = 24;
+                                else if (local_param >= 64)  N = 4;
+
+                                uint32_t period_samples = safe_div_u32(1440000, cached_params.bpm * N);
+                                uint32_t pulse_width = 240; // 10ms
+                                if (pulse_width > period_samples / 2) {
+                                    pulse_width = period_samples / 2;
+                                }
+                                if (pulse_width < 1) {
+                                    pulse_width = 1;
+                                }
+
+                                uint32_t step = 0x100000000ULL / N;
+                                uint32_t phase_mod = master_phase_ % step;
+                                bool high = (!run_gate_paused) && (phase_mod < base_inc * pulse_width);
+                                val = high ? 2047 : 0;
+                            }
+                            break;
+                        }
+                    }
+                }
             }
         } else {
             uint32_t base_phase = state.phase;
-            if (i < 6 && ch_config.euclidean_steps == 0) {
+            if (i < 4 && ch_config.euclidean_steps == 0) {
                 uint32_t offset = (uint32_t)ch_config.euclidean_fills * 16843009U;
                 if (is_one_shot) {
                     if (state.phase < offset) {
@@ -2484,7 +2602,7 @@ void __not_in_flash_func(ClockworksCard::ProcessSample)() {
                 }
             }
 
-            if (i < 6) {
+            if (i < 4) {
                 switch (ch_config.wave_shape) {
                     case WAVE_GATE: {
                         uint32_t threshold = (uint32_t)local_param << 24;
@@ -2646,10 +2764,6 @@ void __not_in_flash_func(ClockworksCard::ProcessSample)() {
                         break;
                     }
                     case WAVE_CV_DELAY: {
-                        if (i >= 4) {
-                            val = 0;
-                            break;
-                        }
                         uint32_t mask = delay_buffer_masks[i];
                         uint32_t max_samples = mask + 1;
                         uint32_t delay_samples = 0;
@@ -2854,27 +2968,150 @@ void __not_in_flash_func(ClockworksCard::ProcessSample)() {
                         break;
                     }
                 }
+            } else {
+                // Specialized Digital Pulse shapes for Channels 4 and 5
+                // level parameter (0-200) acts as Phase Offset (Pulse Delay)
+                // where 0 = 0% delay, 200 = 100% delay (internally scaled 0-100 by division by 2)
+                uint8_t scaled_delay = ch_config.level / 2;
+                uint32_t delay_phase = (uint32_t)scaled_delay * 42949672U;
+                if (rendering_phase < delay_phase) {
+                    val = 0;
+                } else {
+                    uint32_t shifted_phase = rendering_phase - delay_phase;
+                    switch (ch_config.wave_shape) {
+                        case 0: { // GATE
+                            uint32_t width_phase = (uint32_t)local_param * 16843009U;
+                            if (local_param > 0) {
+                                uint32_t min_trig_phase = 288 * phase_inc;
+                                if (width_phase < min_trig_phase) {
+                                    width_phase = min_trig_phase;
+                                }
+                                if (local_param < 255) {
+                                    uint32_t max_trig_phase = 0xFFFFFFFF;
+                                    if (10 * phase_inc < 0xFFFFFFFF) {
+                                        max_trig_phase = 0xFFFFFFFF - 10 * phase_inc;
+                                    }
+                                    if (width_phase > max_trig_phase) {
+                                        width_phase = max_trig_phase;
+                                    }
+                                }
+                            }
+                            bool high = state.step_active && (shifted_phase < width_phase);
+                            val = high ? 2047 : 0;
+                            break;
+                        }
+                        case 1: { // RATCHET
+                            uint32_t trig_width = 429496730; // ~10% of 0xFFFFFFFF
+                            uint32_t min_trig_phase = 288 * phase_inc;
+                            if (trig_width < min_trig_phase) {
+                                trig_width = min_trig_phase;
+                            }
+                            if (trig_width > 1932735282U) { // Cap at 45% of 0xFFFFFFFF to avoid underflow
+                                trig_width = 1932735282U;
+                            }
+                            uint32_t min_delay = trig_width;
+                            uint32_t max_delay = 0xFFFFFFFF - trig_width;
+                            uint32_t delay = min_delay + mul_u32_u32_shift8(local_param, max_delay - min_delay);
+
+                            bool trig1 = shifted_phase < trig_width;
+                            bool trig2 = shifted_phase >= delay && shifted_phase < (delay + trig_width);
+                            bool high = state.step_active && (trig1 || trig2);
+                            val = high ? 2047 : 0;
+                            break;
+                        }
+                        case 2: { // TRIGGER (DELAY)
+                            uint32_t trig_width = 288 * phase_inc;
+                            if (trig_width > 3865470565U) { // 90% of 0xFFFFFFFF
+                                trig_width = 3865470565U;
+                            }
+                            uint32_t max_extra_delay = 3865470565U - trig_width;
+                            uint32_t extra_delay = mul_u32_u32_shift8(local_param, max_extra_delay);
+                            bool high = state.step_active && (shifted_phase >= extra_delay) && (shifted_phase < (extra_delay + trig_width));
+                            val = high ? 2047 : 0;
+                            break;
+                        }
+                        case 3: { // BURST
+                            uint32_t num_pulses = 1 + (((uint32_t)local_param * 7) >> 8); // 1..8
+                            uint32_t W = segment_widths_ram[num_pulses - 1];
+                            uint32_t k = mul_u32_u32_high(shifted_phase, num_pulses);
+                            uint32_t phase_within_segment = shifted_phase - k * W;
+                            uint32_t pulse_width = W >> 1;
+                            uint32_t min_trig_phase = 288 * phase_inc;
+                            if (pulse_width < min_trig_phase) {
+                                  pulse_width = min_trig_phase;
+                            }
+                            bool high = state.step_active && (phase_within_segment < pulse_width);
+                            val = high ? 2047 : 0;
+                            break;
+                        }
+                        case 4: { // RANDOM
+                            uint32_t gate_width_scale = ((uint32_t)state.rand_current * local_param) >> 8;
+                            uint32_t threshold = gate_width_scale << 24;
+                            if (local_param > 0 && state.rand_current > 0) {
+                                uint32_t min_trig_phase = 288 * phase_inc;
+                                if (threshold < min_trig_phase) {
+                                    threshold = min_trig_phase;
+                                }
+                                uint32_t max_trig_phase = 0xFFFFFFFF;
+                                if (10 * phase_inc < 0xFFFFFFFF) {
+                                    max_trig_phase = 0xFFFFFFFF - 10 * phase_inc;
+                                }
+                                if (threshold > max_trig_phase) {
+                                    threshold = max_trig_phase;
+                                }
+                            }
+                            bool high = state.step_active && (shifted_phase < threshold);
+                            val = high ? 2047 : 0;
+                            break;
+                        }
+                        case 5: { // UTILITY
+                            if (local_param >= 192) {
+                                val = (!run_gate_paused) ? 2047 : 0;
+                            } else {
+                                uint32_t N = 1;
+                                if (local_param >= 128)      N = 24;
+                                else if (local_param >= 64)  N = 4;
+
+                                uint32_t period_samples = safe_div_u32(1440000, cached_params.bpm * N);
+                                uint32_t pulse_width = 240; // 10ms
+                                if (pulse_width > period_samples / 2) {
+                                    pulse_width = period_samples / 2;
+                                }
+                                if (pulse_width < 1) {
+                                    pulse_width = 1;
+                                }
+
+                                uint32_t step = 0x100000000ULL / N;
+                                uint32_t phase_mod = master_phase_ % step;
+                                bool high = (!run_gate_paused) && (phase_mod < base_inc * pulse_width);
+                                val = high ? 2047 : 0;
+                            }
+                            break;
+                        }
+                        default: {
+                            val = 0;
+                            break;
+                        }
+                    }
+                }
             }
             if (humanize_muted) {
                 val = 0;
             }
         }
 
-        // Apply Level Attenuation for all channels.
-        // GATE and RATCHET on pulse outputs (channels 4-5) use GPIO, so level is irrelevant there;
-        // the guard below excludes them to avoid accidentally scaling a value that won't reach PulseCVOut.
-        bool is_bipolar = (ch_config.wave_shape == WAVE_SINE ||
-                           ch_config.wave_shape == WAVE_TRIANGLE ||
-                           ch_config.wave_shape == WAVE_SAW_UP ||
-                           ch_config.wave_shape == WAVE_SAW_DOWN ||
-                           ch_config.wave_shape == WAVE_RANDOM_SH ||
-                           ch_config.wave_shape == WAVE_RANDOM_SM ||
-                           ch_config.wave_shape == WAVE_CV_DELAY ||
-                           ch_config.wave_shape == WAVE_TRAPEZOID);
-        bool is_gpio_pulse = (i >= 4) && (ch_config.wave_shape == WAVE_GATE || ch_config.wave_shape == WAVE_RATCHET);
-        if (!is_gpio_pulse && ch_config.wave_shape != WAVE_RANDOM_SH && ch_config.wave_shape != WAVE_RANDOM_SM) {
+        // Apply Level Attenuation first (only for analog channels 0-3; digital outputs 4-5 ignore level scaling for trigger consistency)
+        if (i < 4 && ch_config.wave_shape != WAVE_RANDOM_SH && ch_config.wave_shape != WAVE_RANDOM_SM) {
             int32_t signed_level = (int32_t)ch_config.level - 100;
             int32_t abs_scale = signed_level >= 0 ? signed_level : -signed_level;
+            bool is_bipolar = (ch_config.wave_shape == WAVE_SINE || 
+                               ch_config.wave_shape == WAVE_TRIANGLE || 
+                               ch_config.wave_shape == WAVE_SAW_UP || 
+                               ch_config.wave_shape == WAVE_SAW_DOWN || 
+                               ch_config.wave_shape == WAVE_RANDOM_SH || 
+                               ch_config.wave_shape == WAVE_RANDOM_SM || 
+                               ch_config.wave_shape == WAVE_CV_DELAY || 
+                               ch_config.wave_shape == WAVE_TRAPEZOID);
             if (is_bipolar) {
                 if (signed_level < 0) {
                     // Negative level (left side): bipolar mode
@@ -2904,8 +3141,8 @@ void __not_in_flash_func(ClockworksCard::ProcessSample)() {
             if (current_scale != SCALE_OFF) {
                 q_note = quantize_to_scale(q_note, current_scale);
             }
-        } else if (state.step_active && !humanize_muted && current_scale != SCALE_OFF &&
-            ch_config.wave_shape != WAVE_GATE && ch_config.wave_shape != WAVE_RATCHET &&
+        } else if (i < 4 && state.step_active && !humanize_muted && current_scale != SCALE_OFF && 
+            ch_config.wave_shape != WAVE_GATE && ch_config.wave_shape != WAVE_RATCHET && 
             ch_config.wave_shape != WAVE_RANDOM_SH && ch_config.wave_shape != WAVE_RANDOM_SM) {
             int note = 60 + ((val * 9 + 128) >> 8); // ~28.44 steps per semitone with rounding
             // Only re-run the scale search when the input semitone or scale changed.
@@ -2969,17 +3206,9 @@ void __not_in_flash_func(ClockworksCard::ProcessSample)() {
             }
             CVOut2Millivolts(mv);
         } else if (i == 4) {
-            if (is_gpio_pulse) {
-                PulseOut1(val > 0); // GATE/RATCHET: clean 0V/5V binary via GPIO
-            } else {
-                PulseCVOut1(val, is_bipolar && (ch_config.level < 100)); // All other shapes: PWM-CV via sigma-delta
-            }
+            PulseOut1(val > 0);
         } else if (i == 5) {
-            if (is_gpio_pulse) {
-                PulseOut2(val > 0); // GATE/RATCHET: clean 0V/5V binary via GPIO
-            } else {
-                PulseCVOut2(val, is_bipolar && (ch_config.level < 100)); // All other shapes: PWM-CV via sigma-delta
-            }
+            PulseOut2(val > 0);
         }
     }
 
@@ -2989,10 +3218,10 @@ void __not_in_flash_func(ClockworksCard::ProcessSample)() {
             // Use absolute amplitude (not raw signed value) so bipolar signals
             // light the LED based on how much signal is going out, not its polarity.
             int32_t abs_brightness = states_[i].last_value;
-            bool is_unipolar = (cached_params.channels[i].wave_shape == WAVE_GATE) ||
+            bool is_unipolar = (i >= 4) ||
+                               (cached_params.channels[i].wave_shape == WAVE_GATE) ||
                                (cached_params.channels[i].wave_shape == WAVE_RATCHET) ||
-                               (cached_params.channels[i].wave_shape == WAVE_ENVELOPE) ||
-                               (cached_params.channels[i].wave_shape == WAVE_LOG_ENVELOPE);
+                               (cached_params.channels[i].wave_shape == WAVE_ENVELOPE);
 
             if (is_unipolar) {
                 if (abs_brightness < 0) abs_brightness = 0;
@@ -3471,12 +3700,19 @@ void ClockworksCard::tick_ui_once() {
             // ==========================================
             // Main knob: Waveform Shape (0 to 12 or 0 to 5)
             int32_t target_shape = ch.wave_shape;
-            int32_t shape_ref = target_shape * 315;
+            int32_t shape_ref = (active_page_ >= 4) ? (target_shape * 682) : (target_shape * 315);
             main_active = lock_main_.update(raw_main, shape_ref, main_val);
             if (main_active) {
-                int shape = (main_val * WAVE_NUM_SHAPES) >> 12;
-                if (shape < 0) shape = 0;
-                if (shape >= WAVE_NUM_SHAPES) shape = WAVE_NUM_SHAPES - 1;
+                int shape;
+                if (active_page_ >= 4) {
+                    shape = (main_val * 6) >> 12;
+                    if (shape < 0) shape = 0;
+                    if (shape >= 6) shape = 5;
+                } else {
+                    shape = (main_val * WAVE_NUM_SHAPES) >> 12;
+                    if (shape < 0) shape = 0;
+                    if (shape >= WAVE_NUM_SHAPES) shape = WAVE_NUM_SHAPES - 1;
+                }
                 if (pending_main_.active && pending_main_.type != PENDING_SHAPE)
                     commit_pending(pending_main_);
                 if (shape != (int)(pending_main_.active ? pending_main_.value : ch.wave_shape)) {
@@ -3501,13 +3737,13 @@ void ClockworksCard::tick_ui_once() {
                     config_dirty_ = true;
                     last_change_time_ms_ = now_ms;
                     parameter_feedback_timer_ = 1200;
-                    if (active_page_ < 6) {
-                        // All LFO/CV/audio channels: bipolar -100..+100 (stored 0..200, centre=100)
+                    if (active_page_ < 4) {
+                        // CV/audio channels: bipolar -100..+100 (stored 0..200, centre=100)
                         parameter_feedback_mode_       = FEEDBACK_BAR_BIPOLAR;
                         parameter_feedback_signed_val_ = (int8_t)((level - 100) * 32 / 100);
                         parameter_feedback_value_      = 0;
                     } else {
-                        // Global pages or future extensions: unipolar
+                        // Pulse channels: unipolar phase delay 0..100%
                         parameter_feedback_mode_  = FEEDBACK_BAR_UNIPOLAR;
                         parameter_feedback_value_ = (uint8_t)((level * 63) / 200);
                         parameter_feedback_signed_val_ = 0;
@@ -3649,7 +3885,7 @@ void ClockworksCard::tick_ui_once() {
                 }
             } else {
                 int32_t target_fills = ch.euclidean_fills;
-                int max_fills = (ch.euclidean_steps == 0 && active_page_ < 6) ? 255 : (ch.euclidean_steps == 0 ? 16 : ch.euclidean_steps);
+                int max_fills = (ch.euclidean_steps == 0 && active_page_ < 4) ? 255 : (ch.euclidean_steps == 0 ? 16 : ch.euclidean_steps);
                 int32_t multiplier = max_fills == 255 ? 16 : 240;
                 y_active = lock_y_.update(raw_y, target_fills * multiplier, y_val);
                 if (y_active) {
@@ -4019,7 +4255,11 @@ void ClockworksCard::apply_parameter_change(uint8_t ch, uint8_t param_id, uint8_
                 break;
             case 2: ch_config.euclidean_fills = (value > 16) ? 16 : value; break;
             case 3: 
-                ch_config.wave_shape = (value >= WAVE_NUM_SHAPES) ? (WAVE_NUM_SHAPES - 1) : value; 
+                if (ch >= 4) {
+                    ch_config.wave_shape = (value >= 6) ? 5 : value;
+                } else {
+                    ch_config.wave_shape = (value >= WAVE_NUM_SHAPES) ? (WAVE_NUM_SHAPES - 1) : value; 
+                }
                 calculate_state_inverses(ch, ch_config.wave_shape, ch_config.wave_param);
                 break;
             case 4: 

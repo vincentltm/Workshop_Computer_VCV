@@ -1,18 +1,15 @@
 # Auto-generated makefile configuration for card sources
 
 # Card libraries target definitions
-ifeq ($(OS), Windows_NT)
+ifdef ARCH_WIN
 	CARD_LIB_EXT := dll
 	CARD_LDFLAGS_SHARED := -shared
+else ifdef ARCH_MAC
+	CARD_LIB_EXT := dylib
+	CARD_LDFLAGS_SHARED := -dynamiclib -undefined dynamic_lookup
 else
-	UNAME_S := $(shell uname -s)
-	ifeq ($(UNAME_S), Darwin)
-		CARD_LIB_EXT := dylib
-		CARD_LDFLAGS_SHARED := -dynamiclib -undefined dynamic_lookup
-	else
-		CARD_LIB_EXT := so
-		CARD_LDFLAGS_SHARED := -shared -fPIC
-	endif
+	CARD_LIB_EXT := so
+	CARD_LDFLAGS_SHARED := -shared -fPIC
 endif
 
 CARD_LIBS := res/cards/libcard_simple_midi.$(CARD_LIB_EXT) res/cards/libcard_turing_machine.$(CARD_LIB_EXT) res/cards/libcard_byo_benjolin.$(CARD_LIB_EXT) res/cards/libcard_chord_blimey.$(CARD_LIB_EXT) res/cards/libcard_usb_audio_bridge.$(CARD_LIB_EXT) res/cards/libcard_bumpers.$(CARD_LIB_EXT) res/cards/libcard_bytebeat.$(CARD_LIB_EXT) res/cards/libcard_divcom.$(CARD_LIB_EXT) res/cards/libcard_goldfish.$(CARD_LIB_EXT) res/cards/libcard_am_coupler.$(CARD_LIB_EXT) res/cards/libcard_noisebox.$(CARD_LIB_EXT) res/cards/libcard_cvmod.$(CARD_LIB_EXT) res/cards/libcard_mlrws.$(CARD_LIB_EXT) res/cards/libcard_chord_organ.$(CARD_LIB_EXT) res/cards/libcard_ca_sequencer.$(CARD_LIB_EXT) res/cards/libcard_reverb.$(CARD_LIB_EXT) res/cards/libcard_resonator.$(CARD_LIB_EXT) res/cards/libcard_sheep.$(CARD_LIB_EXT) res/cards/libcard_slowmod.$(CARD_LIB_EXT) res/cards/libcard_crafted_volts.$(CARD_LIB_EXT) res/cards/libcard_utility_pair.$(CARD_LIB_EXT) res/cards/libcard_clockwork.$(CARD_LIB_EXT) res/cards/libcard_siren.$(CARD_LIB_EXT) res/cards/libcard_eighties_bass.$(CARD_LIB_EXT) res/cards/libcard_cirpy_wavetable.$(CARD_LIB_EXT) res/cards/libcard_esp.$(CARD_LIB_EXT) res/cards/libcard_vink.$(CARD_LIB_EXT) res/cards/libcard_drumdrum.$(CARD_LIB_EXT) res/cards/libcard_dual_quant.$(CARD_LIB_EXT) res/cards/libcard_freq_shift.$(CARD_LIB_EXT) res/cards/libcard_od.$(CARD_LIB_EXT) res/cards/libcard_knots.$(CARD_LIB_EXT) res/cards/libcard_blackbird.$(CARD_LIB_EXT) res/cards/libcard_backyard_rain.$(CARD_LIB_EXT) res/cards/libcard_castle_process.$(CARD_LIB_EXT) res/cards/libcard_birds.$(CARD_LIB_EXT) res/cards/libcard_nzt.$(CARD_LIB_EXT) res/cards/libcard_flux.$(CARD_LIB_EXT) res/cards/libcard_grains.$(CARD_LIB_EXT) res/cards/libcard_lens.$(CARD_LIB_EXT) res/cards/libcard_glitter.$(CARD_LIB_EXT) res/cards/libcard_tapegrade.$(CARD_LIB_EXT) res/cards/libcard_fifths.$(CARD_LIB_EXT) res/cards/libcard_krell.$(CARD_LIB_EXT) res/cards/libcard_glitch.$(CARD_LIB_EXT) res/cards/libcard_lochovibes.$(CARD_LIB_EXT) res/cards/libcard_bitphase.$(CARD_LIB_EXT) res/cards/libcard_markov.$(CARD_LIB_EXT) res/cards/libcard_voices_of_sid.$(CARD_LIB_EXT) res/cards/libcard_stretchcore.$(CARD_LIB_EXT) res/cards/libcard_fragments.$(CARD_LIB_EXT) res/cards/libcard_trace.$(CARD_LIB_EXT) res/cards/libcard_degenerator.$(CARD_LIB_EXT) res/cards/libcard_motorik.$(CARD_LIB_EXT) res/cards/libcard_wild_pebble.$(CARD_LIB_EXT) res/cards/libcard_turing_clouds.$(CARD_LIB_EXT) res/cards/libcard_talker.$(CARD_LIB_EXT) res/cards/libcard_west_coast_lpg.$(CARD_LIB_EXT) res/cards/libcard_computer_grids.$(CARD_LIB_EXT) res/cards/libcard_origami.$(CARD_LIB_EXT) res/cards/libcard_cosmik_c1zzl3.$(CARD_LIB_EXT) res/cards/libcard_tesserae.$(CARD_LIB_EXT) res/cards/libcard_fr330hfr33.$(CARD_LIB_EXT) res/cards/libcard_pantograph.$(CARD_LIB_EXT) res/cards/libcard_chorgan.$(CARD_LIB_EXT) res/cards/libcard_turing_matrix.$(CARD_LIB_EXT) res/cards/libcard_offair2.$(CARD_LIB_EXT) res/cards/libcard_alloy.$(CARD_LIB_EXT) res/cards/libcard_duo_midi.$(CARD_LIB_EXT) res/cards/libcard_toolbox.$(CARD_LIB_EXT) res/cards/libcard_sense_of_space.$(CARD_LIB_EXT)
@@ -173,9 +170,9 @@ res/cards/libcard_grains.$(CARD_LIB_EXT): src/cards/Card_grains.cpp
 	@mkdir -p res/cards
 	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/51_grains" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_grains.cpp
 
-res/cards/libcard_lens.$(CARD_LIB_EXT): src/cards/Card_lens.cpp src/cards/Card_lens_runtime_sysex_cpp.cpp src/cards/Card_lens_runtime_runtime_c.cpp src/cards/Card_lens_runtime_midi_c.cpp src/cards/Card_lens_runtime_snapshot_apply_c.cpp src/cards/Card_lens_runtime_thirdparty_weave_wrapper_cpp.cpp src/cards/Card_lens_runtime_thirdparty_braids_analog_oscillator_cc.cpp src/cards/Card_lens_runtime_thirdparty_braids_digital_oscillator_cc.cpp src/cards/Card_lens_runtime_thirdparty_braids_macro_oscillator_cc.cpp src/cards/Card_lens_runtime_thirdparty_braids_quantizer_cc.cpp src/cards/Card_lens_runtime_thirdparty_braids_resources_cc.cpp src/cards/Card_lens_runtime_thirdparty_braids_settings_cc.cpp src/cards/Card_lens_runtime_thirdparty_stmlib_utils_random_cc.cpp
+res/cards/libcard_lens.$(CARD_LIB_EXT): src/cards/Card_lens.cpp src/cards/Card_lens_runtime_sysex_cpp.cpp src/cards/Card_lens_runtime_runtime_c.cpp src/cards/Card_lens_runtime_midi_c.cpp src/cards/Card_lens_runtime_snapshot_apply_c.cpp
 	@mkdir -p res/cards
-	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/external/52_lens" "-Ideps/external/52_lens/runtime" "-Ideps/external/52_lens/runtime/thirdparty" "-Ideps/external/52_lens/runtime/thirdparty/braids" "-Ideps/external/52_lens/runtime/thirdparty/stmlib" "-Ideps/external/52_lens/runtime/thirdparty/stmlib/utils" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_lens.cpp src/cards/Card_lens_runtime_sysex_cpp.cpp src/cards/Card_lens_runtime_runtime_c.cpp src/cards/Card_lens_runtime_midi_c.cpp src/cards/Card_lens_runtime_snapshot_apply_c.cpp src/cards/Card_lens_runtime_thirdparty_weave_wrapper_cpp.cpp src/cards/Card_lens_runtime_thirdparty_braids_analog_oscillator_cc.cpp src/cards/Card_lens_runtime_thirdparty_braids_digital_oscillator_cc.cpp src/cards/Card_lens_runtime_thirdparty_braids_macro_oscillator_cc.cpp src/cards/Card_lens_runtime_thirdparty_braids_quantizer_cc.cpp src/cards/Card_lens_runtime_thirdparty_braids_resources_cc.cpp src/cards/Card_lens_runtime_thirdparty_braids_settings_cc.cpp src/cards/Card_lens_runtime_thirdparty_stmlib_utils_random_cc.cpp
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/external/52_lens" "-Ideps/external/52_lens/runtime" "-Ideps/external/52_lens/runtime/thirdparty" "-Ideps/external/52_lens/runtime/thirdparty/braids" "-Ideps/external/52_lens/runtime/thirdparty/stmlib" "-Ideps/external/52_lens/runtime/thirdparty/stmlib/utils" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_lens.cpp src/cards/Card_lens_runtime_sysex_cpp.cpp src/cards/Card_lens_runtime_runtime_c.cpp src/cards/Card_lens_runtime_midi_c.cpp src/cards/Card_lens_runtime_snapshot_apply_c.cpp
 
 res/cards/libcard_glitter.$(CARD_LIB_EXT): src/cards/Card_glitter.cpp
 	@mkdir -p res/cards

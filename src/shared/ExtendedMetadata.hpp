@@ -716,13 +716,13 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                         { "any", "", "", "Audio 2 Input", "Audio input 2" },
                     },
                     {
-                        { "any", "", "", "Intensity CV", "CV modulation over rain intensity" },
+                        { "any", "", "", "CV 1 Input", "CV input 1" },
                     },
                     {
                         { "any", "", "", "CV 2 Input", "CV input 2" },
                     },
                     {
-                        { "any", "", "", "Thunder Trigger", "Rising edge triggers thunder playbacks" },
+                        { "any", "", "", "Pulse 1 Input", "Pulse input 1" },
                     },
                     {
                         { "any", "", "", "Pulse 2 Input", "Pulse input 2" },
@@ -730,16 +730,16 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 },
                 {
                     {
-                        { "any", "", "", "Mix L", "Left channel stereo audio mix" },
+                        { "any", "", "", "Audio 1 Output", "Audio output 1" },
                     },
                     {
-                        { "any", "", "", "Mix R", "Right channel stereo audio mix" },
+                        { "any", "", "", "Audio 2 Output", "Audio output 2" },
                     },
                     {
-                        { "any", "", "", "Intensity Monitor", "CV monitor mirroring the current rain intensity level" },
+                        { "any", "", "", "CV 1 Output", "CV output 1" },
                     },
                     {
-                        { "any", "", "", "LFO CV Out", "Control voltage output of the internal modulation LFO" },
+                        { "any", "", "", "CV 2 Output", "CV output 2" },
                     },
                     {
                         { "any", "", "", "Pulse 1 Output", "Pulse output 1" },
@@ -750,13 +750,10 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 },
                 {
                     {
-                        { "any", "", "", "Rain Intensity", "Controls volume/density mix of the rain sample playback loops" },
                     },
                     {
-                        { "any", "", "", "Unused", "" },
                     },
                     {
-                        { "any", "", "", "Unused", "" },
                     },
                 },
                 {
@@ -3943,10 +3940,10 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                         { "any", "", "", "Out 4\n(CV Out 2)", "Channel 4 CV/Gate output (PWM)" },
                     },
                     {
-                        { "any", "", "", "Out 5\n(Pulse Out 1)", "Channel 5 Digital Gate / PWM CV output (0-5V, slightly lower resolution/quality)" },
+                        { "any", "", "", "Out 5\n(Pulse Out 1)", "Channel 5 Digital Gate output (GPIO)" },
                     },
                     {
-                        { "any", "", "", "Out 6\n(Pulse Out 2)", "Channel 6 Digital Gate / PWM CV output (0-5V, slightly lower resolution/quality)" },
+                        { "any", "", "", "Out 6\n(Pulse Out 2)", "Channel 6 Digital Gate output (GPIO)" },
                     },
                 },
                 {
@@ -4183,7 +4180,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Workshop Computer Card",
                 "Music Thing Modular",
                 "",
-                "Stable phase-distortion synthesiser and Turing machine firmware with gate-held\nlooping Web MIDI envelopes, envelope readback, PD, detune, eight waveform\nfamilies, hosted CZ patch import, USB MIDI device/host operation, and optional\nTuring MIDI output.",
+                "Stable phase-distortion synthesiser and Turing machine firmware with Web MIDI\nenvelope readback, PD, detune, eight waveform families, hosted CZ patch\nimport, USB MIDI device/host operation, and optional Turing MIDI output.",
                 "",
                 "https://github.com/TomWhitwell/Workshop_Computer/tree/main/releases/84_CosmikC1zzl3",
                 {
@@ -4203,7 +4200,7 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                         { "any", "", "", "Ext Turing\nClock", "External Turing clock in switch-up mode" },
                     },
                     {
-                        { "any", "", "", "Envelope\nTrig", "Triggers selected envelope and oscillator sync in synth mode; held gates loop\nsupported envelopes and gate-off lets them complete" },
+                        { "any", "", "", "Envelope\nTrig", "Triggers selected envelope and oscillator sync in synth mode when preset is\nactive" },
                     },
                 },
                 {
@@ -4611,58 +4608,55 @@ inline const CardMeta* get_card_metadata(const std::string& card_id) {
                 "Workshop Computer Card",
                 "Graham Ritchie",
                 "",
-                "A programmable audio environment running Loupe patches.\nUse the visual patcher (Flare) to connect oscillators, delays, envelopes, and logic.\nMain knob: Assignable parameter (default mutation/prob).\nX/Y knobs: Assignable parameters.\nZ switch: Down/Middle/Up (default modes).",
-                "MIT",
-                "https://github.com/vincentltm/lens.git",
+                "A programmable synth. Write patches in Loupe (a tiny Lisp); sequences of values read through lenses become pitch, rhythm, CV and audio.",
+                "",
+                "",
                 {
                     {
-                        { "any", "", "", "Audio Input 1", "Audio signal input 1 (assignable in Loupe patch)" },
+                        { "any", "", "", "Audio 1 Input", "Audio input 1" },
                     },
                     {
-                        { "any", "", "", "Audio Input 2", "Audio signal input 2 (assignable in Loupe patch)" },
+                        { "any", "", "", "Audio 2 Input", "Audio input 2" },
                     },
                     {
-                        { "any", "", "", "CV Input 1", "Control voltage input 1 (assignable in Loupe patch)" },
+                        { "any", "", "", "CV 1 Input", "CV input 1" },
                     },
                     {
-                        { "any", "", "", "CV Input 2", "Control voltage input 2 (assignable in Loupe patch)" },
+                        { "any", "", "", "CV 2 Input", "CV input 2" },
                     },
                     {
-                        { "any", "", "", "Pulse Input 1", "Trigger/clock input 1 (assignable in Loupe patch)" },
+                        { "any", "", "", "Pulse 1 Input", "Pulse input 1" },
                     },
                     {
-                        { "any", "", "", "Pulse Input 2", "Trigger/clock input 2 (assignable in Loupe patch)" },
+                        { "any", "", "", "Pulse 2 Input", "Pulse input 2" },
                     },
                 },
                 {
                     {
-                        { "any", "", "", "Audio Output 1", "Audio signal output 1 (assignable in Loupe patch)" },
+                        { "any", "", "", "Audio 1 Output", "Audio output 1" },
                     },
                     {
-                        { "any", "", "", "Audio Output 2", "Audio signal output 2 (assignable in Loupe patch)" },
+                        { "any", "", "", "Audio 2 Output", "Audio output 2" },
                     },
                     {
-                        { "any", "", "", "CV Output 1", "Control voltage output 1 (assignable in Loupe patch)" },
+                        { "any", "", "", "CV 1 Output", "CV output 1" },
                     },
                     {
-                        { "any", "", "", "CV Output 2", "Control voltage output 2 (assignable in Loupe patch)" },
+                        { "any", "", "", "CV 2 Output", "CV output 2" },
                     },
                     {
-                        { "any", "", "", "Pulse Output 1", "Trigger/gate output 1 (assignable in Loupe patch)" },
+                        { "any", "", "", "Pulse 1 Output", "Pulse output 1" },
                     },
                     {
-                        { "any", "", "", "Pulse Output 2", "Trigger/gate output 2 (assignable in Loupe patch)" },
+                        { "any", "", "", "Pulse 2 Output", "Pulse output 2" },
                     },
                 },
                 {
                     {
-                        { "any", "", "", "Parameter Main", "Primary assignable knob (default: mutation rate/probability)" },
                     },
                     {
-                        { "any", "", "", "Parameter X", "Secondary assignable knob (knob :x)" },
                     },
                     {
-                        { "any", "", "", "Parameter Y", "Tertiary assignable knob (knob :y)" },
                     },
                 },
                 {

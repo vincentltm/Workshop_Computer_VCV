@@ -202,7 +202,7 @@ CARD_WHITELIST = [
         "dir": "releases/11_goldfish",
         "ns": "Card_Goldfish",
         "num": "11",
-        "sources": ["main.cpp", "goldfish_stream.c"]
+        "sources": ["main.cpp"]
     },
     {
         "id": "bumpers",
@@ -557,15 +557,7 @@ CARD_WHITELIST = [
             "runtime/sysex.cpp",
             "runtime/runtime.c",
             "runtime/midi.c",
-            "runtime/snapshot_apply.c",
-            "runtime/thirdparty/weave_wrapper.cpp",
-            "runtime/thirdparty/braids/analog_oscillator.cc",
-            "runtime/thirdparty/braids/digital_oscillator.cc",
-            "runtime/thirdparty/braids/macro_oscillator.cc",
-            "runtime/thirdparty/braids/quantizer.cc",
-            "runtime/thirdparty/braids/resources.cc",
-            "runtime/thirdparty/braids/settings.cc",
-            "runtime/thirdparty/stmlib/utils/random.cc"
+            "runtime/snapshot_apply.c"
         ]
     },
     {
@@ -1320,18 +1312,15 @@ def main():
     with open(makefile_cards_path, 'w') as f:
         f.write("# Auto-generated makefile configuration for card sources\n\n")
         f.write("# Card libraries target definitions\n")
-        f.write("ifeq ($(OS), Windows_NT)\n")
+        f.write("ifdef ARCH_WIN\n")
         f.write("\tCARD_LIB_EXT := dll\n")
         f.write("\tCARD_LDFLAGS_SHARED := -shared\n")
+        f.write("else ifdef ARCH_MAC\n")
+        f.write("\tCARD_LIB_EXT := dylib\n")
+        f.write("\tCARD_LDFLAGS_SHARED := -dynamiclib -undefined dynamic_lookup\n")
         f.write("else\n")
-        f.write("\tUNAME_S := $(shell uname -s)\n")
-        f.write("\tifeq ($(UNAME_S), Darwin)\n")
-        f.write("\t\tCARD_LIB_EXT := dylib\n")
-        f.write("\t\tCARD_LDFLAGS_SHARED := -dynamiclib -undefined dynamic_lookup\n")
-        f.write("\telse\n")
-        f.write("\t\tCARD_LIB_EXT := so\n")
-        f.write("\t\tCARD_LDFLAGS_SHARED := -shared -fPIC\n")
-        f.write("\tendif\n")
+        f.write("\tCARD_LIB_EXT := so\n")
+        f.write("\tCARD_LDFLAGS_SHARED := -shared -fPIC\n")
         f.write("endif\n\n")
         
         # Write list of libs

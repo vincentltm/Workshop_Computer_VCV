@@ -905,10 +905,11 @@
         // ── Constants ──────────────────────────────────────────────────────
         const CLOCK_MODIFIERS = ["/2048", "/1024", "/768", "/512", "/384", "/256", "/192", "/128", "/96", "/64", "/48", "/32", "/24", "/16", "/12", "/8", "/6", "/4", "/3", "/2", "x1", "x2", "x3", "x4", "x6", "x8", "x12", "x16", "x24", "x32", "x48", "x64", "x96", "x128", "Audio 1", "Audio 2", "CV 1", "CV 2", "Gate 1", "Gate 2", "MIDI Ch 1", "MIDI Ch 2", "MIDI Ch 3", "MIDI Ch 4", "MIDI Ch 5", "MIDI Ch 6", "MIDI Ch 7", "MIDI Ch 8", "MIDI Ch 9", "MIDI Ch 10", "MIDI Ch 11", "MIDI Ch 12", "MIDI Ch 13", "MIDI Ch 14", "MIDI Ch 15", "MIDI Ch 16"];
         const WAVE_SHAPES = ["Gate", "Ratchet", "Sine", "Triangle", "Saw ↑", "Saw ↓", "Trapezoid", "Hump", "Envelope", "Log Env", "S&H", "Smooth", "Delay", "Math"];
+        const PULSE_SHAPES = ["Gate", "Ratchet", "Trigger", "Burst", "Random", "Utility"];
         const SCALES = ["Off", "Chromatic", "Major", "Min Pent", "Nat Minor", "Maj Pent", "Dorian", "Mixolydian", "Lydian", "Phrygian", "Harmonic Minor"];
         const LOOP_LENGTHS_VALS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 20, 24, 28, 30, 32, 40, 48, 56, 60, 64];
-        const CH_NAMES = ["Audio 1", "Audio 2", "CV 1", "CV 2", "Pulse 1", "Pulse 2"];
-        const CH_BADGES = ["Audio", "Audio", "CV", "CV", "CV/Gate", "CV/Gate"];
+        const CH_NAMES = ["Audio 1", "Audio 2", "CV 1", "CV 2", "Gate 1", "Gate 2"];
+        const CH_BADGES = ["Audio", "Audio", "CV", "CV", "Gate", "Gate"];
         const NUM_PRESETS = 6;
 
         const OSC_BUF_LEN = 80;
@@ -980,7 +981,7 @@
         const channelConfigs = Array.from({ length: 6 }, (_, i) => ({
             id: i, clock_modifier: 20, euclidean_steps: 0, euclidean_fills: 0,
             wave_shape: 0, wave_param: 128, probability: 100,
-            quantizer_scale: 0, euclidean_offset: 0, loop_length: 0, level: 200, glide: 0,
+            quantizer_scale: 0, euclidean_offset: 0, loop_length: 0, level: (i < 4) ? 200 : 0, glide: 0,
             trigger_source: 0,
             stepIndex: 0, lastValue: -2048,
             oscilloscopeBuffer: new Int16Array(OSC_BUF_LEN),
@@ -991,7 +992,7 @@
         const grid = document.getElementById('channelsGrid');
         for (let i = 0; i < 6; i++) {
             const isPulse = i >= 4;
-            const shapes = WAVE_SHAPES;
+            const shapes = isPulse ? PULSE_SHAPES : WAVE_SHAPES;
             const card = document.createElement('div');
             card.className = 'channel-card';
             card.id = `card-${i}`;
@@ -1017,11 +1018,11 @@
                         </div>
                         <div class="p">
                             <div class="p-header">
-                                <span class="p-label" id="levelLabel-${i}">Level</span>
-                                <span class="val-num" id="levelVal-${i}">+100%</span>
+                                <span class="p-label" id="levelLabel-${i}">${isPulse ? 'Phase Offset' : 'Level'}</span>
+                                <span class="val-num" id="levelVal-${i}">${isPulse ? '0%' : '100%'}</span>
                             </div>
                             <div class="p-val">
-                                <input type="range" id="level-${i}" min="-100" max="100" value="100" oninput="changeParam(${i},8,parseInt(this.value)+100)">
+                                <input type="range" id="level-${i}" min="${isPulse ? 0 : -100}" max="100" value="${isPulse ? 100 : 100}" oninput="changeParam(${i},8,${isPulse ? 'parseInt(this.value)*2' : 'parseInt(this.value)+100'})">
                             </div>
                         </div>
                         <div class="p">
@@ -1233,9 +1234,7 @@
                         renderScaleControl(i);
 
                         updateParamUI(i, 7, ch.loop_length);
-                        let lvl = ch.level;
-                        if (i >= 4 && (lvl === 0 || lvl === undefined)) lvl = 200;
-                        updateParamUI(i, 8, lvl);
+                        updateParamUI(i, 8, ch.level);
                         updateParamUI(i, 9, ch.glide !== undefined ? ch.glide : 0);
                     });
                 } finally { isSyncing = false; }
@@ -1278,48 +1277,74 @@
                 probLabelEl.textContent = "Probability";
             }
 
-            if (shape === 0) { // WAVE_GATE
-                labelEl.textContent = "Gate Width";
-            } else if (shape === 1) { // WAVE_RATCHET
-                labelEl.textContent = "Ratchets";
-            } else if (shape === 2) { // WAVE_SINE
-                labelEl.textContent = "Phase Offset";
-            } else if (shape === 3) { // WAVE_TRIANGLE
-                labelEl.textContent = "Skew Symmetry";
-            } else if (shape === 4) { // WAVE_SAW_UP
-                labelEl.textContent = "Saw Curve";
-            } else if (shape === 5) { // WAVE_SAW_DOWN
-                labelEl.textContent = "Saw Curve";
-            } else if (shape === 6) { // WAVE_TRAPEZOID
-                labelEl.textContent = "Trapezoid Width";
-            } else if (shape === 7) { // WAVE_HUMP
-                labelEl.textContent = "Hump Lean";
-            } else if (shape === 8) { // WAVE_ENVELOPE
-                labelEl.textContent = "Decay Time";
-            } else if (shape === 9) { // WAVE_LOG_ENVELOPE
-                labelEl.textContent = "Decay Time";
-            } else if (shape === 10) { // WAVE_RANDOM_SH
-                labelEl.textContent = "Slew Rate";
-            } else if (shape === 11) { // WAVE_RANDOM_SM
-                labelEl.textContent = "Slew Rate";
-            } else if (shape === 12) { // WAVE_CV_DELAY
-                labelEl.textContent = "Delay Time";
-            } else if (shape === 13) { // WAVE_MATH
-                labelEl.textContent = "Math Op";
-                if (valNumEl) valNumEl.textContent = "";
-                containerEl.innerHTML = `
-                <select id="param-${ch}" onchange="changeParam(${ch},4,this.value)">
-                    <option value="16">Mix/Sum (+)</option>
-                    <option value="48">Difference (-)</option>
-                    <option value="80">Minimum (min)</option>
-                    <option value="112">Maximum (max)</option>
-                    <option value="144">Multiply (*)</option>
-                    <option value="176">AND (&)</option>
-                    <option value="208">OR (|)</option>
-                    <option value="240">XOR (^)</option>
-                </select>
-            `;
-                return;
+            if (isPulse) {
+                if (shape === 5) { // UTILITY
+                    labelEl.textContent = "Utility Mode";
+                    if (valNumEl) valNumEl.textContent = "";
+                    containerEl.innerHTML = `
+                    <select id="param-${ch}" onchange="changeParam(${ch},4,this.value)">
+                        <option value="32">PPQN 1</option>
+                        <option value="96">PPQN 4</option>
+                        <option value="160">PPQN 24</option>
+                        <option value="224">Run Gate</option>
+                    </select>
+                `;
+                    return;
+                } else if (shape === 2) { // TRIGGER (DELAY)
+                    labelEl.textContent = "Delay Offset";
+                } else if (shape === 0) { // GATE
+                    labelEl.textContent = "Pulse Width";
+                } else if (shape === 1) { // RATCHET
+                    labelEl.textContent = "Ratchet";
+                } else if (shape === 3) { // BURST
+                    labelEl.textContent = "Burst Pulses";
+                } else if (shape === 4) { // RANDOM
+                    labelEl.textContent = "Gate Width";
+                }
+            } else {
+                if (shape === 0) { // WAVE_GATE
+                    labelEl.textContent = "Gate Width";
+                } else if (shape === 1) { // WAVE_RATCHET
+                    labelEl.textContent = "Ratchets";
+                } else if (shape === 2) { // WAVE_SINE
+                    labelEl.textContent = "Phase Offset";
+                } else if (shape === 3) { // WAVE_TRIANGLE
+                    labelEl.textContent = "Skew Symmetry";
+                } else if (shape === 4) { // WAVE_SAW_UP
+                    labelEl.textContent = "Saw Curve";
+                } else if (shape === 5) { // WAVE_SAW_DOWN
+                    labelEl.textContent = "Saw Curve";
+                } else if (shape === 6) { // WAVE_TRAPEZOID
+                    labelEl.textContent = "Trapezoid Width";
+                } else if (shape === 7) { // WAVE_HUMP
+                    labelEl.textContent = "Hump Lean";
+                } else if (shape === 8) { // WAVE_ENVELOPE
+                    labelEl.textContent = "Decay Time";
+                } else if (shape === 9) { // WAVE_LOG_ENVELOPE
+                    labelEl.textContent = "Decay Time";
+                } else if (shape === 10) { // WAVE_RANDOM_SH
+                    labelEl.textContent = "Slew Rate";
+                } else if (shape === 11) { // WAVE_RANDOM_SM
+                    labelEl.textContent = "Slew Rate";
+                } else if (shape === 12) { // WAVE_CV_DELAY
+                    labelEl.textContent = "Delay Time";
+                } else if (shape === 13) { // WAVE_MATH
+                    labelEl.textContent = "Math Op";
+                    if (valNumEl) valNumEl.textContent = "";
+                    containerEl.innerHTML = `
+                    <select id="param-${ch}" onchange="changeParam(${ch},4,this.value)">
+                        <option value="16">Mix/Sum (+)</option>
+                        <option value="48">Difference (-)</option>
+                        <option value="80">Minimum (min)</option>
+                        <option value="112">Maximum (max)</option>
+                        <option value="144">Multiply (*)</option>
+                        <option value="176">AND (&)</option>
+                        <option value="208">OR (|)</option>
+                        <option value="240">XOR (^)</option>
+                    </select>
+                `;
+                    return;
+                }
             }
 
             if (valNumEl) {
@@ -1405,21 +1430,26 @@
                 }
                 renderScaleControl(ch);
 
-                const fillsEl = document.getElementById(`eucFills-${ch}`);
-                const labelEl = fillsEl.closest('.p').querySelector('.p-label');
-                if (v === 0) {
-                    labelEl.textContent = 'Phase Offset';
-                    fillsEl.max = 255;
+                if (ch < 4) {
+                    const fillsEl = document.getElementById(`eucFills-${ch}`);
+                    const labelEl = fillsEl.closest('.p').querySelector('.p-label');
+                    if (v === 0) {
+                        labelEl.textContent = 'Phase Offset';
+                        fillsEl.max = 255;
+                    } else {
+                        labelEl.textContent = 'Fills';
+                        fillsEl.max = v;
+                        if (!isSyncing && cfg.euclidean_fills > v) changeParam(ch, 2, v);
+                    }
                 } else {
-                    labelEl.textContent = 'Fills';
-                    fillsEl.max = v;
+                    document.getElementById(`eucFills-${ch}`).max = v;
                     if (!isSyncing && cfg.euclidean_fills > v) changeParam(ch, 2, v);
                 }
             }
             else if (paramId === 2) {
                 cfg.euclidean_fills = v;
                 safeSetVal(`eucFills-${ch}`, v);
-                if (cfg.euclidean_steps === 0) {
+                if (ch < 4 && cfg.euclidean_steps === 0) {
                     document.getElementById(`eucFillsVal-${ch}`).textContent = `${Math.round(v / 2.55)}%`;
                 } else {
                     document.getElementById(`eucFillsVal-${ch}`).textContent = v;
@@ -1430,7 +1460,9 @@
                 safeSetVal(`shape-${ch}`, v);
                 renderParamControl(ch);
                 updateParamUI(ch, 4, cfg.wave_param);
-                updateParamUI(ch, 8, cfg.level);
+                if (ch < 4) {
+                    updateParamUI(ch, 8, cfg.level);
+                }
             }
             else if (paramId === 4) {
                 cfg.wave_param = v;
@@ -1454,7 +1486,15 @@
                         safeSetVal(`param-${ch}`, v);
                         const valNumEl = document.getElementById(`paramVal-${ch}`);
                         if (valNumEl) {
-                            if (cfg.wave_shape === 12) { // WAVE_CV_DELAY
+                            if (ch >= 4) {
+                                if (cfg.wave_shape === 3) { // BURST
+                                    const num = 1 + ((v * 7) >> 8);
+                                    valNumEl.textContent = `${num} trig`;
+                                } else {
+                                    valNumEl.textContent = `${Math.round(v / 2.55)}%`;
+                                }
+                            } else {
+                                if (cfg.wave_shape === 12) { // WAVE_CV_DELAY
                                     if (v < 128) {
                                         const max_ms = ch < 2 ? 170 : 85;
                                         valNumEl.textContent = `${Math.round((v / 127) * max_ms)} ms`;
@@ -1470,6 +1510,7 @@
                                 } else {
                                     valNumEl.textContent = `${Math.round(v / 2.55)}%`;
                                 }
+                            }
                         }
                     }
                 }
@@ -1496,17 +1537,10 @@
             else if (paramId === 8) {
                 cfg.level = v;
                 if (ch >= 4) {
-                    const sliderVal = v - 100;
+                    const sliderVal = Math.round(v / 2);
                     safeSetVal(`level-${ch}`, sliderVal);
-                    let labelText = "";
-                    if (sliderVal > 0) {
-                        labelText = `+${sliderVal}%`;
-                    } else if (sliderVal === 0) {
-                        labelText = `0%`;
-                    } else {
-                        labelText = `${sliderVal}%`;
-                    }
-                    document.getElementById(`levelVal-${ch}`).textContent = labelText;
+                    // 0 = no delay (0%), 100 = full delay (100%)
+                    document.getElementById(`levelVal-${ch}`).textContent = `${sliderVal}%`;
                 } else {
                     const sliderVal = v - 100;
                     safeSetVal(`level-${ch}`, sliderVal);
@@ -1592,7 +1626,7 @@
         function resetChannel(ch, silent = false) {
             changeParam(ch, 0, 20); changeParam(ch, 1, 0); changeParam(ch, 2, 0);
             changeParam(ch, 3, 0); changeParam(ch, 4, 128); changeParam(ch, 5, 100);
-            changeParam(ch, 6, 0); changeParam(ch, 7, 0); changeParam(ch, 8, 200);
+            changeParam(ch, 6, 0); changeParam(ch, 7, 0); changeParam(ch, 8, ch < 4 ? 200 : 0);
             changeParam(ch, 9, 0);
             if (!silent) showToast(`${CH_NAMES[ch]} reset`);
         }
@@ -1602,7 +1636,7 @@
             changeParam(ch, 1, Math.floor(Math.random() * 17));
             const steps = channelConfigs[ch].euclidean_steps;
             changeParam(ch, 2, steps > 0 ? Math.floor(Math.random() * (steps + 1)) : 0);
-            changeParam(ch, 3, Math.floor(Math.random() * 14));
+            changeParam(ch, 3, Math.floor(Math.random() * (ch >= 4 ? 6 : 13)));
             changeParam(ch, 4, Math.floor(Math.random() * 256));
             changeParam(ch, 5, 20 + Math.floor(Math.random() * 81));
             changeParam(ch, 6, Math.floor(Math.random() * (steps > 0 ? steps : SCALES.length)));
@@ -1820,12 +1854,38 @@
                 case 0: return pf < (param / 255) ? 0.65 : 0;
                 case 1: { const tw = 0.1, d = tw + (param / 255) * (0.9 - tw); return (pf < tw || (pf >= d && pf < d + tw)) ? 0.65 : 0; }
                 case 2:
+                    if (isPulse) { const tw = 0.08, ds = (param / 255) * (1 - tw); return (pf >= ds && pf < ds + tw) ? 0.65 : 0; }
                     return Math.sin(pf * 2 * Math.PI + (param / 255) * 2 * Math.PI) * 0.72;
                 case 3:
+                    if (isPulse) { const np = 1 + ((param * 7) >> 8), sw = 1 / np, k = Math.floor(pf / sw), ps = pf - k * sw; return ps < sw * 0.5 ? 0.65 : 0; }
                     { const sk = Math.max(0.01, Math.min(0.99, param / 255)); return pf < sk ? (-0.72 + 1.44 * (pf / sk)) : (0.72 - 1.44 * ((pf - sk) / (1 - sk))); }
                 case 4:
+                    if (isPulse) { const w = param / 255; if (pf < w * 0.4) return 0.65; if (pf < w * 0.8) return (Math.floor(pf * 100) % 2 === 0) ? 0.65 : 0; return 0; }
                     { const lin = -0.72 + 1.44 * pf, ex = Math.exp(-4 * pf), e2 = -0.72 + 1.44 * (1 - (ex - 0.018) / 0.982), lex = Math.exp(-4 * (1 - pf)), lg = -0.72 + 1.44 * ((lex - 0.018) / 0.982); return param === 128 ? lin : param < 128 ? lg + (lin - lg) * (param / 128) : lin + (e2 - lin) * ((param - 128) / 127); }
                 case 5:
+                    if (isPulse) {
+                        const op = param < 86 ? 0 : (param < 171 ? 1 : 2);
+                        const cfg = channelConfigs[ch];
+                        let src_gate = false;
+                        if (cfg && cfg.trigger_source > 0) {
+                            const src_ch = cfg.trigger_source - 1;
+                            const src_cfg = channelConfigs[src_ch];
+                            if (src_cfg) {
+                                const ratio = CLOCK_MULTIPLIERS[src_cfg.clock_modifier] / CLOCK_MULTIPLIERS[cfg.clock_modifier];
+                                const pf_src = (pf * ratio) % 1;
+                                const src_val = waveY(src_cfg.wave_shape, pf_src, src_cfg.wave_param, src_ch >= 4, src_ch);
+                                src_gate = src_val > 0;
+                            }
+                        } else {
+                            src_gate = (op === 0);
+                        }
+                        const internal_gate = pf < 0.5;
+                        let result = false;
+                        if (op === 0) result = internal_gate && src_gate;
+                        else if (op === 1) result = internal_gate || src_gate;
+                        else result = internal_gate !== src_gate;
+                        return result ? 0.65 : 0;
+                    }
                     { const lin = 0.72 - 1.44 * pf, ex = Math.exp(-4 * pf), e2 = 0.72 - 1.44 * (1 - (ex - 0.018) / 0.982), lex = Math.exp(-4 * (1 - pf)), lg = 0.72 - 1.44 * ((lex - 0.018) / 0.982); return param === 128 ? lin : param < 128 ? lg + (lin - lg) * (param / 128) : lin + (e2 - lin) * ((param - 128) / 127); }
                 case 6: { // Trapezoid
                     const w = param / 255;
@@ -1950,7 +2010,14 @@
                     const pf = x / (wW - 2);
                     let pf_offset = pf;
                     let isMuted = false;
-                    if (cfg.euclidean_steps === 0) {
+                    if (isPulse) {
+                        const delayFrac = Math.round(cfg.level / 2) / 100;
+                        if (pf < delayFrac) {
+                            isMuted = true;
+                        } else {
+                            pf_offset = pf - delayFrac;
+                        }
+                    } else if (cfg.euclidean_steps === 0) {
                         const delayFrac = cfg.euclidean_fills / 255;
                         const isOneShot = [0, 1, 8, 9, 10, 11].includes(shape);
                         if (isOneShot) {
@@ -1963,8 +2030,12 @@
                             pf_offset = (pf - delayFrac + 1) % 1;
                         }
                     }
-                    const val = isMuted ? 0 : waveY(shape, pf_offset, param, false, i);
+                    const val = isMuted ? 0 : waveY(shape, pf_offset, param, isPulse, i);
                     let y = midY;
+                    if (isPulse) {
+                        const amplitude = midY * 0.84;
+                        y = midY - val * amplitude;
+                    } else {
                         const signedLevel = cfg.level - 100;
                         const isBipolarShape = [2, 3, 4, 5, 6, 10, 11, 12, 13].includes(shape);
                         if (isBipolarShape) {
@@ -1993,6 +2064,7 @@
                                 y = midY - val * amplitude;
                             }
                         }
+                    }
                     x === 0 ? ctx.moveTo(x + 1, y) : ctx.lineTo(x + 1, y);
                 }
                 ctx.stroke();
