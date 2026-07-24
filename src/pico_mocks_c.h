@@ -39,6 +39,13 @@ static inline void sleep_ms(uint32_t ms) { (void)ms; }
 static inline void sleep_us(uint64_t us) { (void)us; }
 static inline uint32_t busy_wait_us_32(uint32_t us) { (void)us; return 0; }
 
+/* Time and absolute_time_t stubs */
+typedef uint64_t absolute_time_t;
+static inline absolute_time_t get_absolute_time(void) { return 0; }
+static inline uint64_t to_us_since_boot(absolute_time_t t) { return t; }
+static inline uint32_t to_ms_since_boot(absolute_time_t t) { return (uint32_t)(t / 1000); }
+static inline absolute_time_t from_us_since_boot(uint64_t us) { return us; }
+
 /* TinyUSB CDC stubs for host compilation */
 static inline bool tud_cdc_connected(void) { return false; }
 static inline uint32_t tud_cdc_write(const void *buffer, uint32_t bufsize) { (void)buffer; (void)bufsize; return 0; }
