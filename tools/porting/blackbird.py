@@ -272,7 +272,7 @@ def post_process(content, src_rel):
         # Give 'clock' external linkage by declaring it 'extern' before definition in build/clock.h
         content = content.replace(
             '#include "build/clock.h"',
-            'extern const unsigned char crow_lua_clock_data[];\nextern const unsigned int crow_lua_clock_data_len;\n#include "build/clock.h"'
+            'extern "C" {\nextern const unsigned char crow_lua_clock_data[];\nextern const unsigned int crow_lua_clock_data_len;\n}\n#include "build/clock.h"'
         )
         content = re.sub(r'\{\s*"lua_clock"\s*,\s*clock\s*,\s*true\s*,\s*clock_len\s*\}', '{ "lua_clock", crow_lua_clock_data, true, crow_lua_clock_data_len }', content)
         

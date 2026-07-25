@@ -2,6 +2,13 @@
 
 #include <stdint.h>
 
+// Portable `uint` typedef — glibc/BSD provide this via <sys/types.h> but
+// MinGW-w64 does not. Define it before any usage in this header.
+#ifndef _UINT_DEFINED
+#define _UINT_DEFINED
+typedef unsigned int uint;
+#endif
+
 #ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -975,9 +982,16 @@ inline void hw_write_masked(volatile uint32_t *addr, uint32_t values, uint32_t w
     if (addr) *addr = (*addr & ~write_mask) | (values & write_mask);
 }
 
+// MinGW-w64 defines u_int*_t in <sys/types.h> — guard against redefinition
+#ifndef _U_INT8_T
 typedef uint8_t  u_int8_t;
+#endif
+#ifndef _U_INT16_T
 typedef uint16_t u_int16_t;
+#endif
+#ifndef _U_INT32_T
 typedef uint32_t u_int32_t;
+#endif
 inline void irq_set_priority(unsigned int, unsigned int) {}
 inline void flash_safe_execute_core_init() {}
 template<typename F, typename... Args>
@@ -1157,8 +1171,7 @@ inline bool add_repeating_timer_us(int32_t delay_us, bool (*callback)(struct rep
 
 
 
-// Export global uint typedef for cards/wrappers
-typedef unsigned int uint;
+// uint typedef moved to top of file for cross-platform compatibility (was here)
 
 #ifdef VCV_PORT
 #define g_wasm_core1_tick (t_instance->g_wasm_core1_tick)

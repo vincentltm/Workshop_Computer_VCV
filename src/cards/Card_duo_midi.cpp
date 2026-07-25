@@ -141,8 +141,8 @@ License is GPLv3 or later- see LICENSE file for details.
 #include "build/public.h"
 #undef public
 extern "C" {
-extern extern "C" const unsigned char crow_lua_clock_data[];
-extern "C" const unsigned int crow_lua_clock_data_len;
+extern const unsigned char crow_lua_clock_data[];
+extern const unsigned int crow_lua_clock_data_len;
 }
 #include "build/quote.h"
 #include "build/timeline.h"

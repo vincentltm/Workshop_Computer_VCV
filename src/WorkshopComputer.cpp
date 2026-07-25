@@ -1293,9 +1293,9 @@ struct WorkshopComputer : Module, IGridConsumer, IComputerModule {
 
         // Resolve export functions
         #ifdef _WIN32
-            card_globals.set_thread_globals_fn = (void(*)(CardGlobals*)) GetProcAddress((HMODULE)card_lib_handle, "set_thread_globals");
-            card_globals.set_core1_thread_fn = (void(*)(bool)) GetProcAddress((HMODULE)card_lib_handle, "set_core1_thread");
-            auto run_card_fn = (void(*)()) GetProcAddress((HMODULE)card_lib_handle, "run_card");
+            card_globals.set_thread_globals_fn = reinterpret_cast<void(*)(CardGlobals*)>(reinterpret_cast<void*>(GetProcAddress((HMODULE)card_lib_handle, "set_thread_globals")));
+            card_globals.set_core1_thread_fn = reinterpret_cast<void(*)(bool)>(reinterpret_cast<void*>(GetProcAddress((HMODULE)card_lib_handle, "set_core1_thread")));
+            auto run_card_fn = reinterpret_cast<void(*)()>(reinterpret_cast<void*>(GetProcAddress((HMODULE)card_lib_handle, "run_card")));
         #else
             card_globals.set_thread_globals_fn = (void(*)(CardGlobals*)) dlsym(card_lib_handle, "set_thread_globals");
             card_globals.set_core1_thread_fn = (void(*)(bool)) dlsym(card_lib_handle, "set_core1_thread");
@@ -1359,7 +1359,7 @@ struct WorkshopComputer : Module, IGridConsumer, IComputerModule {
 
         for (size_t i = 0; i < g_card_registry.size(); i++) {
             std::string card_id = g_card_registry[i].id;
-            INFO("Diagnostics: Testing card %zu/%zu: %s ...", i + 1, g_card_registry.size(), card_id.c_str());
+            INFO("Diagnostics: Testing card %lu/%lu: %s ...", (unsigned long)(i + 1), (unsigned long)g_card_registry.size(), card_id.c_str());
             try {
                 // Change card without loading flash to keep it fast
                 change_card_impl((int)i, false);
@@ -2215,7 +2215,7 @@ void handle_client(socket_t client_fd) {
                                 if (type_str == "midi") {
                                     push_midi_to_rx_queue(msg_bytes.data(), msg_bytes.size());
                                 } else if (type_str == "serial") {
-                                    DEBUG("WebSocket serial RX: %zu bytes", msg_bytes.size());
+                                    DEBUG("WebSocket serial RX: %lu bytes", (unsigned long)msg_bytes.size());
                                     g_serial_rx_byte_queue.push(msg_bytes.data(), msg_bytes.size());
                                 } else if (type_str == "flash") {
                                     json_t* addr_j = json_object_get(root, "address");
@@ -2227,7 +2227,7 @@ void handle_client(socket_t client_fd) {
                                         }
                                         if (offset + msg_bytes.size() <= PICO_FLASH_SIZE_BYTES) {
                                             memcpy(module_ptr->card_globals.g_flash_memory_val + offset, msg_bytes.data(), msg_bytes.size());
-                                            DEBUG("Flashed %zu bytes to simulated memory offset 0x%lx via WebSocket", msg_bytes.size(), offset);
+                                            DEBUG("Flashed %lu bytes to simulated memory offset 0x%lx via WebSocket", (unsigned long)msg_bytes.size(), (unsigned long)offset);
                                             
                                             CardGlobals* old_instance = t_instance;
                                             t_instance = &module_ptr->card_globals;
@@ -2266,7 +2266,7 @@ void handle_client(socket_t client_fd) {
                 
                 std::vector<uint8_t> serial_msg;
                 while (module_ptr->websocket_serial_tx_queue.pop(serial_msg)) {
-                    DEBUG("WebSocket serial TX: %zu bytes", serial_msg.size());
+                    DEBUG("WebSocket serial TX: %lu bytes", (unsigned long)serial_msg.size());
                     send_websocket_frame(client_fd, 0x01, serial_msg, "serial");
                 }
             }
