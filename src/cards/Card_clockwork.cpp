@@ -4538,7 +4538,6 @@ ClockworksCard card;
 
 // USB Host MIDI callbacks
 extern "C" {
-bool tuh_midi_packet_read(uint8_t dev_addr, uint8_t packet[4]);
 
 void tuh_midi_mount_cb(uint8_t dev_addr, uint8_t in_ep, uint8_t out_ep, uint8_t num_cables_rx, uint16_t num_cables_tx) {
     (void)dev_addr; (void)in_ep; (void)out_ep; (void)num_cables_rx; (void)num_cables_tx;
