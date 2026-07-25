@@ -697,11 +697,12 @@ def main():
             return card.get("visible", True)
         cid = card["id"]
         cnum = str(card["num"]).zfill(2)
+        folder = os.path.basename(card.get("dir", ""))
         excluded = set(str(x) for x in visible_config.get("excluded_cards", []))
         allowed = set(str(x) for x in visible_config.get("allowed_cards", []))
-        if cid in excluded or cnum in excluded or card["num"] in excluded:
+        if cid in excluded or cnum in excluded or card["num"] in excluded or folder in excluded:
             return False
-        if allowed and (cid not in allowed and cnum not in allowed and card["num"] not in allowed):
+        if allowed and (cid not in allowed and cnum not in allowed and card["num"] not in allowed and folder not in allowed):
             return False
         return card.get("visible", True)
 
@@ -712,6 +713,9 @@ def main():
     card_data = {}
     
     for card in CARD_WHITELIST:
+        if not is_card_visible(card):
+            continue
+            
         if card["id"] == "usb_audio_bridge":
             card_data[card["id"]] = {
                 "sources": [os.path.join("src", "cards", "Card_usb_audio_bridge.cpp")],

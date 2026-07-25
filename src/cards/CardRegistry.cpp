@@ -29,14 +29,6 @@ void register_all_cards() {
         true
     });
     g_card_registry.push_back({
-        "chord_blimey",
-        "Chord Blimey!",
-        "05",
-        "Generates CV/Pulse arpeggios",
-        "Tom Waters",
-        false
-    });
-    g_card_registry.push_back({
         "usb_audio_bridge",
         "USB Audio Bridge",
         "06",
@@ -45,44 +37,12 @@ void register_all_cards() {
         true
     });
     g_card_registry.push_back({
-        "bumpers",
-        "Bumpers",
-        "07",
-        "Bouncing ball' style delay and trigger generators",
-        "Chris Johnson",
-        false
-    });
-    g_card_registry.push_back({
-        "bytebeat",
-        "Bytebeat",
-        "08",
-        "Workshop Computer Card",
-        "Music Thing Modular",
-        true
-    });
-    g_card_registry.push_back({
-        "divcom",
-        "Divcom",
-        "09",
-        "Workshop Computer Card",
-        "Music Thing Modular",
-        false
-    });
-    g_card_registry.push_back({
         "goldfish",
         "Goldfish",
         "11",
         "Weird delay/looper for audio and CV",
         "Dune Desormeaux",
         true
-    });
-    g_card_registry.push_back({
-        "am_coupler",
-        "AM Coupler",
-        "12",
-        "AM radio transmitter / coupler",
-        "Chris Johnson",
-        false
     });
     g_card_registry.push_back({
         "noisebox",
@@ -109,28 +69,12 @@ void register_all_cards() {
         true
     });
     g_card_registry.push_back({
-        "chord_organ",
-        "Chord Organ-ish",
-        "18",
-        "Chord Organ-ish - 16 chords, 8 voices, 1V/oct root. Inspired by Music Thing Chord Organ.",
-        "jkeyworth",
-        false
-    });
-    g_card_registry.push_back({
         "ca_sequencer",
         "Cellular Automata Sequencer",
         "19",
         "16-cell gate and quantized CV melody generator inspired by NLC Cellular Automata, using CA rules 90 & 150 on a 4x4 grid",
         "Ainews",
         true
-    });
-    g_card_registry.push_back({
-        "reverb",
-        "Reverb+",
-        "20",
-        "Reverb effect, plus pulse/CV generators and MIDI-to-CV, configurable using web interface.",
-        "Chris Johnson",
-        false
     });
     g_card_registry.push_back({
         "resonator",
@@ -147,14 +91,6 @@ void register_all_cards() {
         "A time-stretching and pitch-shifting granular processor and digital degradation playground with 2 fidelity options.",
         "Dune Desormeaux",
         true
-    });
-    g_card_registry.push_back({
-        "slowmod",
-        "Slowmod",
-        "23",
-        "Workshop Computer Card",
-        "Music Thing Modular",
-        false
     });
     g_card_registry.push_back({
         "crafted_volts",
@@ -205,22 +141,6 @@ void register_all_cards() {
         true
     });
     g_card_registry.push_back({
-        "esp",
-        "ESP",
-        "31",
-        "A MS-20-style External Signal Processor that includes a preamp, bandpass filter, envelope follower, gate, and 1v/oct pitch outs.",
-        "Ben Regnier",
-        false
-    });
-    g_card_registry.push_back({
-        "vink",
-        "Vink",
-        "32",
-        "Dual delay loops with sigmoid saturation for Jaap Vink / Roland Kayn style feedback patching",
-        "Ben Regnier",
-        false
-    });
-    g_card_registry.push_back({
         "drumdrum",
         "drumdrum",
         "33",
@@ -237,28 +157,12 @@ void register_all_cards() {
         true
     });
     g_card_registry.push_back({
-        "freq_shift",
-        "FreqShift",
-        "35",
-        "Dual Input Frequency Shifter for Feedback Experimentation",
-        "Ben Regnier",
-        true
-    });
-    g_card_registry.push_back({
         "od",
         "Od",
         "38",
         "Loopable chaotic Lorenz attractor trajectories and zero-crossings as CV and pulses, with sensitivity to initial conditions.",
         "M. John Mills",
         true
-    });
-    g_card_registry.push_back({
-        "knots",
-        "Knots",
-        "39",
-        "Workshop Computer Card",
-        "Music Thing Modular",
-        false
     });
     g_card_registry.push_back({
         "blackbird",
@@ -290,14 +194,6 @@ void register_all_cards() {
         "44",
         "Two birds sing to each other controlled by a Turing-style shift register sequencer with clock in and CV/pulse out.",
         "Tom Whitwell",
-        true
-    });
-    g_card_registry.push_back({
-        "nzt",
-        "Nzt",
-        "47",
-        "Workshop Computer Card",
-        "Music Thing Modular",
         true
     });
     g_card_registry.push_back({
@@ -349,14 +245,6 @@ void register_all_cards() {
         true
     });
     g_card_registry.push_back({
-        "krell",
-        "Krell",
-        "56",
-        "Krell",
-        "Benjamin Reily",
-        false
-    });
-    g_card_registry.push_back({
         "glitch",
         "Glitch",
         "57",
@@ -381,22 +269,6 @@ void register_all_cards() {
         true
     });
     g_card_registry.push_back({
-        "markov",
-        "Markov",
-        "60",
-        "Dual generative Markov chain module — evolving melody (MarkoV) left side, rhythmic percussion patterns (MarkovPerc) right side, with internal synth voice",
-        "Andy Jenkinson (uglifruit)",
-        false
-    });
-    g_card_registry.push_back({
-        "voices_of_sid",
-        "Voices Of Sid",
-        "64",
-        "Dual MOS 6581 SID emulation (reSID engine) with CV/gate control, stereo output, waveform selection, and randomize",
-        "Joep Vermaat",
-        true
-    });
-    g_card_registry.push_back({
         "stretchcore",
         "Stretchcore",
         "66",
@@ -411,14 +283,6 @@ void register_all_cards() {
         "Six-slot audio recorder and clocked fragment sequencer with browser librarian, MIDI pitch control, random CV outputs, and an alternate long-sample variation mode.",
         "Max Harnishfeger",
         true
-    });
-    g_card_registry.push_back({
-        "trace",
-        "Trace",
-        "69",
-        "Oscillograph stereo oscillator",
-        "Ruiyang Wang",
-        false
     });
     g_card_registry.push_back({
         "degenerator",
@@ -461,14 +325,6 @@ void register_all_cards() {
         true
     });
     g_card_registry.push_back({
-        "west_coast_lpg",
-        "West Coast LPG",
-        "81",
-        "Dual vactrol-emulating low-pass gate (combined VCA + low-pass filter) with fast-attack/slow-decay 'plong', self-pinging percussion, and per-channel VCA/VCF/LPG modes.",
-        "Jason Moore",
-        false
-    });
-    g_card_registry.push_back({
         "computer_grids",
         "Computer Grids",
         "82",
@@ -477,28 +333,12 @@ void register_all_cards() {
         true
     });
     g_card_registry.push_back({
-        "origami",
-        "Origami",
-        "83",
-        "Dual oversampled wavefolder — triangle / sine / hard-clip folding with bias (even-harmonic) control and CV over fold depth, band-limited via 4x oversampling.",
-        "Jason Moore",
-        false
-    });
-    g_card_registry.push_back({
         "cosmik_c1zzl3",
         "Cosmik C1ZZL3",
         "84",
         "Stable phase-distortion synthesiser and Turing machine firmware with Web MIDI envelope readback, PD, detune, eight waveform families, hosted CZ patch import, USB MIDI device/host operation, and optional Turing MIDI output.",
         "Adrian Vos",
         true
-    });
-    g_card_registry.push_back({
-        "tesserae",
-        "Tesserae",
-        "86",
-        "Tesserae — Variable-voice (2-8) arpeggiated chord generator with 5 patterns, 10 scales, tap tempo, CV/audio transpose inputs, and dual CV + audio pitch outputs. Inspired by Laurie Spiegel's Music Mouse and Patchwork.",
-        "MTM Community",
-        false
     });
     g_card_registry.push_back({
         "fr330hfr33",
@@ -515,22 +355,6 @@ void register_all_cards() {
         "Trace and record CV — record knob movements, loop them at bipolar speed",
         "Kenny Shen",
         true
-    });
-    g_card_registry.push_back({
-        "chorgan",
-        "Chorgan",
-        "91",
-        "Chorgan — 6-voice chord synthesizer with morphing timbre, chord extension presets, and built-in chord sequencer. Two modes: normal (detune/chorus) and slew (portamento chord changes). Inspired by the Music Thing Modular Chord Organ.",
-        "Andy Jenkinson (uglifruit)",
-        false
-    });
-    g_card_registry.push_back({
-        "turing_matrix",
-        "Turing Matrix",
-        "93",
-        "Turing Machine sequencer with a switchable mixer layer inspired by the Music Thing Modular Turing Machine and Vactrol Mix combination",
-        "Adrian Vos from initial code by Tom Whitwell / Music Thing Modular / Chris Johnson",
-        false
     });
     g_card_registry.push_back({
         "offair2",
@@ -555,14 +379,6 @@ void register_all_cards() {
         "A duophonic midi device/host interface",
         "Dune Desormeaux",
         true
-    });
-    g_card_registry.push_back({
-        "toolbox",
-        "Toolbox",
-        "99",
-        "Workshop Computer Card",
-        "Music Thing Modular",
-        false
     });
     g_card_registry.push_back({
         "sense_of_space",

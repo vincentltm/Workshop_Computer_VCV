@@ -1113,7 +1113,7 @@ static te_expr *factor(state *s) {
         neg = 1;
     }
 
-    while (s->type == TOK_INFIX && (s->function == (const void*)powf)) {
+    while (s->type == TOK_INFIX && (s->function == (const void*)op_pow)) {
         te_fun2 t = (te_fun2)s->function;
         next_token(s);
 
@@ -1125,7 +1125,7 @@ static te_expr *factor(state *s) {
             insertion = insert;
         } else {
             ret = NEW_EXPR(TE_FUNCTION2 | TE_FLAG_PURE, ret, power(s));
-            ret->function = t;
+            ret->function = (const void*)t;
             insertion = ret;
         }
     }
@@ -1142,11 +1142,11 @@ static te_expr *factor(state *s) {
     /* <factor>    =    <power> {"^" <power>} */
     te_expr *ret = power(s);
 
-    while (s->type == TOK_INFIX && (s->function == (const void*)powf)) {
+    while (s->type == TOK_INFIX && (s->function == (const void*)op_pow)) {
         te_fun2 t = (te_fun2)s->function;
         next_token(s);
         ret = NEW_EXPR(TE_FUNCTION2 | TE_FLAG_PURE, ret, power(s));
-        ret->function = t;
+        ret->function = (const void*)t;
     }
 
     return ret;
@@ -1162,7 +1162,7 @@ static te_expr *term(state *s) {
         te_fun2 t = (te_fun2)s->function;
         next_token(s);
         ret = NEW_EXPR(TE_FUNCTION2 | TE_FLAG_PURE, ret, factor(s));
-        ret->function = t;
+        ret->function = (const void*)t;
     }
 
     return ret;
@@ -1184,7 +1184,7 @@ static te_expr *parse_term(state *s) {
         te_fun2 t = (te_fun2)s->function;
         next_token(s);
         ret = NEW_EXPR(TE_FUNCTION2 | TE_FLAG_PURE, ret, factor(s));
-        ret->function = t;
+        ret->function = (const void*)t;
     }
 
     return ret;
@@ -1197,7 +1197,7 @@ static te_expr *parse_additive(state *s) {
         te_fun2 t = (te_fun2)s->function;
         next_token(s);
         ret = NEW_EXPR(TE_FUNCTION2 | TE_FLAG_PURE, ret, parse_term(s));
-        ret->function = t;
+        ret->function = (const void*)t;
     }
 
     return ret;
@@ -1210,7 +1210,7 @@ static te_expr *parse_shift(state *s) {
         te_fun2 t = (te_fun2)s->function;
         next_token(s);
         ret = NEW_EXPR(TE_FUNCTION2 | TE_FLAG_PURE, ret, parse_additive(s));
-        ret->function = t;
+        ret->function = (const void*)t;
     }
 
     return ret;
@@ -1223,7 +1223,7 @@ static te_expr *parse_relational(state *s) {
         te_fun2 t = (te_fun2)s->function;
         next_token(s);
         ret = NEW_EXPR(TE_FUNCTION2 | TE_FLAG_PURE, ret, parse_shift(s));
-        ret->function = t;
+        ret->function = (const void*)t;
     }
 
     return ret;
@@ -1232,11 +1232,11 @@ static te_expr *parse_relational(state *s) {
 static te_expr *parse_bitwise_and(state *s) {
     te_expr *ret = parse_relational(s);
 
-    while (s->type == TOK_INFIX && s->function == and) {
+    while (s->type == TOK_INFIX && s->function == (const void*)op_and) {
         te_fun2 t = (te_fun2)s->function;
         next_token(s);
         ret = NEW_EXPR(TE_FUNCTION2 | TE_FLAG_PURE, ret, parse_relational(s));
-        ret->function = t;
+        ret->function = (const void*)t;
     }
 
     return ret;
@@ -1245,11 +1245,11 @@ static te_expr *parse_bitwise_and(state *s) {
 static te_expr *parse_bitwise_xor(state *s) {
     te_expr *ret = parse_bitwise_and(s);
 
-    while (s->type == TOK_INFIX && s->function == xor) {
+    while (s->type == TOK_INFIX && s->function == (const void*)op_xor) {
         te_fun2 t = (te_fun2)s->function;
         next_token(s);
         ret = NEW_EXPR(TE_FUNCTION2 | TE_FLAG_PURE, ret, parse_bitwise_and(s));
-        ret->function = t;
+        ret->function = (const void*)t;
     }
 
     return ret;
@@ -1258,11 +1258,11 @@ static te_expr *parse_bitwise_xor(state *s) {
 static te_expr *parse_bitwise_or(state *s) {
     te_expr *ret = parse_bitwise_xor(s);
 
-    while (s->type == TOK_INFIX && s->function == or) {
+    while (s->type == TOK_INFIX && s->function == (const void*)op_or) {
         te_fun2 t = (te_fun2)s->function;
         next_token(s);
         ret = NEW_EXPR(TE_FUNCTION2 | TE_FLAG_PURE, ret, parse_bitwise_xor(s));
-        ret->function = t;
+        ret->function = (const void*)t;
     }
 
     return ret;
@@ -1280,12 +1280,12 @@ static te_expr *expr(state *s) {
 
     while (s->type == TOK_INFIX && (s->function == add || s->function == sub 
                 || s->function == shiftl || s->function == shiftr
-                || s->function == xor || s->function == or || s->function == and
+                || s->function == (const void*)op_xor || s->function == (const void*)op_or || s->function == (const void*)op_and
                 || s->function == less_than || s->function == greater_than)) {
         te_fun2 t = (te_fun2)s->function;
         next_token(s);
         ret = NEW_EXPR(TE_FUNCTION2 | TE_FLAG_PURE, ret, term(s));
-        ret->function = t;
+        ret->function = (const void*)t;
     }
 
     return ret;
@@ -1309,7 +1309,7 @@ static te_expr *list(state *s) {
 
 
 #define TE_FUN(...) ((int(*)(__VA_ARGS__))n->function)
-#define M(e) te_eval(n->parameters[e])
+#define M(e) te_eval((const te_expr*)n->parameters[e])
 
 
 int te_eval(const te_expr *n) {

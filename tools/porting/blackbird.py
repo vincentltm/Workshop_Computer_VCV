@@ -270,6 +270,7 @@ def post_process(content, src_rel):
             '#include "build/clock.h"',
             'extern const unsigned char crow_lua_clock_data[];\nextern const unsigned int crow_lua_clock_data_len;\n#include "build/clock.h"'
         )
+        content = re.sub(r'\{\s*"lua_clock"\s*,\s*clock\s*,\s*true\s*,\s*clock_len\s*\}', '{ "lua_clock", crow_lua_clock_data, true, crow_lua_clock_data_len }', content)
         
     elif src_rel == "lib/casl.c":
         # C++ explicit casts for malloc
