@@ -1130,9 +1130,9 @@ def main():
                     src_content = src_content.replace('FLASH_SAMPLES_BASE', '(XIP_BASE + 0x00180000)')
                     src_content = src_content.replace('FLASH_SETTINGS_BASE', '(XIP_BASE + 0x0017f000)')
                     # Rename embedded Lua clock bytecode array symbol to avoid colliding with C library clock(void) function
-                    src_content = src_content.replace('const unsigned char clock[', 'const unsigned char crow_lua_clock_data[')
-                    src_content = src_content.replace('extern const unsigned char clock[', 'extern const unsigned char crow_lua_clock_data[')
-                    src_content = src_content.replace('extern const unsigned int clock_len;', 'extern const unsigned int crow_lua_clock_data_len;')
+                    src_content = src_content.replace('const unsigned char clock[', 'extern "C" const unsigned char crow_lua_clock_data[')
+                    src_content = src_content.replace('extern const unsigned char clock[', 'extern "C" const unsigned char crow_lua_clock_data[')
+                    src_content = src_content.replace('extern const unsigned int clock_len;', 'extern "C" const unsigned int crow_lua_clock_data_len;')
                     src_content = src_content.replace('"lua_clock"     , clock', '"lua_clock"     , crow_lua_clock_data')
                     src_content = src_content.replace('"lua_clock"   , clock', '"lua_clock"   , crow_lua_clock_data')
                     src_content = src_content.replace('"lua_clock", clock', '"lua_clock", crow_lua_clock_data')
