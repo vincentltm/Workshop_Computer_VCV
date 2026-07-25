@@ -942,6 +942,11 @@ void core1_handler() {
     }
 }
 
+bool ResonatingStrings::loadProgressionFromFlash() { return false; }
+void ResonatingStrings::checkPendingFlashSave() {}
+void ResonatingStrings::handleSerialCommand(const char*) {}
+void ResonatingStrings::resetToDefaults() { progressionIndex = 0; }
+
 int main() {
     stdio_init_all();  // Initialize USB CDC
 

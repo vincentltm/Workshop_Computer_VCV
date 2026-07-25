@@ -2368,12 +2368,6 @@ void handle_client(socket_t client_fd) {
     close_socket(client_fd);
 }
 
-extern "C" {
-bool tuh_midi_packet_read(uint8_t dev_addr, uint8_t packet[4]) {
-    (void)dev_addr;
-    (void)packet;
-    return false;
-}
-}
+
 
 

@@ -1135,7 +1135,9 @@ inline void tight_loop_contents() {
 }
 
 extern "C" {
-    bool tuh_midi_packet_read(uint8_t, uint8_t*);
+    inline bool tuh_midi_packet_read(uint8_t dev_addr, uint8_t packet[4]) {
+        (void)dev_addr; (void)packet; return false;
+    }
 }
 
 struct watchdog_hw_t {
