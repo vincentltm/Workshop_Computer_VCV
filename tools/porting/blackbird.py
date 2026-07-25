@@ -64,8 +64,10 @@ def convert_lua_files(card_dir_abs, wrapper_dir):
             if filename_we == "clock" and os.path.exists(out_file):
                 with open(out_file, 'r') as hf:
                     hdata = hf.read()
-                hdata = hdata.replace('const unsigned char clock[', 'extern const unsigned char crow_lua_clock_data[')
-                hdata = hdata.replace('const unsigned int clock_len', 'extern const unsigned int crow_lua_clock_data_len')
+                hdata = hdata.replace('const unsigned char clock[', 'extern "C" const unsigned char crow_lua_clock_data[')
+                hdata = hdata.replace('unsigned char clock[', 'extern "C" const unsigned char crow_lua_clock_data[')
+                hdata = hdata.replace('const unsigned int clock_len', 'extern "C" const unsigned int crow_lua_clock_data_len')
+                hdata = hdata.replace('unsigned int clock_len', 'extern "C" const unsigned int crow_lua_clock_data_len')
                 with open(out_file, 'w') as hf:
                     hf.write(hdata)
         except subprocess.CalledProcessError as e:

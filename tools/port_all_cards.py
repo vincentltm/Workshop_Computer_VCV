@@ -1428,6 +1428,19 @@ def main():
                         shutil.copy(os.path.join(stereo_src_dir, f_name), os.path.join(stereo_dst_dir, f_name))
             print("Copied wavetable and sample files for backyard_rain")
             
+        # Sanitize all generated clock.h headers with extern "C"
+        for root, dirs, files in os.walk(os.path.join(VCV_PROJECT_DIR, "src", "cards", "wrappers")):
+            for file in files:
+                if file == "clock.h":
+                    fp = os.path.join(root, file)
+                    with open(fp, "r") as hf:
+                        hc = hf.read()
+                    if 'extern "C"' not in hc and "crow_lua_clock_data" in hc:
+                        hc = hc.replace("const unsigned char crow_lua_clock_data[", 'extern "C" const unsigned char crow_lua_clock_data[')
+                        hc = hc.replace("const unsigned int crow_lua_clock_data_len", 'extern "C" const unsigned int crow_lua_clock_data_len')
+                        with open(fp, "w") as hf:
+                            hf.write(hc)
+
         print("Done! Ported all whitelisted cards successfully.")
 
 if __name__ == "__main__":
