@@ -56,10 +56,12 @@ def convert_lua_files(blackbird_dir, duo_midi_dir, wrapper_dir):
         if filename_we == "clock" and os.path.exists(out_file):
             with open(out_file, 'r') as hf:
                 hdata = hf.read()
-            hdata = hdata.replace('const unsigned char clock[', 'extern "C" const unsigned char crow_lua_clock_data[')
-            hdata = hdata.replace('unsigned char clock[', 'extern "C" const unsigned char crow_lua_clock_data[')
-            hdata = hdata.replace('const unsigned int clock_len', 'extern "C" const unsigned int crow_lua_clock_data_len')
-            hdata = hdata.replace('unsigned int clock_len', 'extern "C" const unsigned int crow_lua_clock_data_len')
+            hdata = hdata.replace('const unsigned char clock[', 'const unsigned char crow_lua_clock_data[')
+            hdata = hdata.replace('unsigned char clock[', 'const unsigned char crow_lua_clock_data[')
+            hdata = hdata.replace('const unsigned int clock_len', 'const unsigned int crow_lua_clock_data_len')
+            hdata = hdata.replace('unsigned int clock_len', 'const unsigned int crow_lua_clock_data_len')
+            if '#ifdef __cplusplus' not in hdata:
+                hdata = "#ifdef __cplusplus\nextern \"C\" {\n#endif\n" + hdata + "\n#ifdef __cplusplus\n}\n#endif\n"
             with open(out_file, 'w') as hf:
                 hf.write(hdata)
         
