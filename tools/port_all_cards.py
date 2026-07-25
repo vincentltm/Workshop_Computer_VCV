@@ -593,7 +593,7 @@ CARD_WHITELIST = [
         "dir": "releases/433_sense_of_space",
         "ns": "Card_SenseOfSpace",
         "num": "433",
-        "sources": ["main.cpp", "reverb_dsp.c"],
+        "sources": ["main.cpp", "reverb_dsp.c", "src/cards/wrappers/sense_of_space_samples.cpp"],
         "flags": ["-DFOUR33_SAMPLE_RATE=10000"]
     }
 ]
@@ -647,6 +647,10 @@ def run_card_post_process(card_id, src_content, src_rel):
     if card_id == "sense_of_space":
         src_content = src_content.replace("db->buffer = malloc(", "db->buffer = (int32_t*)malloc(")
         src_content = src_content.replace("reverb *v = malloc(", "reverb *v = (reverb*)malloc(")
+        src_content = src_content.replace("extern const int8_t seat_creak_data[];", "extern const int8_t* const seat_creak_data;")
+        src_content = src_content.replace("extern const int8_t seat_creak_data_end[];", "extern const int8_t* const seat_creak_data_end;")
+        src_content = src_content.replace("extern const int8_t sample_data[];", "extern const int8_t* const sample_data;")
+        src_content = src_content.replace("extern const int8_t sample_data_end[];", "extern const int8_t* const sample_data_end;")
         src_content = "#ifndef FOUR33_SAMPLE_RATE\n#define FOUR33_SAMPLE_RATE 10000\n#endif\n" + src_content
     try:
         mod = importlib.import_module(f"porting.{card_id}")
@@ -894,6 +898,11 @@ def main():
                 pass
         # Helper to resolve source path, prioritizing local VCV wrappers
         def get_source_path(s):
+            card_src_path = os.path.join(card_dir_abs, s)
+            if os.path.exists(card_src_path):
+                return card_src_path
+            if s.startswith("src/"):
+                return os.path.join(VCV_PROJECT_DIR, s)
             vcv_wrapper_path = os.path.join(VCV_PROJECT_DIR, "src", "cards", "wrappers", card["id"], s)
             if os.path.exists(vcv_wrapper_path):
                 return vcv_wrapper_path
@@ -901,7 +910,7 @@ def main():
                 lua_path = os.path.join(VCV_PROJECT_DIR, "deps", "external", "blackbird_lua", s)
                 if os.path.exists(lua_path):
                     return lua_path
-            return os.path.join(card_dir_abs, s)
+            return card_src_path
 
         for s in card["sources"]:
             src_path_abs = get_source_path(s)

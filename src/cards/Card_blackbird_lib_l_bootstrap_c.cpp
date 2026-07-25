@@ -43,8 +43,8 @@ namespace Card_Blackbird {
 #include "build/crowlib.h"
 #include "build/asl.h"
 #include "build/asllib.h"
-extern const unsigned char clock[];
-extern const unsigned int clock_len;
+extern const unsigned char crow_lua_clock_data[];
+extern const unsigned int crow_lua_clock_data_len;
 #include "build/clock.h"
 #include "build/metro.h"
 #define public public_lua

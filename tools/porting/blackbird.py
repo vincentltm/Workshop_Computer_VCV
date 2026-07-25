@@ -268,7 +268,7 @@ def post_process(content, src_rel):
         # Give 'clock' external linkage by declaring it 'extern' before definition in build/clock.h
         content = content.replace(
             '#include "build/clock.h"',
-            'extern const unsigned char clock[];\nextern const unsigned int clock_len;\n#include "build/clock.h"'
+            'extern const unsigned char crow_lua_clock_data[];\nextern const unsigned int crow_lua_clock_data_len;\n#include "build/clock.h"'
         )
         
     elif src_rel == "lib/casl.c":
