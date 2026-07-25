@@ -649,8 +649,10 @@ def run_card_post_process(card_id, src_content, src_rel):
         src_content = src_content.replace("reverb *v = malloc(", "reverb *v = (reverb*)malloc(")
         src_content = src_content.replace("extern const int8_t seat_creak_data[];", "extern const int8_t* const seat_creak_data;")
         src_content = src_content.replace("extern const int8_t seat_creak_data_end[];", "extern const int8_t* const seat_creak_data_end;")
-        src_content = src_content.replace("extern const int8_t sample_data[];", "extern const int8_t* const sample_data;")
-        src_content = src_content.replace("extern const int8_t sample_data_end[];", "extern const int8_t* const sample_data_end;")
+        src_content = src_content.replace("extern const int8_t sample_data[];", "extern const uint8_t* const sample_data;")
+        src_content = src_content.replace("extern const int8_t sample_data_end[];", "extern const uint8_t* const sample_data_end;")
+        src_content = src_content.replace("extern const uint8_t sample_data[];", "extern const uint8_t* const sample_data;")
+        src_content = src_content.replace("extern const uint8_t sample_data_end[];", "extern const uint8_t* const sample_data_end;")
         src_content = "#ifndef FOUR33_SAMPLE_RATE\n#define FOUR33_SAMPLE_RATE 10000\n#endif\n" + src_content
     try:
         mod = importlib.import_module(f"porting.{card_id}")
