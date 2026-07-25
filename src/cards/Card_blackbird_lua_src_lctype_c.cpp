@@ -43,7 +43,7 @@ namespace Card_Blackbird {
 
 #if !LUA_USE_CTYPE	/* { */
 
-/* stripped system include */
+#include <limits.h>
 
 
 #if defined (LUA_UCID)		/* accept UniCode IDentifiers? */

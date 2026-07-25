@@ -39,8 +39,8 @@ namespace Card_Krell {
 #include "lprefix.h"
 
 
-/* stripped system include */
-/* stripped system include */
+#include <limits.h>
+#include <string.h>
 
 #include "lua.h"
 

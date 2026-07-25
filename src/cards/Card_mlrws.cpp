@@ -8323,7 +8323,7 @@ typedef struct {
 static sample_mgr_state_t g_sample_mgr;
 static uint8_t g_header_sector[MLR_SECTOR_SIZE] __attribute__((aligned(4)));
 
-static bool __attribute__((section(".flashdata.devmode"))) cdc_write_all(const void *data, uint32_t len)
+static bool  cdc_write_all(const void *data, uint32_t len)
 {
     if (!tud_cdc_n_connected(SAMPLE_CDC_ITF))
         return false;
@@ -8357,12 +8357,12 @@ static bool __attribute__((section(".flashdata.devmode"))) cdc_write_all(const v
     return sent == len;
 }
 
-static bool __attribute__((section(".flashdata.devmode"))) cdc_write_str(const char *s)
+static bool  cdc_write_str(const char *s)
 {
     return cdc_write_all(s, (uint32_t)strlen(s));
 }
 
-static bool __attribute__((section(".flashdata.devmode"))) cdc_read_byte(uint8_t *out)
+static bool  cdc_read_byte(uint8_t *out)
 {
     if (g_sample_mgr.has_injected) {
         *out = g_sample_mgr.injected_byte;
@@ -8372,7 +8372,7 @@ static bool __attribute__((section(".flashdata.devmode"))) cdc_read_byte(uint8_t
     return tud_cdc_n_read(SAMPLE_CDC_ITF, out, 1) == 1;
 }
 
-static bool __attribute__((section(".flashdata.devmode"))) mlr_flash_idle(void)
+static bool  mlr_flash_idle(void)
 {
     if (mlr_rec_track >= 0 || mlr_flushing || mlr_scene_saving)
         return false;
@@ -8388,7 +8388,7 @@ static bool __attribute__((section(".flashdata.devmode"))) mlr_flash_idle(void)
 /** Force-stop all playing tracks so flash operations can proceed.
  *  Returns true if tracks were successfully stopped (or already idle).
  *  Returns false if recording or flushing is in progress (can't override). */
-static bool __attribute__((section(".flashdata.devmode"))) mlr_force_idle(void)
+static bool  mlr_force_idle(void)
 {
     if (mlr_rec_track >= 0 || mlr_flushing || mlr_scene_saving)
         return false;
@@ -8403,7 +8403,7 @@ static bool __attribute__((section(".flashdata.devmode"))) mlr_force_idle(void)
     return true;
 }
 
-static void __attribute__((section(".flashdata.devmode"))) sample_mgr_reset_session(void)
+static void  sample_mgr_reset_session(void)
 {
     g_sample_mgr.rx_state = SAMPLE_RX_WAIT_CMD;
     g_sample_mgr.pending_cmd = 0;
@@ -8423,7 +8423,7 @@ static void __attribute__((section(".flashdata.devmode"))) sample_mgr_reset_sess
     g_sample_mgr.op = SAMPLE_OP_NONE;
 }
 
-static bool __attribute__((section(".flashdata.devmode"))) sample_mgr_send_info(void)
+static bool  sample_mgr_send_info(void)
 {
     char info[512];
     uint32_t used = 0;
@@ -8468,7 +8468,7 @@ static bool __attribute__((section(".flashdata.devmode"))) sample_mgr_send_info(
     return cdc_write_all(info, used);
 }
 
-static bool __attribute__((section(".flashdata.devmode"))) sample_mgr_begin_read(uint8_t track)
+static bool  sample_mgr_begin_read(uint8_t track)
 {
     /* Reads stream from XIP (no flash writes), so only block if
      * a recording or flash-write operation is in progress. */
@@ -8499,7 +8499,7 @@ static bool __attribute__((section(".flashdata.devmode"))) sample_mgr_begin_read
     return true;
 }
 
-static bool __attribute__((section(".flashdata.devmode"))) sample_mgr_begin_write(uint8_t track, uint32_t total_len)
+static bool  sample_mgr_begin_write(uint8_t track, uint32_t total_len)
 {
     if (!mlr_force_idle())
     {
@@ -8528,7 +8528,7 @@ static bool __attribute__((section(".flashdata.devmode"))) sample_mgr_begin_writ
     return true;
 }
 
-static bool __attribute__((section(".flashdata.devmode"))) sample_mgr_erase_track(uint8_t track)
+static bool  sample_mgr_erase_track(uint8_t track)
 {
     if (!mlr_force_idle())
         return cdc_write_str("BUSY\n");
@@ -8540,7 +8540,7 @@ static bool __attribute__((section(".flashdata.devmode"))) sample_mgr_erase_trac
     return cdc_write_str("OK\n");
 }
 
-static bool __attribute__((section(".flashdata.devmode"))) sample_mgr_set_cv1_pitch(uint8_t track, bool enabled)
+static bool  sample_mgr_set_cv1_pitch(uint8_t track, bool enabled)
 {
     if (track >= MLR_NUM_TRACKS)
         return cdc_write_str("ERR\n");
@@ -8564,7 +8564,7 @@ static bool __attribute__((section(".flashdata.devmode"))) sample_mgr_set_cv1_pi
     return cdc_write_str("OK\n");
 }
 
-static void __attribute__((section(".flashdata.devmode"))) sample_mgr_finish_write(void)
+static void  sample_mgr_finish_write(void)
 {
     if (g_sample_mgr.page_fill > 0) {
         memset(g_sample_mgr.page_buf + g_sample_mgr.page_fill, 0xFF,
@@ -8586,7 +8586,7 @@ static void __attribute__((section(".flashdata.devmode"))) sample_mgr_finish_wri
         sample_mgr_reset_session();
 }
 
-static void __attribute__((section(".flashdata.devmode"))) sample_mgr_pump_read(void)
+static void  sample_mgr_pump_read(void)
 {
     if (g_sample_mgr.op != SAMPLE_OP_READ_STREAM)
         return;
@@ -8672,7 +8672,7 @@ static void __attribute__((section(".flashdata.devmode"))) sample_mgr_pump_read(
         g_sample_mgr.read_wait_ack = true;
 }
 
-static void __attribute__((section(".flashdata.devmode"))) sample_mgr_pump_write(void)
+static void  sample_mgr_pump_write(void)
 {
     if (g_sample_mgr.op != SAMPLE_OP_WRITE_STREAM)
         return;
@@ -8712,7 +8712,7 @@ static void __attribute__((section(".flashdata.devmode"))) sample_mgr_pump_write
         sample_mgr_finish_write();
 }
 
-static void __attribute__((section(".flashdata.devmode"))) sample_mgr_drain_rejected_write(void)
+static void  sample_mgr_drain_rejected_write(void)
 {
     while (g_sample_mgr.drain_remaining > 0 && tud_cdc_n_available(SAMPLE_CDC_ITF) > 0) {
         uint8_t scratch[32];
@@ -8730,19 +8730,19 @@ static void __attribute__((section(".flashdata.devmode"))) sample_mgr_drain_reje
         g_sample_mgr.rx_state = SAMPLE_RX_WAIT_CMD;
 }
 
-void __attribute__((section(".flashdata.devmode"))) device_mode_init(void)
+void  device_mode_init(void)
 {
     memset(&g_sample_mgr, 0, sizeof(g_sample_mgr));
     sample_mgr_reset_session();
 }
 
-void __attribute__((section(".flashdata.devmode"))) device_mode_inject_byte(uint8_t byte)
+void  device_mode_inject_byte(uint8_t byte)
 {
     g_sample_mgr.injected_byte = byte;
     g_sample_mgr.has_injected = true;
 }
 
-void __attribute__((section(".flashdata.devmode"))) device_mode_task(void)
+void  device_mode_task(void)
 {
     bool connected = tud_cdc_n_connected(SAMPLE_CDC_ITF);
     if (!connected) {

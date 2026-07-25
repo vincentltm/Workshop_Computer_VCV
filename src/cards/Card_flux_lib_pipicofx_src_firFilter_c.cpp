@@ -34,9 +34,9 @@ namespace Card_Flux {
 #ifdef RP2040_FEATHER
 #include "drivers/multicore.h"
 #include "drivers/gpio.h"
-/* stripped hardware include */
-/* stripped hardware include */
-/* stripped hardware include */
+#include "hardware/regs/addressmap.h"
+#include "hardware/regs/sio.h"
+#include "hardware/rp2040_registers.h"
 #endif
 
 void initfirFilter(FirFilterType*data)

@@ -29,7 +29,7 @@
 namespace Card_Flux {
     extern const int16_t exptable_impl[];
     extern const int16_t logtable_impl[];
-/* stripped system include */
+#include <stdint.h>
 #include "pipicofx/fxPrograms.h"
 #include "pipicofx/picofxCore.h"
 #include "stringFunctions.h"

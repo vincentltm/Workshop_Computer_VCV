@@ -29,8 +29,8 @@
 namespace Card_Krell {
 #include "metro.h"
 
-/* stripped system include */            // malloc()
-/* stripped system include */
+#include <stdlib.h>            // malloc()
+#include <stdio.h>
 
 #include "ll_timers.h"      // _Init() _Start() _Stop() _Set_Params()
 #include "l_crowlib.h"      // L_queue_metro()

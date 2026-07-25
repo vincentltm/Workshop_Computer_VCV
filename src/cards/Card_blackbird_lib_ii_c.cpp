@@ -28,8 +28,8 @@
 
 namespace Card_Blackbird {
 #include "lib/ii.h"
-/* stripped system include */
-/* stripped system include */
+#include <stdio.h>
+#include <string.h>
 
 // Inter-IC (I2C) communication stubs for RP2040
 

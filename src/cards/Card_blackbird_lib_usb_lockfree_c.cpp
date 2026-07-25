@@ -28,8 +28,8 @@
 
 namespace Card_Blackbird {
 #include "usb_lockfree.h"
-/* stripped pico include */
-/* stripped system include */
+#include "pico/stdlib.h"
+#include <string.h>
 
 // ============================================================================
 // RX Queue - USB → Application

@@ -34,7 +34,7 @@ namespace Card_Flux {
 #include "romfunc.h"
 #include "audio/audiotools.h"
 #include "audio/reverbUtils.h"
-/* stripped system include */
+#include <stddef.h>
 
 // --- ECHO VERB ---
 // Stereo Delay fed into a diffuse reverb tank with analog/tube warmth.

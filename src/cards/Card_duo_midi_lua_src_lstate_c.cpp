@@ -39,8 +39,8 @@ namespace Card_DuoMidi {
 #include "lprefix.h"
 
 
-/* stripped system include */
-/* stripped system include */
+#include <stddef.h>
+#include <string.h>
 
 #include "lua.h"
 
@@ -86,7 +86,7 @@ typedef struct LG {
 */
 #if !defined(luai_makeseed)
 
-/* stripped system include */
+#include <time.h>
 
 /*
 ** Compute an initial seed with some level of randomness.

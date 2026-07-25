@@ -122,7 +122,7 @@ enum Scale {
 
 // 34 clock modifiers: divisions (/2048 to /2), 1x, multiplications (x2 to x128)
 // Pinned to RAM so Core 1 never stalls on a Flash rodata access.
-uint32_t clock_multipliers_q16[] __attribute__((section(".data"))) = {
+uint32_t clock_multipliers_q16[]  = {
     32, 64, 85, 128, 171, 256, 341,                                        // /2048, /1024, /768, /512, /384, /256, /192
     512, 683, 1024, 1365, 2048, 2731, 4096, 5461, 8192, 10922, 16384, 21845, 32768,  // Divisions: /128, /96, /64, /48, /32, /24, /16, /12, /8, /6, /4, /3, /2
     65536,                                                                  // x1
@@ -145,15 +145,15 @@ const char* scale_names[] = {
 };
 
 // Pinned to RAM so Core 1 never stalls on Flash rodata access inside ProcessSample.
-int scale_notes_major[] __attribute__((section(".data"))) = {0, 2, 4, 5, 7, 9, 11};
-int scale_notes_minor_pentatonic[] __attribute__((section(".data"))) = {0, 3, 5, 7, 10};
-int scale_notes_natural_minor[] __attribute__((section(".data"))) = {0, 2, 3, 5, 7, 8, 10};
-int scale_notes_major_pentatonic[] __attribute__((section(".data"))) = {0, 2, 4, 7, 9};
-int scale_notes_dorian[] __attribute__((section(".data"))) = {0, 2, 3, 5, 7, 9, 10};
-int scale_notes_mixolydian[] __attribute__((section(".data"))) = {0, 2, 4, 5, 7, 9, 10};
-int scale_notes_lydian[] __attribute__((section(".data"))) = {0, 2, 4, 6, 7, 9, 11};
-int scale_notes_phrygian[] __attribute__((section(".data"))) = {0, 1, 3, 5, 7, 8, 10};
-int scale_notes_harmonic_minor[] __attribute__((section(".data"))) = {0, 2, 3, 5, 7, 8, 11};
+int scale_notes_major[]  = {0, 2, 4, 5, 7, 9, 11};
+int scale_notes_minor_pentatonic[]  = {0, 3, 5, 7, 10};
+int scale_notes_natural_minor[]  = {0, 2, 3, 5, 7, 8, 10};
+int scale_notes_major_pentatonic[]  = {0, 2, 4, 7, 9};
+int scale_notes_dorian[]  = {0, 2, 3, 5, 7, 9, 10};
+int scale_notes_mixolydian[]  = {0, 2, 4, 5, 7, 9, 10};
+int scale_notes_lydian[]  = {0, 2, 4, 6, 7, 9, 11};
+int scale_notes_phrygian[]  = {0, 1, 3, 5, 7, 8, 10};
+int scale_notes_harmonic_minor[]  = {0, 2, 3, 5, 7, 8, 11};
 
 uint32_t segment_widths_ram[] = {
     4294967295U,
@@ -285,10 +285,10 @@ struct ChannelState {
 };
 
 // Symmetrical circular delay buffers in SRAM (24 KB total)
-int16_t delay_buffer_0[4096] __attribute__((section(".data")));
-int16_t delay_buffer_1[4096] __attribute__((section(".data")));
-int16_t delay_buffer_2[2048] __attribute__((section(".data")));
-int16_t delay_buffer_3[2048] __attribute__((section(".data")));
+int16_t delay_buffer_0[4096] ;
+int16_t delay_buffer_1[4096] ;
+int16_t delay_buffer_2[2048] ;
+int16_t delay_buffer_3[2048] ;
 
 int16_t* delay_buffers[4] = { delay_buffer_0, delay_buffer_1, delay_buffer_2, delay_buffer_3 };
 uint32_t delay_buffer_masks[4] = { 4095, 4095, 2047, 2047 };

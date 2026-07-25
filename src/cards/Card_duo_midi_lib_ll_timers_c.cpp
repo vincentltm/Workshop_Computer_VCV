@@ -28,11 +28,11 @@
 
 namespace Card_DuoMidi {
 #include "ll_timers.h"
-/* stripped system include */
-/* stripped system include */
-/* stripped system include */
-/* stripped pico include */
-/* stripped hardware include */
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include "pico/stdlib.h"
+#include "hardware/sync.h"
 #include "ashapes.h"  // For output quantization
 #include "slopes.h"   // For q16_t and Q16_SHIFT
 #include "sample_rate.h"
@@ -138,7 +138,7 @@ void Timer_Set_Params(int timer_id, float seconds) {
 // Timer processing - called from MainControlLoop at ~20kHz
 // NO LONGER IN ISR! Safe to take time for complex calculations
 // CRITICAL: Place in RAM for consistent timing at high poll rates
-__attribute__((section(".time_critical.Timer_Process")))
+
 void Timer_Process(void) {
     // Check if enough samples have passed for next block
     // global_sample_counter incremented by ProcessSample() ISR

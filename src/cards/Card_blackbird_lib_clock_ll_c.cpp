@@ -29,8 +29,8 @@
 namespace Card_Blackbird {
 #include "clock_ll.h"
 
-/* stripped system include */
-/* stripped system include */
+#include <stdio.h>
+#include <stdlib.h>
 
 // clock_thread as a linked list node
 

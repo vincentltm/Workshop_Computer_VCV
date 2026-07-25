@@ -32,13 +32,13 @@ namespace Card_Lens {
  * int32_t writes are atomic on M0+; no latch needed (one-sample skew is fine). */
 
 #include "midi.h"
-/* stripped system include */
+#include <string.h>
 
 /* Cross-core ordering for the MIDI-out ring: Core 0 fills a slot then advances
    head; Core 1 reads head then the slot. M0+ needs a real DMB between, not just a
    compiler barrier. The host sim is single-threaded, so a compiler barrier suffices. */
 #if defined(__arm__) || defined(__thumb__)
-  #define MIDI_BARRIER() __asm__ volatile ("dmb" ::: "memory")
+  #define MIDI_BARRIER() asm volatile("" ::: "memory");
 #else
   #define MIDI_BARRIER() __asm__ volatile ("" ::: "memory")
 #endif

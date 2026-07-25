@@ -29,9 +29,9 @@
 namespace Card_Krell {
 #include "casl.h"
 
-/* stripped system include */
-/* stripped system include */
-/* stripped system include */ // floorf
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h> // floorf
 
 // TODO
 // add sequins data type

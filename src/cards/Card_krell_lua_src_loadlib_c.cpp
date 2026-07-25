@@ -43,9 +43,9 @@ namespace Card_Krell {
 #include "lprefix.h"
 
 
-/* stripped system include */
-/* stripped system include */
-/* stripped system include */
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "lua.h"
 
@@ -131,7 +131,7 @@ static lua_CFunction lsys_sym (lua_State *L, void *lib, const char *sym);
 ** =========================================================================
 */
 
-/* stripped system include */
+#include <dlfcn.h>
 
 /*
 ** Macro to convert pointer-to-void* to pointer-to-function. This cast
@@ -176,7 +176,7 @@ static lua_CFunction lsys_sym (lua_State *L, void *lib, const char *sym) {
 ** =======================================================================
 */
 
-/* stripped system include */
+#include <windows.h>
 
 
 /*

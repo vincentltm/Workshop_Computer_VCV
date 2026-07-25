@@ -31,7 +31,7 @@ namespace Card_Flux {
     extern const int16_t logtable_impl[];
 #include "audio/oversamplingWaveshaper.h"
 #include "audio/secondOrderIirFilter.h"
-/* stripped system include */
+#include <stdint.h>
 // #include "drivers/i2s.h"
 
 //v oversampling factor as power of two

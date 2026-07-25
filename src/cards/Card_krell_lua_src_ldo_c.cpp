@@ -39,9 +39,9 @@ namespace Card_Krell {
 #include "lprefix.h"
 
 
-/* stripped system include */
-/* stripped system include */
-/* stripped system include */
+#include <setjmp.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "lua.h"
 

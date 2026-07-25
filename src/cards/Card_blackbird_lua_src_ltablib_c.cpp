@@ -39,9 +39,9 @@ namespace Card_Blackbird {
 #include "lprefix.h"
 
 
-/* stripped system include */
-/* stripped system include */
-/* stripped system include */
+#include <limits.h>
+#include <stddef.h>
+#include <string.h>
 
 #include "lua.h"
 
@@ -261,7 +261,7 @@ typedef unsigned int IdxT;
 */
 #if !defined(l_randomizePivot)		/* { */
 
-/* stripped system include */
+#include <time.h>
 
 /* size of 'e' measured in number of 'unsigned int's */
 #define sof(e)		(sizeof(e) / sizeof(unsigned int))

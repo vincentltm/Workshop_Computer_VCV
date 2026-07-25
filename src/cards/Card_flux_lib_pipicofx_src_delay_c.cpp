@@ -42,7 +42,7 @@ int16_t * getDelayMemoryPointer()
 }
 
 // Added ramfunc attribute
-__attribute__ ((section (".ramfunc"))) 
+ 
 void clearDelayLine()
 {
     uint32_t* delayMemPtr=(uint32_t*)getDelayMemoryPointer();

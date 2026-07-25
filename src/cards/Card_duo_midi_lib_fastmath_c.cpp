@@ -29,10 +29,10 @@
 namespace Card_DuoMidi {
 #include "fastmath.h"
 
-/* stripped system include */
-/* stripped system include */
+#include <stdint.h>
+#include <string.h>
 
-/* stripped system include */
+#include <limits.h>
 
 #include "fastmath_lut.h"
 

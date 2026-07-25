@@ -39,7 +39,7 @@ namespace Card_Blackbird {
 #include "lprefix.h"
 
 
-/* stripped system include */
+#include <stddef.h>
 
 #include "lua.h"
 

@@ -39,8 +39,8 @@ namespace Card_DuoMidi {
 #include "lprefix.h"
 
 
-/* stripped system include */
-/* stripped system include */
+#include <limits.h>
+#include <stddef.h>
 
 #include "lua.h"
 

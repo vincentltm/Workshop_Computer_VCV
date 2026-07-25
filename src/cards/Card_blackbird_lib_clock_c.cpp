@@ -29,12 +29,12 @@
 namespace Card_Blackbird {
 #include "clock.h"
 
-/* stripped system include */
-/* stripped system include */
-/* stripped system include */
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
 
 // Unified time source (ms since boot)
-/* stripped pico include */ // For get_absolute_time(), to_ms_since_boot
+#include "pico/time.h" // For get_absolute_time(), to_ms_since_boot
 // Monotonic milliseconds since boot (unifies all clock math)
 static inline uint32_t clock_now_ms(void) {
     return to_ms_since_boot(get_absolute_time());

@@ -28,8 +28,8 @@
 
 namespace Card_Krell {
 #include "events_lockfree.h"
-/* stripped system include */
-/* stripped pico include */
+#include <stdio.h>
+#include "pico/stdlib.h"
 #include "debug.h"
 
 // ARM Cortex-M0+ memory barriers for RP2040

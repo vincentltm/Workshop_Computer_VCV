@@ -39,11 +39,11 @@ namespace Card_DuoMidi {
 #include "lprefix.h"
 
 
-/* stripped system include */
-/* stripped system include */
-/* stripped system include */
-/* stripped system include */
-/* stripped system include */
+#include <errno.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 
 /*
@@ -296,7 +296,7 @@ LUALIB_API int luaL_fileresult (lua_State *L, int stat, const char *fname) {
 
 #if defined(LUA_USE_POSIX)
 
-/* stripped system include */
+#include <sys/wait.h>
 
 /*
 ** use appropriate macros to interpret 'pclose' return status

@@ -180,8 +180,8 @@ struct PerfRingEntry {
     uint16_t walk;   /* Core 0 walk cycles */
     uint16_t io;     /* hw_in gather + driveJacks cycles */
 };
-static struct PerfRingEntry __attribute__((section(".data"))) perf_ring[1024];
-static uint32_t             __attribute__((section(".data"))) perf_head = 0;
+static struct PerfRingEntry  perf_ring[1024];
+static uint32_t              perf_head = 0;
 /* SPEC: exposed for sysex PERF_DUMP handler (Core 1 reads, Core 0 writes). */
 volatile struct PerfRingEntry* const lens_perf_ring    = perf_ring;
 volatile uint32_t*             const lens_perf_head_p  = &perf_head;

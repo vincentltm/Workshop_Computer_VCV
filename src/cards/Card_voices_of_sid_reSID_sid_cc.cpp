@@ -47,7 +47,7 @@ namespace Card_VoicesOfSid {
 //  ---------------------------------------------------------------------------
 
 #include "sid.h"
-/* stripped system include */
+#include <math.h>
 
 RESID_NAMESPACE_START
 

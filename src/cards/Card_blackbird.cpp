@@ -2715,7 +2715,7 @@ public:
 
     // Hardware abstraction functions for output
     // CRITICAL: Place in RAM - called from shaper_v() on every slope update
-    __attribute__((section(".time_critical.hardware_set_output")))
+    
     void hardware_set_output(int channel, float volts) {
         if (channel < 1 || channel > 4) return;
         
@@ -2753,7 +2753,7 @@ public:
     }
     
     // Q16-native hardware output - eliminates float conversion in hot path
-    __attribute__((section(".time_critical.hardware_set_output_q16")))
+    
     void hardware_set_output_q16(int channel, q16_t voltage_q16) {
         if (channel < 1 || channel > 4) return;
         
@@ -5761,7 +5761,7 @@ int LuaManager::lua_clock_stats(lua_State* L) {
 
 // Implementation of C interface function (after BlackbirdCrow class is fully defined)
 // CRITICAL: Place in RAM - called from shaper_v() via slopes.c
-__attribute__((section(".time_critical.hardware_output_set_voltage")))
+
 void hardware_output_set_voltage(int channel, float voltage) {
     int ch_idx = channel - 1;  // channel is 1-based
     
@@ -5792,7 +5792,7 @@ void hardware_output_set_voltage(int channel, float voltage) {
 
 // Q16-native version - eliminates float conversion in hot path
 // Called from slopes.c shaper_v() and S_toward_q16()
-__attribute__((section(".time_critical.hardware_output_set_voltage_q16")))
+
 void hardware_output_set_voltage_q16(int channel, q16_t voltage_q16) {
     int ch_idx = channel - 1;  // channel is 1-based
     

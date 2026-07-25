@@ -68,8 +68,8 @@ static const struct Dx7Bank DX7_BANKS[1] = { { 0, 0, "" } };
 #endif
 #include "wavetables.h"
 #include "msfa_op.h"
-/* stripped system include */
-/* stripped system include */
+#include <stdint.h>
+#include <string.h>
 
 /* ===== stateful state structs ===== */
 

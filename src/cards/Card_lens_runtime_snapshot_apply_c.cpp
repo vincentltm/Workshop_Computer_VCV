@@ -31,8 +31,8 @@ namespace Card_Lens {
 #include "kernel_ids.h"
 #include "midi.h"
 #include "snapshot_format.h"
-/* stripped system include */
-/* stripped system include */
+#include <string.h>
+#include <stdio.h>
 
 /* pack12: 12-bit cells packed 2-per-3-bytes. */
 __attribute__((always_inline))

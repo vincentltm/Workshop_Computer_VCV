@@ -28,10 +28,10 @@
 
 namespace Card_DuoMidi {
 #include "lib/caw.h"
-/* stripped system include */
-/* stripped system include */
-/* stripped system include */
-/* stripped tusb include */  // For TinyUSB CDC functions
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include "tusb.h"  // For TinyUSB CDC functions
 
 // Stub implementations for RP2040 build
 

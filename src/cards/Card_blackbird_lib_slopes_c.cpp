@@ -29,13 +29,13 @@
 namespace Card_Blackbird {
 #include "slopes.h"
 
-/* stripped system include */
-/* stripped system include */
-/* stripped system include */
-/* stripped system include */
-/* stripped system include */
-/* stripped hardware include */
-/* stripped pico include */
+#include <stdlib.h>
+#include <math.h>
+#include <stdio.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include "hardware/sync.h"
+#include "pico/multicore.h"
 
 // TODO: Port STM32 dependencies to RP2040
 // #include "stm32f7xx.h" // STM32-specific, removed
@@ -120,7 +120,7 @@ const q11_t* lut_exp_ptr = NULL;
 // Ultra-fast Q11 LUT lookup with linear interpolation
 // Performance: ~40-60 cycles on Cortex-M0+ (vs ~1500+ for powf())
 // CRITICAL HOT PATH: Place in RAM for deterministic timing
-__attribute__((section(".time_critical.lut_lookup_q11")))
+
 static float lut_lookup_q11(const q11_t* lut, float in) {
     // Clamp input to [0, 1] range
     in = (in < 0.0f) ? 0.0f : ((in > 1.0f) ? 1.0f : in);
@@ -162,7 +162,7 @@ static inline float osc_shape_eval(Shape_t shape, float in) {
 // Q16-native LUT lookup - eliminates redundant float conversions in hot path
 // Directly converts Q16 input to Q16 output via Q11 LUT
 // Performance: Same as lut_lookup_q11 but saves 2 float conversions per call
-__attribute__((section(".time_critical.lut_lookup_q16")))
+
 static inline q16_t lut_lookup_q16(const q11_t* lut, q16_t in_q16) {
     // Clamp Q16 input to [0, 1] range (0 to Q16_ONE)
     if (in_q16 <= 0) return 0;
@@ -213,7 +213,7 @@ static float shapes_ease_in_back(float in) { return in; } // TODO: Implement pro
 static float shapes_ease_out_rebound(float in) { return in; } // TODO: Implement proper rebound
 
 // Missing shape functions using local wrBlocks - similar to crow implementation
-/* stripped system include */
+#include <math.h>
 #include "wrblocks.h"
 
 #ifndef M_PI
@@ -222,7 +222,7 @@ static float shapes_ease_out_rebound(float in) { return in; } // TODO: Implement
 
 // Single sample shape functions - NOW USING Q11 LUTs for 30-50x speedup!
 // HOT PATH: In RAM for consistent timing during high-frequency slope processing
-__attribute__((section(".time_critical.shapes_sin")))
+
 static float shapes_sin(float in) {
     if (!luts_initialized) {
         // Fallback to slow math if LUTs not ready (should never happen)
@@ -231,7 +231,7 @@ static float shapes_sin(float in) {
     return lut_lookup_q11(lut_sin, in);
 }
 
-__attribute__((section(".time_critical.shapes_exp")))
+
 static float shapes_exp(float in) {
     if (!luts_initialized) {
         // Fallback to slow math if LUTs not ready (should never happen)
@@ -240,7 +240,7 @@ static float shapes_exp(float in) {
     return lut_lookup_q11(lut_exp, in);
 }
 
-__attribute__((section(".time_critical.shapes_log")))
+
 static float shapes_log(float in) {
     if (!luts_initialized) {
         // Fallback to slow math if LUTs not ready (should never happen)
@@ -475,7 +475,7 @@ bool S_slope_buffer_needs_fill(int index) {
     return slope_buffer_fill_level(index) <= SLOPE_BUFFER_LOW_WATER;
 }
 
-__attribute__((section(".time_critical.S_slope_buffer_fill_block")))
+
 void S_slope_buffer_fill_block(int index, int samples) {
     if (index < 0 || index >= SLOPE_CHANNELS || samples <= 0 || slopes == NULL) {
         return;
@@ -501,7 +501,7 @@ void S_request_slope_buffer_fill(int index) {
     restore_interrupts(irq_state);
 }
 
-__attribute__((section(".time_critical.S_consume_buffered_sample_q16")))
+
 q16_t S_consume_buffered_sample_q16(int index) {
     if (index < 0 || index >= SLOPE_CHANNELS) { return 0; }
     if (slope_buffer_flush_request[index]) {
@@ -738,7 +738,7 @@ float S_get_state( int index )
     return Q16_TO_FLOAT(slopes[index].shaped_q16);
 }
 
-__attribute__((section(".time_critical.S_render_one_sample_q16")))
+
 static slope_buffer_entry_t S_render_one_sample_q16(int index)
 {
     slope_buffer_entry_t entry = { .value_q16 = 0, .action_due = 0, .callback = NULL };
@@ -843,7 +843,7 @@ static slope_buffer_entry_t S_render_one_sample_q16(int index)
 }
 
 // Single-sample slope processing for Core 1 ISR (immediate mode)
-__attribute__((section(".time_critical.S_step_one_sample_q16")))
+
 q16_t S_step_one_sample_q16(int index)
 {
     if (index < 0 || index >= SLOPE_CHANNELS) { return 0; }
@@ -1126,7 +1126,7 @@ void S_toward_samples( int        index
 }
 
 // CRITICAL: Place in RAM - called from Timer_Process_Block at high frequency
-__attribute__((section(".time_critical.S_step_v")))
+
 float* S_step_v( int     index
                , float*  out
                , int     size
@@ -1144,7 +1144,7 @@ float* S_step_v( int     index
 // private defns
 
 // CRITICAL: Dispatcher in RAM for consistent timing
-__attribute__((section(".time_critical.step_v")))
+
 static float* step_v( Slope_t* self
                     , float*   out
                     , int      size
@@ -1161,7 +1161,7 @@ static float* step_v( Slope_t* self
 }
 
 // CRITICAL: Static value handler in RAM
-__attribute__((section(".time_critical.static_v")))
+
 static float* static_v( Slope_t* self, float* out, int size )
 {
     // OPTIMIZATION: Only set final sample since we discard the rest
@@ -1176,7 +1176,7 @@ static float* static_v( Slope_t* self, float* out, int size )
 }
 
 // CRITICAL: Motion calculation in RAM - most common path for LFOs
-__attribute__((section(".time_critical.motion_v")))
+
 static float* motion_v( Slope_t* self, float* out, int size )
 {
     // OPTIMIZATION: Only calculate final sample since we discard the rest
@@ -1192,7 +1192,7 @@ static float* motion_v( Slope_t* self, float* out, int size )
 }
 
 // CRITICAL: Breakpoint handler in RAM - handles slope transitions and callbacks
-__attribute__((section(".time_critical.breakpoint_v")))
+
 static float* breakpoint_v( Slope_t* self, float* out, int size )
 {
     if( size <= 0 ){ return out; }
@@ -1235,7 +1235,7 @@ static float* breakpoint_v( Slope_t* self, float* out, int size )
 
 // CRITICAL: Shape application in RAM - applies expensive sin/exp/log
 // vectors for optimized segments (assume: self->shape is constant)
-__attribute__((section(".time_critical.shaper_v")))
+
 static float* shaper_v( Slope_t* self, float* out, int size )
 {
     // OPTIMIZATION: Only process final sample since we discard the rest

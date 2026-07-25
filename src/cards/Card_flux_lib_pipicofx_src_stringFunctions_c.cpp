@@ -39,10 +39,10 @@ namespace Card_Flux {
  * 
  * 
  */
-/* stripped system include */
+#include <stdint.h>
 #include "stringFunctions.h"
-/* stripped system include */
-/* stripped system include */
+#include <string.h>
+#include <stdlib.h>
 
 /**
  * @brief converts a number from 0 1 into a string showing percent from 0 to 100. The precision is fixed to three digits.

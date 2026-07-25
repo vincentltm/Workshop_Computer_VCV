@@ -29,9 +29,9 @@
 namespace Card_Blackbird {
 #include "ashapes.h"
 
-/* stripped system include */
-/* stripped system include */
-/* stripped system include */
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
 
 int ashaper_count = 0;
 AShape_t* ashapers = NULL;
@@ -160,7 +160,7 @@ float* AShaper_v( int     index
 
 // Single-sample quantization for real-time hardware output
 // CRITICAL: Place in RAM - called from shaper_v() on every block
-__attribute__((section(".time_critical.AShaper_quantize_single")))
+
 float AShaper_quantize_single( int index, float voltage )
 {
     if( index < 0 || index >= ASHAPER_CHANNELS ){ return voltage; }
@@ -187,7 +187,7 @@ float AShaper_quantize_single( int index, float voltage )
 // Native Q16 quantization - no float conversions in hot path!
 // CRITICAL: Place in RAM - called from shaper_v() on every block
 // Performance: ~3x faster than float version due to eliminated conversions
-__attribute__((section(".time_critical.AShaper_quantize_single_q16")))
+
 q16_t AShaper_quantize_single_q16( int index, q16_t voltage_q16 )
 {
     if( index < 0 || index >= ASHAPER_CHANNELS ){ return voltage_q16; }

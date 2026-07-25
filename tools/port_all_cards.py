@@ -1117,15 +1117,29 @@ def main():
                     # Rename embedded Lua clock bytecode array symbol to avoid colliding with C library clock(void) function
                     src_content = src_content.replace('const unsigned char clock[', 'const unsigned char crow_lua_clock_data[')
                     src_content = src_content.replace('extern const unsigned char clock[', 'extern const unsigned char crow_lua_clock_data[')
+                    src_content = src_content.replace('extern const unsigned int clock_len;', 'extern const unsigned int crow_lua_clock_data_len;')
                     src_content = src_content.replace('"lua_clock"     , clock', '"lua_clock"     , crow_lua_clock_data')
                     src_content = src_content.replace('"lua_clock"   , clock', '"lua_clock"   , crow_lua_clock_data')
                     src_content = src_content.replace('"lua_clock", clock', '"lua_clock", crow_lua_clock_data')
+                    
+                    # Replace hardware ARM assembly instructions with portable memory barrier macros
+                    src_content = re.sub(r'__asm__?\s+volatile\s*\(\s*"dmb"\s*:::\s*"memory"\s*\);?', r'asm volatile("" ::: "memory");', src_content)
+                    src_content = re.sub(r'__asm__?\s+volatile\s*\(\s*"dsb"\s*:::\s*"memory"\s*\);?', r'asm volatile("" ::: "memory");', src_content)
+                    src_content = re.sub(r'__asm__?\s+volatile\s*\(\s*"dmb"\s*\);?', r'asm volatile("" ::: "memory");', src_content)
+                    src_content = re.sub(r'__asm__?\s+volatile\s*\(\s*"dsb"\s*\);?', r'asm volatile("" ::: "memory");', src_content)
+                    src_content = re.sub(r'__asm__?\s+volatile\s*\(\s*"bkpt\s+[^"]+"\s*\);?', r'/* bkpt */', src_content)
+                    src_content = re.sub(r'__asm__?\s+volatile\s*\(\s*"mov\s+%0,\s*lr"\s*:\s*"=r"\([^)]+\)\s*\);?', r'/* mov lr */', src_content)
+                    src_content = src_content.replace('__asm volatile("dmb" ::: "memory");', 'asm volatile("" ::: "memory");')
+                    src_content = src_content.replace('__asm volatile("dmb");', 'asm volatile("" ::: "memory");')
                     
                     # Fix missing return 0 in main() to avoid UB / EXC_BREAKPOINT under -O3
                     src_content = fix_main_return(src_content)
                     
                     # Delegate card-specific post-processing
                     src_content = run_card_post_process(card["id"], src_content, src_rel)
+                    
+                    # Strip linker section attributes that break Clang Mach-O compilation on macOS
+                    src_content = re.sub(r'__attribute__\s*\(\s*\(\s*section\s*\([^)]+\)\s*\)\s*\)', '', src_content)
                     
                     # Strip standard includes to avoid double compilation within namespace (since they are global)
                     src_content = re.sub(r'#include\s+<[^>]+>', '/* stripped system include */', src_content)
@@ -1202,30 +1216,17 @@ def main():
                 src_content = src_content.replace('FLASH_SAMPLES_BASE', '(XIP_BASE + 0x00180000)')
                 src_content = src_content.replace('FLASH_SETTINGS_BASE', '(XIP_BASE + 0x0017f000)')
                 # Replace hardware dmb assembly blocks with portable memory barrier macros
-                src_content = src_content.replace('__asm volatile("dmb" ::: "memory");', 'asm volatile("" ::: "memory");')
-                src_content = src_content.replace('__asm volatile("dmb");', 'asm volatile("" ::: "memory");')
-                src_content = src_content.replace('const unsigned char clock[', 'const unsigned char crow_lua_clock_data[')
-                src_content = src_content.replace('extern const unsigned char clock[', 'extern const unsigned char crow_lua_clock_data[')
-                src_content = src_content.replace('extern const unsigned int clock_len;', 'extern const unsigned int crow_lua_clock_data_len;')
-                src_content = src_content.replace('clock_len', 'crow_lua_clock_data_len')
-                src_content = src_content.replace('"lua_clock"     , clock', '"lua_clock"     , crow_lua_clock_data')
-                src_content = src_content.replace('"lua_clock"   , clock', '"lua_clock"   , crow_lua_clock_data')
-                src_content = src_content.replace('"lua_clock", clock', '"lua_clock", crow_lua_clock_data')
-                
-                # Strip duplicate includes
-                src_content = re.sub(r'#include\s+<[^>]+>', '/* stripped system include */', src_content)
-                src_content = re.sub(r'#include\s+"pico/[^"]+"', '/* stripped pico include */', src_content)
-                src_content = re.sub(r'#include\s+"hardware/[^"]+"', '/* stripped hardware include */', src_content)
-                src_content = re.sub(r'#include\s+"bsp/[^"]+"', '/* stripped bsp include */', src_content)
-                src_content = re.sub(r'#include\s+"usb_midi_host\.h"', '/* stripped usb_midi_host include */', src_content)
-                src_content = re.sub(r'#include\s+"ComputerCard\.h"', '/* stripped ComputerCard include */', src_content)
-                src_content = re.sub(r'#include\s+"ComputerCard/ComputerCard\.h"', '/* stripped ComputerCard include */', src_content)
-                src_content = re.sub(r'#include\s+"tusb\.h"', '/* stripped tusb include */', src_content)
-                src_content = re.sub(r'#include\s+<tusb\.h>', '/* stripped tusb include */', src_content)
-                src_content = re.sub(r'#include\s+"tusb_config\.h"', '/* stripped tusb_config include */', src_content)
-                
+                src_content = re.sub(r'__asm__?\s+volatile\s*\(\s*"dmb"\s*:::\s*"memory"\s*\);?', r'asm volatile("" ::: "memory");', src_content)
+                src_content = re.sub(r'__asm__?\s+volatile\s*\(\s*"dsb"\s*:::\s*"memory"\s*\);?', r'asm volatile("" ::: "memory");', src_content)
+                src_content = re.sub(r'__asm__?\s+volatile\s*\(\s*"dmb"\s*\);?', r'asm volatile("" ::: "memory");', src_content)
+                src_content = re.sub(r'__asm__?\s+volatile\s*\(\s*"dsb"\s*\);?', r'asm volatile("" ::: "memory");', src_content)
+                src_content = re.sub(r'__asm__?\s+volatile\s*\(\s*"bkpt\s+[^"]+"\s*\);?', r'/* bkpt */', src_content)
+                src_content = re.sub(r'__asm__?\s+volatile\s*\(\s*"mov\s+%0,\s*lr"\s*:\s*"=r"\([^)]+\)\s*\);?', r'/* mov lr */', src_content)
                 # Delegate card-specific post-processing
                 src_content = run_card_post_process(card["id"], src_content, sep_src)
+                
+                # Strip linker section attributes that break Clang Mach-O compilation on macOS
+                src_content = re.sub(r'__attribute__\s*\(\s*\(\s*section\s*\([^)]+\)\s*\)\s*\)', '', src_content)
                 
                 with open(sep_path, 'w') as sep_f:
                     # C++ wrapper: full C++ headers wrapped in card namespace

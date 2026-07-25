@@ -33,7 +33,7 @@ namespace Card_Flux {
 #include "pipicofx/fxPrograms.h"
 #include "pipicofx/picofxCore.h"
 #include "stringFunctions.h"
-/* stripped system include */
+#include <math.h>
 
 // FxProgram28: "Spectral Freeze"
 // Implemented as an Integer-Only Additive Resynthesis Filterbank (Vocoder-style)

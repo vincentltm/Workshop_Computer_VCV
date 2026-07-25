@@ -28,12 +28,12 @@
 
 namespace Card_DuoMidi {
 #include "lib/detect.h"
-/* stripped system include */
-/* stripped system include */
-/* stripped system include */
-/* stripped system include */
-/* stripped pico include */
-/* stripped tusb include */
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+#include <stdio.h>
+#include "pico/stdlib.h"
+#include "tusb.h"
 #include "sample_rate.h"
 
 #define DETECT_DEBUG 0

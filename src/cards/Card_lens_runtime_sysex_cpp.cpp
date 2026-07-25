@@ -33,8 +33,8 @@ namespace Card_Lens {
  */
 
 #include "sysex.h"
-/* stripped tusb include */
-/* stripped system include */
+#include "tusb.h"
+#include <string.h>
 
 namespace lenssysex {
 

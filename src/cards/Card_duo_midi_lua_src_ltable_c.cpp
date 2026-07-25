@@ -52,8 +52,8 @@ namespace Card_DuoMidi {
 ** Hence even when the load factor reaches 100%, performance remains good.
 */
 
-/* stripped system include */
-/* stripped system include */
+#include <math.h>
+#include <limits.h>
 
 #include "lua.h"
 

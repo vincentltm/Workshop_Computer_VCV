@@ -29,7 +29,7 @@
 namespace Card_Krell {
 #include "l_ii_mod.h"
 
-/* stripped system include */
+#include <stdio.h>
 
 // Stub i2c module loader for RP2040 Workshop Computer
 // Replaces the original crow i2c module functionality

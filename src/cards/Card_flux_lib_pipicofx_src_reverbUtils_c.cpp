@@ -34,7 +34,7 @@ namespace Card_Flux {
 #include "audio/audiotools.h"
 
 // Added ramfunc attribute to definition
-__attribute__ ((section (".ramfunc"))) 
+ 
 int16_t morphingAllpassProcessSample(int16_t sampleIn,AllpassType*allpass,AudioProcessor processor,void * processorData,volatile uint32_t * audioStatePtr)
 {
     int16_t sampleOut;
@@ -56,7 +56,7 @@ int16_t morphingAllpassProcessSample(int16_t sampleIn,AllpassType*allpass,AudioP
 }
 
 // Added ramfunc attribute to definition
-__attribute__ ((section (".ramfunc"))) 
+ 
 void hadamardDiffuserProcessArray(int32_t * channels,HadamardDiffuserType*data,volatile uint32_t * audioStatePtr)
 {
     int32_t sum_first, sum_second;

@@ -29,9 +29,9 @@
 namespace Card_Blackbird {
 #include "random.h"
 
-/* stripped system include */
-/* stripped system include */
-/* stripped system include */
+#include <stdlib.h>
+#include <time.h>
+#include <stdio.h>
 
 // Random number generator implementation for RP2040 Workshop Computer
 // Uses standard C library functions for simplicity

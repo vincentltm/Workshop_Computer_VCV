@@ -28,9 +28,9 @@
 
 namespace Card_Blackbird {
 #include "flash_storage.h"
-/* stripped system include */
-/* stripped pico include */
-/* stripped tusb include */
+#include <cstring>
+#include "pico/multicore.h"
+#include "tusb.h"
 
 // External flag from main.cpp to signal core1
 extern volatile bool g_flash_operation_pending;

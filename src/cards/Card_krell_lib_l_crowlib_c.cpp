@@ -29,7 +29,7 @@
 namespace Card_Krell {
 #include "l_crowlib.h"
 
-/* stripped system include */
+#include <math.h>
 
 #include "l_bootstrap.h" // l_bootstrap_dofile
 #include "l_ii_mod.h"       // l_ii_mod_preload
@@ -39,7 +39,7 @@ namespace Card_Krell {
 #include "lib/caw.h"        // Caw_printf()
 #include "lib/metro.h"       // Metro_get_period_seconds
 #include "lib/clock.h"       // clock_cancel_coro_all()
-/* stripped pico include */       // time_us_32 for diagnostics
+#include "pico/time.h"       // time_us_32 for diagnostics
 // #include "lib/io.h"         // IO_GetADC() - not used in emulator
 // Declare get_input_state_simple function for compatibility (implemented in main.cpp)
 extern float get_input_state_simple(int channel); // returns input voltage in volts
@@ -49,7 +49,7 @@ extern float get_input_state_simple(int channel); // returns input voltage in vo
 #include "clock_ll.h"        // ll_cleanup()
 #include "lib/events_lockfree.h" // events_lockfree_clear()
 #include "fastmath.h"
-/* stripped system include */
+#include <string.h>
 
 #define L_CL_MIDDLEC 		(261.63f)
 #define L_CL_MIDDLEC_INV 	(1.0f/L_CL_MIDDLEC)

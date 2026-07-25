@@ -29,15 +29,15 @@
 namespace Card_Blackbird {
 #include "l_bootstrap.h"
 
-/* stripped system include */
-/* stripped system include */
-/* stripped system include */
+#include <string.h>
+#include <stdbool.h>
+#include <stdio.h>
 
 #include "l_crowlib.h"
 #include "lib/caw.h"  // For Caw_printf to send crow-style messages
 
 // TinyUSB CDC for direct debug output
-/* stripped tusb include */
+#include "tusb.h"
 
 // Lua libs wrapped in C-headers
 #include "build/crowlib.h"
@@ -147,7 +147,7 @@ const struct lua_lib_locator Lua_libs[] =
     { { "lua_crowlib"   , crowlib   , true, crowlib_len}
     , { "lua_asl"       , asl       , true, asl_len}
     , { "lua_asllib"    , asllib    , true, asllib_len}
-    , { "lua_clock"     , crow_lua_clock_data     , true, crow_lua_clock_data_len}
+    , { "lua_clock"     , clock     , true, clock_len}
     , { "lua_metro"     , metro     , true, metro_len}
     , { "lua_input"     , input     , true, input_len}
     , { "lua_output"    , output    , true, output_len}
