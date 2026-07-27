@@ -48,7 +48,8 @@ jobs:
       - name: Checkout Submodules
         run: |
           git config --global --add safe.directory '*'
-          git submodule update --init --recursive
+          git submodule update --init deps/Workshop_Computer
+          git submodule update --init deps/external/52_lens
       - uses: actions/cache@v4
         id: plugin-version-cache
         with:
@@ -88,7 +89,8 @@ jobs:
       - name: Checkout Submodules
         run: |
           git config --global --add safe.directory '*'
-          git submodule update --init --recursive
+          git submodule update --init deps/Workshop_Computer
+          git submodule update --init deps/external/52_lens
       - uses: actions/cache@v4
         id: plugin-version-cache
         with:
