@@ -2980,6 +2980,7 @@ int main()
 	// Load configuration
 	load_config_from_flash();
 
+#if !defined(VCV_PORT) && !defined(__EMSCRIPTEN__)
 	// Run the selector program
 	{
 		Selector selector;
@@ -2988,6 +2989,7 @@ int main()
 
 	// Save new configuation
 	save_config_to_flash();
+#endif
 
 	
 	ComputerCard *cc;

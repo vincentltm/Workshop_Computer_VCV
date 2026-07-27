@@ -26,13 +26,14 @@
 
 #include "ComputerCard.h"
 
-namespace Card_Lens {
 /* midi.c -- MIDI channel-voice parser; single writer of midi_scratch[].
  * No USB/TinyUSB dependencies; call midi_feed_byte once per incoming byte.
  * int32_t writes are atomic on M0+; no latch needed (one-sample skew is fine). */
 
 #include "midi.h"
 #include <string.h>
+extern "C" {
+
 
 /* Cross-core ordering for the MIDI-out ring: Core 0 fills a slot then advances
    head; Core 1 reads head then the slot. M0+ needs a real DMB between, not just a
@@ -309,4 +310,4 @@ uint8_t midi_out_pop(uint8_t* out) {
     return len;
 }
 
-} // namespace Card_Lens
+}

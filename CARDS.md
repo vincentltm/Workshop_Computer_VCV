@@ -2,17 +2,15 @@
 
 Master source of truth derived from [`cards_registry.json`](file:///Users/vmaurer/Music/Workshop_VCV_Dev/Workshop_Computer_VCV/cards_registry.json).
 
-**Total Registered Cards**: 81 | **Active / Built**: 59 | **Whitelisted Inactive**: 0 | **Waiting (Unallowed)**: 15 | **Hardware Not Viable**: 7
+**Total Registered Cards**: 81 | **Active / Built**: 57 | **Whitelisted Inactive**: 0 | **Waiting (Unallowed)**: 15 | **Hardware Not Viable**: 9
 
-## 1. Active Built Cards (59)
+## 1. Active Built Cards (57)
 Cards enabled, permission granted (author or license), built, and packaged into the VCV Rack plugin and Patchnotes web application.
 
 | Num | Card ID | Card Name | Version | Port Type | Special Features | License | Creator | Permission | Source Availability | Patchnotes | Repository | Tested | Status |
 | :---: | :--- | :--- | :---: | :---: | :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| [00] | `simple_midi` | Simple MIDI | `0.6.6` | `direct_port` | 🎹 MIDI/Serial | `No License Specified` | Tom Whitwell | `granted` | ✅ Source Available | 🌐 Yes | Internal | [x] Yes | ✅ Active Built |
 | [03] | `turing_machine` | Turing Machine | `1.0` | `direct_port` | 🌐 Web UI | `No License Specified` | Unknown | `pending_license` | ✅ Source Available | 🌐 Yes | Internal | [x] Yes | ✅ Active Built |
 | [04] | `byo_benjolin` | BYO Benjolin | `1.1` | `direct_port` | None | `No License Specified` | Dune Desormeaux | `pending_license` | ✅ Source Available | 🌐 Yes | Internal | [x] Yes | ✅ Active Built |
-| [06] | `usb_audio_bridge` | USB Audio & MIDI | `1.0` | `direct_port` | 🌐 Web UI, 🔊 USB Audio | `GPL-3.0` | Vincent Maurer (vincentmaurer.de) | `granted` | ✅ Source Available | 🌐 Yes | Internal | [x] Yes | ✅ Active Built |
 | [07] | `bumpers` | Bumpers | `1.0` | `direct_port` | None | `No License Specified` | Chris Johnson | `granted` | ✅ Source Available | 🌐 Yes | Internal | [x] Yes | ✅ Active Built |
 | [11] | `goldfish` | Goldfish | `2.0` | `direct_port` | None | `No License Specified` | Dune Desormeaux | `pending_license` | ✅ Source Available | 🌐 Yes | Internal | [x] Yes | ✅ Active Built |
 | [13] | `noisebox` | Noisebox | `1.0` | `direct_port` | None | `CC BY-NC-SA 3.0` | Eric Gao | `granted_by_license (CC BY-NC-SA 3.0)` | ✅ Source Available | 🌐 Yes | Internal | [x] Yes | ✅ Active Built |
@@ -54,7 +52,7 @@ Cards enabled, permission granted (author or license), built, and packaged into 
 | [72] | `motorik` | Motorik | `1.0` | `direct_port` | None | `No License Specified` | Joep Vermaat | `pending_license` | 🔗 External Repo | 🌐 Yes | [Link](https://codeberg.org/johantv/motorik) | [x] Yes | ✅ Active Built |
 | [74] | `wild_pebble` | Wild Pebble | `1` | `direct_port` | None | `GPL-3.0` | Adrian Vos with Vibecode support | `granted` | ✅ Source Available | 🌐 Yes | Internal | [x] Yes | ✅ Active Built |
 | [75] | `turing_clouds` | Turing Clouds | `1.0` | `direct_port` | None | `MIT` | Ainews | `granted_by_license (MIT)` | ✅ Source Available | 🌐 Yes | Internal | [x] Yes | ✅ Active Built |
-| [76] | `hot_fuzz` | 76 Hot Fuzz | `1.0` | `direct_port` | None | `MIT` | Joep Vermaat | `granted_by_license (MIT)` | 🔗 External Repo | 🌐 Yes | [Link](https://codeberg.org/johantv/hot-fuzz) | [ ] No | ✅ Active Built |
+| [76] | `hot_fuzz` | 76 Hot Fuzz | `1.0` | `direct_port` | None | `MIT` | Joep Vermaat | `granted_by_license (MIT)` | 🔗 External Repo | 🌐 Yes | [Link](https://codeberg.org/johantv/hot-fuzz) | [x] Yes | ✅ Active Built |
 | [78] | `talker` | Talker | `0.1` | `direct_port` | None | `GPL-3.0` | Chris Johnson | `granted` | ✅ Source Available | 🌐 Yes | Internal | [x] Yes | ✅ Active Built |
 | [82] | `computer_grids` | Computer Grids | `0.1.0` | `direct_port` | 🌐 Web UI | `GPL-3.0-or-later` | Phil Miller | `granted_by_license (GPL-3.0-or-later)` | ✅ Source Available | 🌐 Yes | Internal | [x] Yes | ✅ Active Built |
 | [84] | `cosmik_c1zzl3` | Cosmik C1Zzl3 | `1.1` | `direct_port` | 🌐 Web UI | `MIT` | Adrian Vos | `granted` | ✅ Source Available | 🌐 Yes | Internal | [x] Yes | ✅ Active Built |
@@ -97,11 +95,13 @@ Community release folders present in the repository where build permission is wa
 | [83] | `origami` | 83 Origami | `0.1` | `direct_port` | None | `No License Specified` | Jason Moore | `waiting` | ✅ Source Available | 🌐 Yes | Internal | [ ] No | ❌ Waiting / Unbuilt |
 | [99] | `toolbox` | 99 Toolbox | `0.1.1` | `direct_port` | None | `No License Specified` | divmod | `waiting` | 🔗 External Repo | 🌐 Yes | [Link](https://github.com/divmod-audio/toolbox) | [ ] No | ❌ Waiting / Unbuilt |
 
-## 4. Hardware Not Viable Cards (7)
+## 4. Hardware Not Viable Cards (9)
 Cards requiring specific RP2040 physical hardware (RF radio transmission, low-level DMA IRQ channels) that are not viable in software VCV Rack.
 
 | Num | Card ID | Card Name | Version | Creator | Reason / Viability Notes | Repository | Viability |
 | :---: | :--- | :--- | :---: | :--- | :--- | :---: | :---: |
+| [00] | `simple_midi` | Simple MIDI | `0.6.6` | Tom Whitwell | Requires native USB hardware interface | Internal | 🚫 Not Viable |
+| [06] | `usb_audio_bridge` | USB Audio & MIDI | `1.0` | Vincent Maurer (vincentmaurer.de) | Requires native USB hardware interface | Internal | 🚫 Not Viable |
 | [10] | `twists` | 10 Twists | `0.1` | Random Works | Not portable: C++ source code not available (binary-only release in repository). | Internal | 🚫 Not Viable |
 | [12] | `am_coupler` | 12 Am Coupler | `1.0` | Chris Johnson | Hardware-only card: generates medium-wave AM radio carrier waves via RP2040 RF GPIO output, which has no software equivalent in VCV Rack. | Internal | 🚫 Not Viable |
 | [16] | `the_bells` | 16 The Bells | `1.0.0` | James Saunders | Not portable: C++ source code not available (binary-only release in repository). | Internal | 🚫 Not Viable |
@@ -113,12 +113,12 @@ Cards requiring specific RP2040 physical hardware (RF radio transmission, low-le
 ## Detailed Card Directory
 
 ### [00] Simple MIDI (`simple_midi`)
-- **Build Status**: ✅ Active Built
-- **Patchnotes Web Client**: `supported`
+- **Build Status**: 🚫 Hardware Not Viable
+- **Patchnotes Web Client**: `unsupported`
 - **Repository URL**: `None`
 - **Source Availability**: `source_available`
-- **Viability**: `viable` (Viable for software emulation)
-- **Whitelisted**: `True` | **Enabled**: `True`
+- **Viability**: `not_viable` (Requires native USB hardware interface)
+- **Whitelisted**: `False` | **Enabled**: `False`
 - **Creator / Author**: Tom Whitwell
 - **License**: `No License Specified`
 - **Permission**: `granted` (Author approved)
@@ -177,12 +177,12 @@ Cards requiring specific RP2040 physical hardware (RF radio transmission, low-le
 - **Description**: Community release folder
 
 ### [06] USB Audio & MIDI (`usb_audio_bridge`)
-- **Build Status**: ✅ Active Built
-- **Patchnotes Web Client**: `supported`
+- **Build Status**: 🚫 Hardware Not Viable
+- **Patchnotes Web Client**: `unsupported`
 - **Repository URL**: `None`
 - **Source Availability**: `source_available`
-- **Viability**: `viable` (Viable for software emulation)
-- **Whitelisted**: `True` | **Enabled**: `True`
+- **Viability**: `not_viable` (Requires native USB hardware interface)
+- **Whitelisted**: `False` | **Enabled**: `False`
 - **Creator / Author**: Vincent Maurer (vincentmaurer.de)
 - **License**: `GPL-3.0`
 - **Permission**: `granted` (Author approved)
@@ -1126,7 +1126,7 @@ Cards requiring specific RP2040 physical hardware (RF radio transmission, low-le
 - **Repository URL**: `https://codeberg.org/johantv/hot-fuzz`
 - **Source Availability**: `external_repo_available`
 - **Viability**: `viable` (Viable for software emulation)
-- **Whitelisted**: `False` | **Enabled**: `True`
+- **Whitelisted**: `True` | **Enabled**: `True`
 - **Creator / Author**: Joep Vermaat
 - **License**: `MIT`
 - **Permission**: `granted_by_license (MIT)` (Granted under MIT open source license)

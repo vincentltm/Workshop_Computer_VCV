@@ -1,15 +1,13 @@
 # Unified Card Test Suite Report
 
-**Generated:** 2026-07-26 17:06:36
+**Generated:** 2026-07-27 16:09:49
 
 ## Overview
 
 | Card Num | ID | Name | Build | Metadata | VCV Rack | Patchnotes (WASM) |
 |---|---|---|---|---|---|---|
-| 00 | `simple_midi` | Simple MIDI | — | — | ✅ PASS | — |
 | 03 | `turing_machine` | Turing Machine | — | — | ✅ PASS | — |
 | 04 | `byo_benjolin` | BYO Benjolin | — | — | ✅ PASS | — |
-| 06 | `usb_audio_bridge` | USB Audio & MIDI | — | — | ✅ PASS | — |
 | 07 | `bumpers` | Bumpers | — | — | ✅ PASS | — |
 | 11 | `goldfish` | Goldfish | — | — | ✅ PASS | — |
 | 13 | `noisebox` | Noisebox | — | — | ✅ PASS | — |
@@ -36,7 +34,7 @@
 | 48 | `two_tracks` | 48 Two Tracks | — | — | ✅ PASS | — |
 | 50 | `flux` | Flux | — | — | ✅ PASS | — |
 | 51 | `grains` | Grains | — | — | ✅ PASS | — |
-| 52 | `lens` | Lens | — | — | ✅ PASS | — |
+| 52 | `lens` | Lens | — | — | ❌ FAIL | — |
 | 53 | `glitter` | Glitter | — | — | ✅ PASS | — |
 | 54 | `tapegrade` | Tapegrade | — | — | ✅ PASS | — |
 | 55 | `fifths` | Fifths | — | — | ✅ PASS | — |
@@ -61,10 +59,18 @@
 | 91 | `chorgan` | 91 Chorgan | — | — | ✅ PASS | — |
 | 93 | `turing_matrix` | Turing Matrix | — | — | ✅ PASS | — |
 | 95 | `offair2` | OffAir | — | — | ✅ PASS | — |
-| 97 | `alloy` | Alloy | — | — | ✅ PASS | — |
+| 97 | `alloy` | Alloy | — | — | ❌ FAIL | — |
 | 303 | `acid` | 303 Acid | — | — | ✅ PASS | — |
 | 433 | `sense_of_space` | 433 Sense of Space | — | — | ✅ PASS | — |
 
 ## Issues & Action Items
 
-🎉 All tested cards passed successfully with no errors or degraded behavior!
+### Card `lens` (#52) — [VCV] FAIL
+- **Error:** Failed assertions
+- **Failed Checks:**
+  - `execution_error`: Error during test loop: Command 'RUN_SAMPLES 22000' timed out after 30.0s
+
+### Card `alloy` (#97) — [VCV] FAIL
+- **Error:** Failed assertions
+- **Failed Checks:**
+  - `execution_error`: Error during test loop: Command 'RUN_SAMPLES 1000' timed out after 6.0s

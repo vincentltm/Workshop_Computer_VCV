@@ -41,10 +41,11 @@ def post_process(src_content, src_rel):
         'void __not_in_flash_func(ProcessSample)() override {\n    CVOut1(2047);'
     )
 
-    # Find core1_worker's while(1) loop and wrap/inline it
+    # Find core1_worker's while loop and wrap/inline it
     idx = src_content.find("void __not_in_flash_func(core1_worker)()")
     if idx != -1:
-        while_idx = src_content.find("while (1)", idx)
+        # Search specifically for the outer "while (1) {" loop — NOT the drain loop above it
+        while_idx = src_content.find("  while (1) {", idx)
         if while_idx != -1:
             brace_pos = src_content.find("{", while_idx)
             if brace_pos != -1:
@@ -58,18 +59,29 @@ def post_process(src_content, src_rel):
                     curr_pos += 1
                 closing_brace_idx = curr_pos - 1
                 loop_body = src_content[brace_pos+1 : closing_brace_idx]
-                
-                # Replace local thread-blocking and continue statements with cooperative inline returns
-                loop_body = loop_body.replace("while (core1_paused) {\n      }", "if (core1_paused) { core1_is_paused = true; return; }\n      core1_is_paused = false;")
-                loop_body = loop_body.replace("continue;", "return;")
-                
+
+                # For WASM tick callback, continue; -> return; (single tick execution)
+                loop_body_wasm = loop_body.replace("while (core1_paused) {\n      }", "if (core1_paused) { core1_is_paused = true; return; }\n      core1_is_paused = false;")
+                loop_body_wasm = loop_body_wasm.replace("continue;", "return;")
+
+                # For native C++ thread loop, continue; stays continue; and if (!gptr) return; -> continue;
+                loop_body_native = loop_body.replace("while (core1_paused) {\n      }", "if (core1_paused) { core1_is_paused = true; std::this_thread::sleep_for(std::chrono::milliseconds(1)); continue; }\n      core1_is_paused = false;")
+                loop_body_native = loop_body_native.replace("Grains *gptr = (Grains *)ComputerCard::ThisPtr();\n    if (!gptr)\n      return;", "Grains *gptr = (Grains *)ComputerCard::ThisPtr();\n    if (!gptr)\n      continue;")
+                # Fix return; inside grain loop in native body
+                loop_body_native = loop_body_native.replace("if (!g.active)\n        return;", "if (!g.active)\n        break;")
+                loop_body_native = loop_body_native.replace("activeGrainsCount--;\n            return;", "activeGrainsCount--;\n            break;")
+                # Fix NaN casting out-of-bounds read in tape mode rendering and BackgroundLoop
+                loop_body_native = loop_body_native.replace("if (p < 0) p = 0;", "if (std::isnan(p) || p < 0) p = 0;")
+                loop_body_wasm = loop_body_wasm.replace("if (p < 0) p = 0;", "if (std::isnan(p) || p < 0) p = 0;")
+                src_content = src_content.replace("if (progress < 0)\n              progress = 0;", "if (std::isnan(progress) || progress < 0)\n              progress = 0;")
+
                 replacement = f"""#if defined(__EMSCRIPTEN__)
     g_wasm_core1_tick = []() {{
-        {loop_body}
+        {loop_body_wasm}
     }};
 #else
     while (!g_cancellation_requested.load(std::memory_order_relaxed)) {{
-        {loop_body}
+        {loop_body_native}
     }}
 #endif"""
                 src_content = src_content[:while_idx] + replacement + src_content[closing_brace_idx+1:]

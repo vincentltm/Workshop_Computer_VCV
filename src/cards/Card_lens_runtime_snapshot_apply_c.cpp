@@ -26,13 +26,14 @@
 
 #include "ComputerCard.h"
 
-namespace Card_Lens {
 #include "runtime.h"
 #include "kernel_ids.h"
 #include "midi.h"
 #include "snapshot_format.h"
 #include <string.h>
 #include <stdio.h>
+extern "C" {
+
 
 /* pack12: 12-bit cells packed 2-per-3-bytes. */
 __attribute__((always_inline))
@@ -632,4 +633,4 @@ int snapshot_apply(struct LensRuntime** out_rt, const uint8_t* bytes, size_t len
     return 0;
 }
 
-} // namespace Card_Lens
+}

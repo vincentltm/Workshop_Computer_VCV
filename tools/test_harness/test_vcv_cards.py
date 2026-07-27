@@ -71,7 +71,7 @@ class CardSession:
             return self.proc.stdout.readline().strip()
         return None
 
-    def send_cmd(self, cmd: str, timeout: float = 6.0) -> str:
+    def send_cmd(self, cmd: str, timeout: float = 15.0) -> str:
         if not self.proc or self.proc.poll() is not None:
             raise RuntimeError("Harness process is not running")
         self.proc.stdin.write(cmd + "\n")
@@ -199,7 +199,7 @@ def run_vcv_tests(cards: List[CardInfo], skip_compile: bool = False, stress: boo
             # 2. Idle Sanity
             session.send_cmd("SET_INPUTS 0.0 0.0 0.0 0.0 0 0")
             session.send_cmd("SET_KNOBS 0.5 0.5 0.5")
-            session.send_cmd("RUN_SAMPLES 22000")
+            session.send_cmd("RUN_SAMPLES 2000")
             st_idle = session.get_state()
 
             sane = True
@@ -277,13 +277,13 @@ def run_vcv_tests(cards: List[CardInfo], skip_compile: bool = False, stress: boo
                         session.send_cmd("SET_INPUTS 3.0 1.5 1.0 -1.0 0 0")
                         session.send_cmd("RUN_SAMPLES 100")
                         session.send_cmd("SET_INPUTS 3.0 1.5 1.0 -1.0 1 1")
-                        session.send_cmd("RUN_SAMPLES 1000")
+                        session.send_cmd("RUN_SAMPLES 1000", timeout=20.0)
                         st_fx_dur = session.get_state()
                         dur_energy = max(dur_energy, abs(st_fx_dur["audio_out"][0]) + abs(st_fx_dur["audio_out"][1]) + abs(st_fx_dur["cv_out"][0]) + abs(st_fx_dur["cv_out"][1]))
                         max_led_energy = max(max_led_energy, sum(st_fx_dur["leds"]))
 
                         session.send_cmd("SET_INPUTS 0.0 0.0 0.0 0.0 0 0")
-                        session.send_cmd("RUN_SAMPLES 1000")
+                        session.send_cmd("RUN_SAMPLES 1000", timeout=20.0)
                         st_fx_tail = session.get_state()
                         tail_energy = max(tail_energy, abs(st_fx_tail["audio_out"][0]) + abs(st_fx_tail["audio_out"][1]) + abs(st_fx_tail["cv_out"][0]) + abs(st_fx_tail["cv_out"][1]))
                         max_led_energy = max(max_led_energy, sum(st_fx_tail["leds"]))

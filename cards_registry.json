@@ -22,18 +22,18 @@
             "simple_midi.cpp"
         ],
         "sample_rate_div": 1,
-        "status": "active_built",
-        "enabled": true,
-        "whitelisted": true,
+        "status": "disabled",
+        "enabled": false,
+        "whitelisted": false,
         "category": "Utility",
         "description": "Takes USB midi, sends it to pulse and CV outputs, also sends knob positions and CV inputs back to the computer as CC values.",
-        "viable": true,
-        "viability": "viable",
-        "viability_notes": "Viable for software emulation",
+        "viable": false,
+        "viability": "hardware_only",
+        "viability_notes": "Requires native USB hardware interface",
         "no_source_available": false,
         "source_availability": "source_available",
-        "patchnotes": true,
-        "patchnotes_status": "supported"
+        "patchnotes": false,
+        "patchnotes_status": "disabled"
     },
     {
         "id": "turing_machine",
@@ -1726,7 +1726,8 @@
         "no_source_available": false,
         "source_availability": "source_available",
         "patchnotes": true,
-        "patchnotes_status": "supported"
+        "patchnotes_status": "supported",
+        "manual_rewrite": true
     },
     {
         "id": "lens",
@@ -2422,7 +2423,7 @@
             "midi_serial": "none",
             "working_status": "untested"
         },
-        "tested": false,
+        "tested": true,
         "source_type": "external",
         "dir": "deps/external/76_hot_fuzz",
         "sources": [
@@ -2432,7 +2433,7 @@
         "sample_rate_div": 1,
         "status": "active_built",
         "enabled": true,
-        "whitelisted": false,
+        "whitelisted": true,
         "category": "Utility",
         "description": "Community release folder",
         "viable": true,

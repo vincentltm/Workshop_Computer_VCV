@@ -486,6 +486,33 @@ inline uintptr_t SpinFIFO::pop() {
     head.store((h + 1) % 256, std::memory_order_release);
     return val;
 }
+
+inline uintptr_t SpinFIFO::pop_blocking() {
+    if (g_cancellation_requested.load(std::memory_order_relaxed)) throw ThreadExitException();
+
+    while (head.load(std::memory_order_relaxed) == tail.load(std::memory_order_acquire)) {
+        if (g_cancellation_requested.load(std::memory_order_relaxed)) throw ThreadExitException();
+        if (!is_core1_thread && g_wasm_core1_tick && !g_core1_tick_active) {
+            g_core1_tick_active = true;
+            is_core1_thread = true;
+            try {
+                g_wasm_core1_tick();
+            } catch (const Core1YieldException&) {}
+            is_core1_thread = false;
+            g_core1_tick_active = false;
+        } else if (is_core1_thread) {
+            throw Core1YieldException();
+        }
+    }
+
+    size_t h = head.load(std::memory_order_relaxed);
+    if (h == tail.load(std::memory_order_acquire)) {
+        return 0;
+    }
+    uintptr_t val = buffer[h].load(std::memory_order_relaxed);
+    head.store((h + 1) % 256, std::memory_order_release);
+    return val;
+}
 #else
 inline void SpinFIFO::push(uintptr_t val) {
     {
@@ -511,6 +538,7 @@ inline uintptr_t SpinFIFO::pop_blocking() {
     std::unique_lock<std::mutex> lock(mutex_);
     while (q_.empty()) {
         if (g_cancellation_requested.load(std::memory_order_relaxed)) throw ThreadExitException();
+        if (is_core1_thread && t_instance && t_instance->g_core1_cancellation_requested_val.load(std::memory_order_relaxed)) throw ThreadExitException();
         cv_.wait_for(lock, std::chrono::milliseconds(5));
     }
     uintptr_t val = q_.front();

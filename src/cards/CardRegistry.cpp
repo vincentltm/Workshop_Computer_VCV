@@ -5,14 +5,6 @@ std::vector<CardMetadata> g_card_registry;
 void register_all_cards() {
     g_card_registry.clear();
     g_card_registry.push_back({
-        "simple_midi",
-        "Simple MIDI",
-        "00",
-        "Takes USB midi, sends it to pulse and CV outputs, also sends knob positions and CV inputs back to the computer as CC values.",
-        "Tom Whitwell",
-        true
-    });
-    g_card_registry.push_back({
         "turing_machine",
         "Turing Machine",
         "03",
@@ -26,14 +18,6 @@ void register_all_cards() {
         "04",
         "Rungler, Chaotic VCO, Noise Source, Turing Machine, Quantizer",
         "Dune Desormeaux",
-        true
-    });
-    g_card_registry.push_back({
-        "usb_audio_bridge",
-        "USB Audio Bridge",
-        "06",
-        "Direct hardware bridge for the Workshop System Computer USB Audio card",
-        "Music Thing Modular",
         true
     });
     g_card_registry.push_back({
