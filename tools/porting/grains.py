@@ -151,12 +151,12 @@ def post_process(src_content, src_rel):
                 loop_body = loop_body.replace("while (core1_paused) {\n      }", "if (core1_paused) { core1_is_paused = true; return; }\n      core1_is_paused = false;")
                 loop_body = loop_body.replace("continue;", "return;")
                 
-                replacement = f"""#if defined(__EMSCRIPTEN__) || defined(VCV_PORT)
+                replacement = f"""#if defined(__EMSCRIPTEN__)
     g_wasm_core1_tick = []() {{
         {loop_body}
     }};
 #else
-    while (1) {{
+    while (!g_cancellation_requested.load(std::memory_order_relaxed)) {{
         {loop_body}
     }}
 #endif"""

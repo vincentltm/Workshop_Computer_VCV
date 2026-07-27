@@ -48,7 +48,7 @@ def post_process(src_content, src_rel):
                 loop_body = loop_body.replace("    continue;\n  }", "    return;\n  }")
                 loop_body = loop_body.replace("    continue;\n}", "    return;\n}")
                 
-                replacement = f"""#if defined(__EMSCRIPTEN__) || defined(VCV_PORT)
+                replacement = f"""#if defined(__EMSCRIPTEN__)
     g_wasm_core1_tick = []() {{
         {loop_body}
     }};

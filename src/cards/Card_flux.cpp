@@ -248,13 +248,13 @@ public:
     uint32_t customCount = SynthCore_GetCustomSampleCount();
     if (customCount > 0)
       return SynthCore_GetCustomSamplePtr(index);
-    return 0; // No fallback! Voice announcements are not sampler data.
+    return getVoiceData(index);
   }
   uint32_t GetUnifiedVoiceLen(int index) {
     uint32_t customCount = SynthCore_GetCustomSampleCount();
     if (customCount > 0)
       return SynthCore_GetCustomSampleLen(index);
-    return 0; // No fallback!
+    return getVoiceLen(index);
   }
   uint32_t GetActiveSampleCount() {
     uint32_t customCount = SynthCore_GetCustomSampleCount();
@@ -1082,8 +1082,8 @@ public:
                                      : (mixedR < -32768 ? -32768 : mixedR));
       }
 
-      AudioOut(0, finalL >> 4);
-      AudioOut(1, finalR >> 4);
+      AudioOut(0, finalL);
+      AudioOut(1, finalR);
 
       // ---- LED Logic ----
       if (sw == ComputerCard::Switch::Down) {

@@ -109,6 +109,7 @@ private:
 public:
     void push(uintptr_t val);       // defined after CardGlobals
     uintptr_t pop();
+    uintptr_t pop_blocking();
     bool pop_nonblocking(uintptr_t& val) {
 #ifdef __EMSCRIPTEN__
         size_t h = head.load(std::memory_order_relaxed);
@@ -130,6 +131,12 @@ public:
 #else
         std::lock_guard<std::mutex> lock(mutex_);
         return q_.empty();
+#endif
+    }
+    void notify_all() {
+#ifndef __EMSCRIPTEN__
+        std::lock_guard<std::mutex> lock(mutex_);
+        cv_.notify_all();
 #endif
     }
     size_t size() const {
@@ -203,12 +210,10 @@ struct CustomCancellationAtomic {
     
     bool load(std::memory_order order = std::memory_order_seq_cst) const;
     
-    void store(bool desired, std::memory_order order = std::memory_order_seq_cst) {
-        val.store(desired, order);
-    }
+    void store(bool desired, std::memory_order order = std::memory_order_seq_cst);
     
     CustomCancellationAtomic& operator=(bool desired) {
-        val.store(desired);
+        store(desired);
         return *this;
     }
     
@@ -392,6 +397,14 @@ inline bool CustomCancellationAtomic::load(std::memory_order order) const {
     return val.load(order);
 }
 
+inline void CustomCancellationAtomic::store(bool desired, std::memory_order order) {
+    val.store(desired, order);
+    if (desired && t_instance) {
+        t_instance->g_fifo_0_to_1.notify_all();
+        t_instance->g_fifo_1_to_0.notify_all();
+    }
+}
+
 // ──────────────────────────────────────────────────────────────────────────────
 // Macro redirects — card source code uses bare names like g_knobs[0];
 // these expand to t_instance->g_knobs[0] with zero source changes required.
@@ -494,11 +507,22 @@ inline void SpinFIFO::push(uintptr_t val) {
     }
 }
 
-inline uintptr_t SpinFIFO::pop() {
+inline uintptr_t SpinFIFO::pop_blocking() {
     std::unique_lock<std::mutex> lock(mutex_);
     while (q_.empty()) {
         if (g_cancellation_requested.load(std::memory_order_relaxed)) throw ThreadExitException();
         cv_.wait_for(lock, std::chrono::milliseconds(5));
+    }
+    uintptr_t val = q_.front();
+    q_.pop();
+    return val;
+}
+
+inline uintptr_t SpinFIFO::pop() {
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (q_.empty()) {
+        if (g_cancellation_requested.load(std::memory_order_relaxed)) throw ThreadExitException();
+        return 0;
     }
     uintptr_t val = q_.front();
     q_.pop();
@@ -699,8 +723,8 @@ inline void multicore_fifo_push_blocking(uintptr_t data) {
     }
 }
 inline uintptr_t multicore_fifo_pop_blocking() {
-    if (!is_core1_thread) return g_fifo_1_to_0.pop();
-    else                  return g_fifo_0_to_1.pop();
+    if (!is_core1_thread) return g_fifo_1_to_0.pop_blocking();
+    else                  return g_fifo_0_to_1.pop_blocking();
 }
 inline bool multicore_fifo_rvalid() {
     if (!is_core1_thread) return !g_fifo_1_to_0.empty();

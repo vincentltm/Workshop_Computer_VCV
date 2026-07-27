@@ -39,6 +39,12 @@ def post_process(src_content, src_rel):
             '#define M0P_SYSTICK_CVR (*((volatile uint32_t *)0xE000E018))',
             'static uint32_t mock_systick_cvr = 0;\n#define M0P_SYSTICK_CVR mock_systick_cvr'
         )
+        # Allow Core 1 thread to exit when card stops or changes
+        src_content = src_content.replace(
+            'while (true) {',
+            'while (!g_cancellation_requested.load(std::memory_order_relaxed)) {'
+        )
+
         # Inline Core 1 walk on Core 0 for VCV Rack compilation to avoid scheduling latency and dropouts
         src_content = src_content.replace(
             '            if (multicore_fifo_wready()) {\n                sio_hw->fifo_wr = seq;              /* triggers SIO_IRQ_PROC1 on Core 1 */\n            }',

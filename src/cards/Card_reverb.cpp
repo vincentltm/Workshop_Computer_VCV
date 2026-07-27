@@ -101,7 +101,7 @@ The function of knobs, CV and Pulse input/output are controlled by MIDI SysEx co
 #define debug(f_, ...) printf((f_), __VA_ARGS__)
 #define debugp(f_) printf(f_)
 #define debug_pin(pin_, val_)
-#elifdef ENABLE_GPIO_DEBUGGING
+#elif defined(ENABLE_GPIO_DEBUGGING)
 // Use UART pins as GPIO outputs
 #define debug(f_, ...)
 #define debugp(f_)

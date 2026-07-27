@@ -20,6 +20,7 @@ def post_process(src_content, src_rel):
         'int rv3 = tud_midi_stream_write(0, packet, 9);',
         'tud_midi_stream_write(0, packet, 9);'
     )
+    src_content = src_content.replace('#elifdef ENABLE_GPIO_DEBUGGING', '#elif defined(ENABLE_GPIO_DEBUGGING)')
     return src_content
 
 def get_header_definitions():

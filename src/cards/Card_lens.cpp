@@ -783,7 +783,7 @@ extern "C" void tuh_midi_rx_cb(uint8_t dev_addr, uint32_t num_packets) {
 /* Host loop: tuh_task drives enumeration; tuh_midi_rx_cb feeds the parser.
  * Run-loop split credited to Music Thing Workshop System 33_drumdrum. */
 static void run_host_loop(void) {
-    while (true) {
+    while (!g_cancellation_requested.load(std::memory_order_relaxed)) {
         tuh_task();
     }
 }
@@ -795,7 +795,7 @@ static void run_device_loop(void) {
     static lenssysex::ParserState parser;
     lenssysex::init(&parser);
 
-    while (true) {
+    while (!g_cancellation_requested.load(std::memory_order_relaxed)) {
         tud_task();
 
         /* Drain incoming MIDI as a decoded byte stream. tud_midi_stream_read

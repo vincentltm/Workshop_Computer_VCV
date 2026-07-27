@@ -462,10 +462,14 @@ def post_process(src_content, src_rel):
         src_content = rewrite_initializers(src_content, local_map)
 
     if src_rel.endswith("main.cpp"):
-        # Scale 16-bit final audio outputs down by 4 bits to 12-bit range to avoid clipping distortion
+        # Restore voice announcement fallback to baked-in voice_data.h arrays
         src_content = src_content.replace(
-            '      AudioOut(0, finalL);\n      AudioOut(1, finalR);',
-            '      AudioOut(0, finalL >> 4);\n      AudioOut(1, finalR >> 4);'
+            'return 0; // No fallback! Voice announcements are not sampler data.',
+            'return getVoiceData(index);'
+        )
+        src_content = src_content.replace(
+            'return 0; // No fallback!',
+            'return getVoiceLen(index);'
         )
 
     return src_content

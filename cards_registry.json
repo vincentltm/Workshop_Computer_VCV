@@ -172,18 +172,18 @@
             "Card_usb_audio_bridge.cpp"
         ],
         "sample_rate_div": 1,
-        "status": "active_built",
-        "enabled": true,
-        "whitelisted": true,
+        "status": "disabled",
+        "enabled": false,
+        "whitelisted": false,
         "category": "Utility",
         "description": "6-Channel USB Audio & MIDI firmware with CV/Gate support",
-        "viable": true,
-        "viability": "viable",
-        "viability_notes": "Viable for software emulation",
+        "viable": false,
+        "viability": "hardware_only",
+        "viability_notes": "Requires native USB hardware interface",
         "no_source_available": false,
         "source_availability": "source_available",
-        "patchnotes": true,
-        "patchnotes_status": "supported"
+        "patchnotes": false,
+        "patchnotes_status": "disabled"
     },
     {
         "id": "bumpers",

@@ -1092,7 +1092,7 @@ public:
 void __not_in_flash_func(core1_worker)() {
   while (multicore_fifo_rvalid())
     multicore_fifo_pop_blocking();
-  #if defined(__EMSCRIPTEN__) || defined(VCV_PORT)
+  #if defined(__EMSCRIPTEN__)
     g_wasm_core1_tick = []() {
         
     if (core1_paused) {
@@ -1494,7 +1494,7 @@ void __not_in_flash_func(core1_worker)() {
   
     };
 #else
-    while (1) {
+    while (!g_cancellation_requested.load(std::memory_order_relaxed)) {
         
     if (core1_paused) {
       core1_is_paused = true;

@@ -93,8 +93,10 @@ void test_multicore_launch_core1(void (*entry)()) {
     ComputerCard* card = inst->card_ptr;
 
     if (inst->g_core1_thread_val.joinable()) {
+        inst->g_core1_cancellation_requested_val = true;
         inst->g_core1_thread_val.join();
     }
+    inst->g_core1_cancellation_requested_val = false;
 
     inst->g_core1_thread_val = std::thread([entry, inst, card]() {
         t_instance = inst;
@@ -330,6 +332,7 @@ int main(int argc, char* argv[]) {
 
     // Clean up
     globals.g_cancellation_requested_val = true;
+    globals.g_core1_cancellation_requested_val = true;
     if (t.joinable()) {
         t.join();
     }
