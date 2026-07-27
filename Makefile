@@ -7,6 +7,7 @@ FLAGS += -Isrc -DCOMPUTERCARD_NOIMPL -DVCV_PORT=1
 # Plugin source files
 SOURCES += src/plugin.cpp
 SOURCES += src/WorkshopComputer.cpp
+SOURCES += src/cards/CardRegistry.cpp
 
 # Distributable assets
 DISTRIBUTABLES += res
