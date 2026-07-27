@@ -252,7 +252,7 @@ public:
 			pulseTimer=100;
 		}
 
-		int32_t beat = ((phase>>8)*divisor[divisorIndex])/sizes[beatIndex];
+		int32_t beat = ((phase>>8)*divisor[divisorIndex])/ (sizes[beatIndex] != 0 ? sizes[beatIndex] : 1);
 
 		if (beat != lastBeat && lastDivisorIndex == divisorIndex)
 		{
@@ -267,7 +267,7 @@ public:
 		int32_t r = phase & 0xFF;
 		int32_t ind = phase>>8;
 		
-		int32_t val = breaks[beatIndex][ind]*(256-r)+ breaks[beatIndex][(ind+1)%sizes[beatIndex]]*(r);
+		int32_t val = breaks[beatIndex][ind]*(256-r)+ breaks[beatIndex][(ind+1)% (sizes[beatIndex] != 0 ? sizes[beatIndex] : 1)]*(r);
 
 		if (sleighPhase>=0)	sleighPhase++;
 
@@ -360,7 +360,7 @@ public:
 		else
 		{
 			int32_t val = int_function(x);
-			int32_t aa = (val - lastval)/(x-lastx);
+			int32_t aa = (val - lastval)/((x-lastx != 0) ? (x-lastx) : 1);
 			ret = aa;
 			lastx=x;
 			lastval = val;
@@ -394,9 +394,9 @@ public:
 		
 		if (PulseInRisingEdge(I))
 		{
-			uint32_t r = rnd12()/divisors[kex];
-			CVOut(I, (r*divisors[kex])>>2);
-			LedBrightness(I+2, (r*divisors[kex])>>1);
+			uint32_t r = rnd12()/(divisors[kex] != 0 ? divisors[kex] : 1);
+			CVOut(I, (r*(divisors[kex] != 0 ? divisors[kex] : 1))>>2);
+			LedBrightness(I+2, (r*(divisors[kex] != 0 ? divisors[kex] : 1))>>1);
 			outPulseState = !outPulseState;
 			PulseOut(I, outPulseState);
 			LedOn(4+I, outPulseState);
@@ -1337,8 +1337,8 @@ public:
 
 		 
 		int32_t baseNote = 30 + (k / 70); // Freq = ExpVoct(k+offs+(((count%(nSaws/2))*455)))<<1;
-		int32_t baseNoteOffs = (baseNote/nChords[chordtype])*(12-nChords[chordtype]);
-		int32_t chordNote = notes[chordtype][(baseNote % nChords[chordtype])][sawind];
+		int32_t baseNoteOffs = (baseNote/ (nChords[chordtype] != 0 ? nChords[chordtype] : 1))*(12-nChords[chordtype]);
+		int32_t chordNote = notes[chordtype][(baseNote % (nChords[chordtype] != 0 ? nChords[chordtype] : 1))][sawind];
 
 		active[sawind] = (chordNote != -255);
 		if (active[sawind]) saws[count].SetFreq(10 * ExpNote(baseNote + baseNoteOffs + chordNote));
@@ -1346,7 +1346,7 @@ public:
 		int minnote = 1000;
 		for (int i = 0; i < 4; i++)
 		{
-			if (notes[chordtype][(baseNote % nChords[chordtype])][i] < minnote) minnote = notes[chordtype][(baseNote % nChords[chordtype])][i];
+			if (notes[chordtype][(baseNote % (nChords[chordtype] != 0 ? nChords[chordtype] : 1))][i] < minnote) minnote = notes[chordtype][(baseNote % (nChords[chordtype] != 0 ? nChords[chordtype] : 1))][i];
 		}
 		CVOutMIDINote(I, baseNote + baseNoteOffs + minnote);
 
@@ -1500,7 +1500,7 @@ public:
 		{
 			unsigned readInd = (writeInd + (bufSize << 2) - (offs)-1) % bufSize;
 			unsigned newReadInd = (writeInd + (bufSize << 2) - (newoffs)-1) % bufSize;
-			int32_t xfaded = (buffer[readInd]*xfadeInd + buffer[newReadInd]*(xfadeLen-xfadeInd))/xfadeLen;
+			int32_t xfaded = (buffer[readInd]*xfadeInd + buffer[newReadInd]*(xfadeLen-xfadeInd))/ (xfadeLen != 0 ? xfadeLen : 1);
 			AudioOut(I,xfaded);
 			xfadeInd--;
 			if (xfadeInd==0)
@@ -2435,7 +2435,7 @@ public:
 				inputCounter = 100;
 			}
 
-			LedBrightness(I, 4095 - ((step << 12) / nSteps)); // led brightness shows step
+			LedBrightness(I, 4095 - ((step << 12) / (nSteps != 0 ? nSteps : 1))); // led brightness shows step
 			bucket += nPulsesWithCV;
 			if (bucket >= nSteps)
 			{
@@ -2908,7 +2908,7 @@ class Selector : public ComputerCard
 	int16_t sample=0;
 	int side=0,lastSide=0;
 	int wordstep=0, zeroSampleCount=0;
-	const int divisor = 4095/(numUtilities-1);
+	const int divisor = (numUtilities > 1) ? (4095 / (numUtilities - 1)) : 1;
 public:
 	Selector()
 	{
@@ -2919,9 +2919,11 @@ public:
 	{
 		if (count < 5000000) count++;
 
-		ind[0] = KnobVal(Knob::X)/divisor;
+		int _div_sel = (divisor > 0) ? divisor : 1;
+		ind[0] = KnobVal(Knob::X)/_div_sel;
 		if (ind[0]>=numUtilities) ind[0]=numUtilities-1;
-		ind[1] = KnobVal(Knob::Y)/divisor;
+		int _div_sel2 = (divisor > 0) ? divisor : 1;
+		ind[1] = KnobVal(Knob::Y)/_div_sel2;
 		if (ind[1]>=numUtilities) ind[1]=numUtilities-1;
 			
 		side = KnobVal(Knob::Main)>2048;
