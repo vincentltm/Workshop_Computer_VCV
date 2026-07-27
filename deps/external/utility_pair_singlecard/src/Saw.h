@@ -37,6 +37,7 @@ public:
 		dphase2 *= dphase2; // 0 to 1073741824
 		int32_t retval = dphase2 - last_dphase; // -1073741824 to 1073741824 = ±2^30
 		last_dphase = dphase2;
+		if (invc == 0) invc = 1; // Guard: prevent divide by zero in Tick()
 		return retval/invc; 
 	}
 private:
