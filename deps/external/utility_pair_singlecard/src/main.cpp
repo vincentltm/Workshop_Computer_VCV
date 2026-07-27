@@ -2673,6 +2673,7 @@ public:
 		freq = f;
 		phase_incr = freq; // freq is roughly 89478 per Hz at sr=48kHz
 		invc = phase_incr>>15;
+		if (invc == 0) invc = 1;
 	}
 
 	int32_t SquareTick()
@@ -2701,6 +2702,7 @@ public:
 		dphase2 *= dphase2; // 0 to 1073741824
 	  	retval -= (dphase2 - last_dphase_osc2)>>16; // -1073741824 to 1073741824 = ±2^30
 		
+		if (invc == 0) invc = 1;
 		return (retval/invc)>>5; 
 	}
 
@@ -2716,13 +2718,17 @@ public:
 		{
 			dphase2 = ((dphase2+524288)*(dphase2-p));
 			dphase2 <<=11;
-			dphase2 /= (524288+p);
+			int32_t div1 = 524288 + p;
+			if (div1 == 0) div1 = 1;
+			dphase2 /= div1;
 		}
 		else
 		{
 			dphase2 = ((524288-dphase2)*(dphase2-p));
 			dphase2 <<=11;
-			dphase2 /= (524288-p);
+			int32_t div2 = 524288 - p;
+			if (div2 == 0) div2 = 1;
+			dphase2 /= div2;
 		}
 		last_dphase = dphase2;
 
@@ -2735,18 +2741,23 @@ public:
 		{
 			dphase2 = ((dphase2+524288)*(dphase2-p));
 			dphase2 <<=11;
-			dphase2 /= (524288+p);
+			int32_t div3 = 524288 + p;
+			if (div3 == 0) div3 = 1;
+			dphase2 /= div3;
 		}
 		else
 		{
 			dphase2 = ((524288-dphase2)*(dphase2-p));
 			dphase2 <<=11;
-			dphase2 /= (524288-p);
+			int32_t div4 = 524288 - p;
+			if (div4 == 0) div4 = 1;
+			dphase2 /= div4;
 		}
 
 		// Now calculate difference between previous and current offsets
 		int32_t retval = dphase2 - last_dphase;
 		last_dphase = dphase2;
+		if (invc == 0) invc = 1;
 		retval = retval/invc;
 		return (retval>>4)+(retval>>5);
 	}
