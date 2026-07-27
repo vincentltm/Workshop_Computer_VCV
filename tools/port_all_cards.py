@@ -434,26 +434,15 @@ def main():
                 for d in dirs:
                     card_include_flags.append(f"-I{os.path.join(root, d)}")
                     
-        # Add original card source directories second
+        # Add original card source directory and all valid subdirectories second
         card_include_flags.append(f"-I{card_dir_abs}")
-        src_sub = os.path.join(card_dir_abs, "src")
-        if os.path.exists(src_sub):
-            card_include_flags.append(f"-I{src_sub}")
-            for root, dirs, files in os.walk(src_sub):
-                for d in dirs:
-                    card_include_flags.append(f"-I{os.path.join(root, d)}")
-        inc_sub = os.path.join(card_dir_abs, "include")
-        if os.path.exists(inc_sub):
-            card_include_flags.append(f"-I{inc_sub}")
-            for root, dirs, files in os.walk(inc_sub):
-                for d in dirs:
-                    card_include_flags.append(f"-I{os.path.join(root, d)}")
-        inc_sub2 = os.path.join(card_dir_abs, "inc")
-        if os.path.exists(inc_sub2):
-            card_include_flags.append(f"-I{inc_sub2}")
-            for root, dirs, files in os.walk(inc_sub2):
-                for d in dirs:
-                    card_include_flags.append(f"-I{os.path.join(root, d)}")
+        if os.path.exists(card_dir_abs):
+            for root, dirs, files in os.walk(card_dir_abs):
+                for d in list(dirs):
+                    if d in ("build", ".git", "test", "web", "docs", "tools", "__pycache__", "UF2", "assets_tmp"):
+                        dirs.remove(d)
+                    else:
+                        card_include_flags.append(f"-I{os.path.join(root, d)}")
 
         # Allow porting modules to inject extra include directories
         try:
@@ -465,13 +454,6 @@ def main():
                 card_include_flags.extend(mod.get_extra_compiler_flags())
         except ImportError:
             pass
-            
-        lib_dir = os.path.join(card_dir_abs, "lib")
-        if os.path.exists(lib_dir):
-            for root, dirs, files in os.walk(lib_dir):
-                for d in dirs:
-                    if d in ("inc", "include"):
-                        card_include_flags.append(f"-I{os.path.join(root, d)}")
                         
         # Convert include paths to relative paths
         def to_rel(path):
