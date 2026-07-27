@@ -38,6 +38,10 @@ def post_process(content, src_rel):
         )
         # 3. Periodically call process_usb_midi_device and tick_ui_once inside ProcessSample (on host builds)
         content = content.replace(
+            'bool tuh_midi_packet_read(uint8_t dev_addr, uint8_t packet[4]);',
+            '// bool tuh_midi_packet_read forward decl removed for pico_mocks inline'
+        )
+        content = content.replace(
             'void __not_in_flash_func(ClockworksCard::ProcessSample)() {',
             'void __not_in_flash_func(ClockworksCard::ProcessSample)() {\n#if !defined(__arm__) && !defined(VCV_PORT)\n    static uint32_t ui_counter = 0;\n    ui_counter++;\n    if (ui_counter >= 48) {\n        ui_counter = 0;\n        process_usb_midi_device();\n        tick_ui_once();\n    }\n#endif'
         )
