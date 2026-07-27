@@ -24,11 +24,10 @@ include $(RACK_DIR)/plugin.mk
 # Override standard to C++17 to support modern card features (std::clamp, generic lambdas)
 # -Wno-deprecated-declarations: suppress sprintf deprecation warnings in third-party Lua sources
 # -Wno-narrowing / -Wno-c++11-narrowing: suppress narrowing warnings in ported card code
-CXXFLAGS += -std=c++17 -Wno-narrowing -Wno-deprecated-declarations
+CXXFLAGS += -std=c++17 -Wno-narrowing -Wno-deprecated-declarations -fPIC
 ifdef ARCH_WIN
     # Enable ANSI stdio in MinGW for %zu and other C99 format specifiers
     CXXFLAGS += -D__USE_MINGW_ANSI_STDIO=1
-    # -Wno-c++11-narrowing is Clang-only; MinGW/GCC uses -Wno-narrowing (already added)
 else
     # Clang-only flag for narrowing (no-op on GCC, used on macOS/Clang)
     CXXFLAGS += -Wno-c++11-narrowing

@@ -815,7 +815,7 @@ def main():
         f.write("# Card libraries target definitions\n")
         f.write("ifdef ARCH_WIN\n")
         f.write("\tCARD_LIB_EXT := dll\n")
-        f.write("\tCARD_LDFLAGS_SHARED := -shared\n")
+        f.write("\tCARD_LDFLAGS_SHARED := -shared -static-libgcc -static-libstdc++\n")
         f.write("else ifdef ARCH_MAC\n")
         f.write("\tCARD_LIB_EXT := dylib\n")
         f.write("\tCARD_LDFLAGS_SHARED := -dynamiclib -undefined dynamic_lookup\n")
@@ -823,6 +823,9 @@ def main():
         f.write("\tCARD_LIB_EXT := so\n")
         f.write("\tCARD_LDFLAGS_SHARED := -shared -fPIC\n")
         f.write("endif\n\n")
+        
+        f.write("res/cards:\n")
+        f.write("\t@mkdir -p res/cards\n\n")
         
         # Write list of libs
         lib_list = " ".join([f"res/cards/libcard_{cid}.$(CARD_LIB_EXT)" for cid in card_data.keys()])
@@ -837,11 +840,10 @@ def main():
             
             if c_srcs:
                 # Mixed C/C++ card: compile .c files as C (gnu99) to avoid GCC C++ designated-initializer errors
-                # on the old Ubuntu16.04 cross-compiler toolchain used by CI
+                # on the old Ubuntu toolchain used by CI
                 c_objs = []
                 all_objs = []
-                f.write(f"res/cards/libcard_{cid}.$(CARD_LIB_EXT): {' '.join(all_srcs)}\n")
-                f.write(f"\t@mkdir -p res/cards\n")
+                f.write(f"res/cards/libcard_{cid}.$(CARD_LIB_EXT): {' '.join(all_srcs)} | res/cards\n")
                 for src in c_srcs:
                     obj = src.replace("/", "_").replace(".", "_") + f"_{cid}.o"
                     obj_path = f"res/cards/{obj}"
@@ -859,8 +861,7 @@ def main():
             else:
                 # Pure C++ card: compile all at once with CXX
                 srcs = " ".join(all_srcs)
-                f.write(f"res/cards/libcard_{cid}.$(CARD_LIB_EXT): {srcs}\n")
-                f.write(f"\t@mkdir -p res/cards\n")
+                f.write(f"res/cards/libcard_{cid}.$(CARD_LIB_EXT): {srcs} | res/cards\n")
                 f.write(f"\t$(CXX) $(CXXFLAGS) $(FLAGS) {flags_str} $(CARD_LDFLAGS_SHARED) -o $@ {srcs}\n\n")
             
         f.write("SOURCES += src/cards/CardRegistry.cpp\n")
