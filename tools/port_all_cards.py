@@ -195,8 +195,8 @@ def main():
             })
             continue
 
-        if card["dir"].startswith("/"):
-            card_dir_abs = card["dir"]
+        if card["dir"].startswith("/") or card["dir"].startswith("deps/"):
+            card_dir_abs = os.path.join(VCV_PROJECT_DIR, card["dir"]) if not card["dir"].startswith("/") else card["dir"]
         else:
             card_dir_abs = os.path.join(WORKSPACE_DIR, card["dir"])
         if not os.path.exists(card_dir_abs):
@@ -291,8 +291,8 @@ def main():
         
         # Read info.yaml for metadata
         info_dir = card.get("info_dir", card["dir"])
-        if info_dir.startswith("/"):
-            info_dir_abs = info_dir
+        if info_dir.startswith("/") or info_dir.startswith("deps/"):
+            info_dir_abs = os.path.join(VCV_PROJECT_DIR, info_dir) if not info_dir.startswith("/") else info_dir
         else:
             info_dir_abs = os.path.join(WORKSPACE_DIR, info_dir)
         info_path = os.path.join(info_dir_abs, "info.yaml")

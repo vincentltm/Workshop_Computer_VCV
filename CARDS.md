@@ -492,7 +492,7 @@ Cards requiring specific RP2040 physical hardware (RF radio transmission, low-le
 - **Permission**: `pending_license` (No explicit open-source license file in repository)
 - **Version**: `1.0` | **Port Type**: `direct_port`
 - **External Connections**: Web UI: `none` | USB Audio: `none` | MIDI/Serial: `none`
-- **Source Location**: `/Users/vmaurer/Music/Workshop_VCV_Dev/Workshop_Computer_VCV/deps/external/utility_pair_singlecard` (external)
+- **Source Location**: `deps/external/utility_pair_singlecard` (external)
 - **Source Files**: `src/main.cpp`
 - **Description**: 25 small utilities, which can be combined in pairs
 
@@ -796,7 +796,7 @@ Cards requiring specific RP2040 physical hardware (RF radio transmission, low-le
 - **Permission**: `granted_by_license (MIT)` (Granted under MIT open source license)
 - **Version**: `1.1` | **Port Type**: `direct_port`
 - **External Connections**: Web UI: `none` | USB Audio: `none` | MIDI/Serial: `none`
-- **Source Location**: `/Users/vmaurer/Music/Workshop_VCV_Dev/Workshop_Computer_VCV/deps/external/48_two_tracks` (external)
+- **Source Location**: `deps/external/48_two_tracks` (external)
 - **Source Files**: `main.cpp, two_tracks_stream.c`
 - **Description**: Community release folder
 
@@ -812,7 +812,7 @@ Cards requiring specific RP2040 physical hardware (RF radio transmission, low-le
 - **Permission**: `granted_by_license (GPL-3.0)` (Granted under GPL-3.0 open source license)
 - **Version**: `1.0` | **Port Type**: `cpp_rewrite`
 - **External Connections**: Web UI: `yes` | USB Audio: `none` | MIDI/Serial: `none`
-- **Source Location**: `/Users/vmaurer/Music/Workshop_VCV_Dev/Workshop_Computer_VCV/deps/external/multifx/50_flux` (external)
+- **Source Location**: `deps/external/multifx/50_flux` (external)
 - **Source Files**: `src/main.cpp, src/SynthCore.cpp, src/MathTables.cpp, src/synths/synth_noise.cpp, src/synths/synth_wavetable.cpp, src/synths/synth_vabass.cpp, src/synths/synth_strings.cpp, src/synths/synth_modal.cpp, src/synths/synth_granular.cpp, src/synths/synth_piano.cpp, src/synths/synth_sampler_oneshot.cpp, src/synths/synth_sampler_loop.cpp, src/synths/synth_sampler_player.cpp, src/synths/synth_drums.cpp, src/synths/synth_fm.cpp, src/synths/synth_drumsynth.cpp`
 - **Description**: Effects, Synthesizer and Utility
 
@@ -844,7 +844,7 @@ Cards requiring specific RP2040 physical hardware (RF radio transmission, low-le
 - **Permission**: `pending_license` (No explicit open-source license file in repository)
 - **Version**: `0.4` | **Port Type**: `direct_port`
 - **External Connections**: Web UI: `yes` | USB Audio: `none` | MIDI/Serial: `none`
-- **Source Location**: `/Users/vmaurer/Music/Workshop_VCV_Dev/Workshop_Computer_VCV/deps/external/52_lens` (external)
+- **Source Location**: `deps/external/52_lens` (external)
 - **Source Files**: `runtime/main.cpp, runtime/sysex.cpp, runtime/runtime.c, runtime/midi.c, runtime/snapshot_apply.c`
 - **Description**: A programmable synth/sequencer running Loupe (Lisp) patches. Connect visually via the web editor to compile and upload.
 
@@ -860,7 +860,7 @@ Cards requiring specific RP2040 physical hardware (RF radio transmission, low-le
 - **Permission**: `pending_license` (No explicit open-source license file in repository)
 - **Version**: `0.1.0` | **Port Type**: `direct_port`
 - **External Connections**: Web UI: `none` | USB Audio: `none` | MIDI/Serial: `none`
-- **Source Location**: `/Users/vmaurer/Music/Workshop_VCV_Dev/Workshop_Computer_VCV/deps/external/mtws/53_glitter` (external)
+- **Source Location**: `deps/external/mtws/53_glitter` (external)
 - **Source Files**: `main.cpp, src/Glitter.cpp, src/Utils.cpp`
 - **Description**: Granular Looping Sampler
 
@@ -988,7 +988,7 @@ Cards requiring specific RP2040 physical hardware (RF radio transmission, low-le
 - **Permission**: `granted_by_license (MIT)` (Granted under MIT open source license)
 - **Version**: `1.1` | **Port Type**: `direct_port`
 - **External Connections**: Web UI: `none` | USB Audio: `none` | MIDI/Serial: `none`
-- **Source Location**: `/Users/vmaurer/Music/Workshop_VCV_Dev/Workshop_Computer_VCV/deps/external/64_voices_of_sid` (external)
+- **Source Location**: `deps/external/64_voices_of_sid` (external)
 - **Source Files**: `main.cpp, reSID/envelope.cc, reSID/extfilt.cc, reSID/filter.cc, reSID/pot.cc, reSID/sid.cc, reSID/voice.cc, reSID/wave.cc`
 - **Description**: Community release folder
 
@@ -1052,7 +1052,7 @@ Cards requiring specific RP2040 physical hardware (RF radio transmission, low-le
 - **Permission**: `pending_license` (No explicit open-source license file in repository)
 - **Version**: `1.3` | **Port Type**: `direct_port`
 - **External Connections**: Web UI: `yes` | USB Audio: `none` | MIDI/Serial: `none`
-- **Source Location**: `/Users/vmaurer/Music/Workshop_VCV_Dev/Workshop_Computer_VCV/deps/external/Degenerator` (external)
+- **Source Location**: `deps/external/Degenerator` (external)
 - **Source Files**: `main.cpp`
 - **Description**: Degenerator — Disintegrating Looper. Capture audio loops and apply irreversible degradation with 6 algorithms (Saturation, Filter Drift, Tape Hiss, Oxide Shedding, Bit Crush, Bit Rot) via preview/apply workflow. Inspired by William Basinski's The Disintegration Loops.
 
@@ -1068,7 +1068,7 @@ Cards requiring specific RP2040 physical hardware (RF radio transmission, low-le
 - **Permission**: `pending_license` (No explicit open-source license file in repository)
 - **Version**: `1.0` | **Port Type**: `direct_port`
 - **External Connections**: Web UI: `none` | USB Audio: `none` | MIDI/Serial: `none`
-- **Source Location**: `/Users/vmaurer/Music/Workshop_VCV_Dev/Workshop_Computer_VCV/deps/external/motorik` (external)
+- **Source Location**: `deps/external/motorik` (external)
 - **Source Files**: `main.cpp`
 - **Description**: Motorik drum machine — kick/snare/hihat with bass and melody CV, classic Krautrock grooves
 
@@ -1132,7 +1132,7 @@ Cards requiring specific RP2040 physical hardware (RF radio transmission, low-le
 - **Permission**: `granted_by_license (MIT)` (Granted under MIT open source license)
 - **Version**: `1.0` | **Port Type**: `direct_port`
 - **External Connections**: Web UI: `none` | USB Audio: `none` | MIDI/Serial: `none`
-- **Source Location**: `/Users/vmaurer/Music/Workshop_VCV_Dev/Workshop_Computer_VCV/deps/external/76_hot_fuzz` (external)
+- **Source Location**: `deps/external/76_hot_fuzz` (external)
 - **Source Files**: `main.cpp, braids_resources.cc`
 - **Description**: Community release folder
 
@@ -1228,7 +1228,7 @@ Cards requiring specific RP2040 physical hardware (RF radio transmission, low-le
 - **Permission**: `granted_by_license (MIT)` (Granted under MIT open source license)
 - **Version**: `1.0` | **Port Type**: `direct_port`
 - **External Connections**: Web UI: `none` | USB Audio: `none` | MIDI/Serial: `none`
-- **Source Location**: `/Users/vmaurer/Music/Workshop_VCV_Dev/Workshop_Computer_VCV/deps/external/86_tesserae` (external)
+- **Source Location**: `deps/external/86_tesserae` (external)
 - **Source Files**: `main.cpp`
 - **Description**: Community release folder
 

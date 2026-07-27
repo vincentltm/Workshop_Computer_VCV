@@ -868,7 +868,7 @@
         },
         "tested": true,
         "source_type": "external",
-        "dir": "/Users/vmaurer/Music/Workshop_VCV_Dev/Workshop_Computer_VCV/deps/external/utility_pair_singlecard",
+        "dir": "deps/external/utility_pair_singlecard",
         "sources": [
             "src/main.cpp"
         ],
@@ -1620,7 +1620,7 @@
         },
         "tested": false,
         "source_type": "external",
-        "dir": "/Users/vmaurer/Music/Workshop_VCV_Dev/Workshop_Computer_VCV/deps/external/48_two_tracks",
+        "dir": "deps/external/48_two_tracks",
         "sources": [
             "main.cpp",
             "two_tracks_stream.c"
@@ -1659,7 +1659,7 @@
         },
         "tested": true,
         "source_type": "external",
-        "dir": "/Users/vmaurer/Music/Workshop_VCV_Dev/Workshop_Computer_VCV/deps/external/multifx/50_flux",
+        "dir": "deps/external/multifx/50_flux",
         "sources": [
             "src/main.cpp",
             "src/SynthCore.cpp",
@@ -1746,7 +1746,7 @@
         },
         "tested": true,
         "source_type": "external",
-        "dir": "/Users/vmaurer/Music/Workshop_VCV_Dev/Workshop_Computer_VCV/deps/external/52_lens",
+        "dir": "deps/external/52_lens",
         "sources": [
             "runtime/main.cpp",
             "runtime/sysex.cpp",
@@ -1786,7 +1786,7 @@
         },
         "tested": true,
         "source_type": "external",
-        "dir": "/Users/vmaurer/Music/Workshop_VCV_Dev/Workshop_Computer_VCV/deps/external/mtws/53_glitter",
+        "dir": "deps/external/mtws/53_glitter",
         "sources": [
             "main.cpp",
             "src/Glitter.cpp",
@@ -2081,7 +2081,7 @@
         },
         "tested": false,
         "source_type": "external",
-        "dir": "/Users/vmaurer/Music/Workshop_VCV_Dev/Workshop_Computer_VCV/deps/external/64_voices_of_sid",
+        "dir": "deps/external/64_voices_of_sid",
         "sources": [
             "main.cpp",
             "reSID/envelope.cc",
@@ -2238,7 +2238,7 @@
         },
         "tested": true,
         "source_type": "external",
-        "dir": "/Users/vmaurer/Music/Workshop_VCV_Dev/Workshop_Computer_VCV/deps/external/Degenerator",
+        "dir": "deps/external/Degenerator",
         "sources": [
             "main.cpp"
         ],
@@ -2276,7 +2276,7 @@
         },
         "tested": true,
         "source_type": "external",
-        "dir": "/Users/vmaurer/Music/Workshop_VCV_Dev/Workshop_Computer_VCV/deps/external/motorik",
+        "dir": "deps/external/motorik",
         "sources": [
             "main.cpp"
         ],
@@ -2424,7 +2424,7 @@
         },
         "tested": false,
         "source_type": "external",
-        "dir": "/Users/vmaurer/Music/Workshop_VCV_Dev/Workshop_Computer_VCV/deps/external/76_hot_fuzz",
+        "dir": "deps/external/76_hot_fuzz",
         "sources": [
             "main.cpp",
             "braids_resources.cc"
@@ -2650,7 +2650,7 @@
         },
         "tested": false,
         "source_type": "external",
-        "dir": "/Users/vmaurer/Music/Workshop_VCV_Dev/Workshop_Computer_VCV/deps/external/86_tesserae",
+        "dir": "deps/external/86_tesserae",
         "sources": [
             "main.cpp"
         ],
