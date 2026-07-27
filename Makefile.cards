@@ -18,13 +18,13 @@ res/cards:
 CARD_LIBS := res/cards/libcard_simple_midi.$(CARD_LIB_EXT) res/cards/libcard_turing_machine.$(CARD_LIB_EXT) res/cards/libcard_byo_benjolin.$(CARD_LIB_EXT) res/cards/libcard_usb_audio_bridge.$(CARD_LIB_EXT) res/cards/libcard_bumpers.$(CARD_LIB_EXT) res/cards/libcard_goldfish.$(CARD_LIB_EXT) res/cards/libcard_noisebox.$(CARD_LIB_EXT) res/cards/libcard_cvmod.$(CARD_LIB_EXT) res/cards/libcard_mlrws.$(CARD_LIB_EXT) res/cards/libcard_ca_sequencer.$(CARD_LIB_EXT) res/cards/libcard_reverb.$(CARD_LIB_EXT) res/cards/libcard_resonator.$(CARD_LIB_EXT) res/cards/libcard_sheep.$(CARD_LIB_EXT) res/cards/libcard_crafted_volts.$(CARD_LIB_EXT) res/cards/libcard_utility_pair.$(CARD_LIB_EXT) res/cards/libcard_clockwork.$(CARD_LIB_EXT) res/cards/libcard_siren.$(CARD_LIB_EXT) res/cards/libcard_eighties_bass.$(CARD_LIB_EXT) res/cards/libcard_xht.$(CARD_LIB_EXT) res/cards/libcard_cirpy_wavetable.$(CARD_LIB_EXT) res/cards/libcard_drumdrum.$(CARD_LIB_EXT) res/cards/libcard_dual_quant.$(CARD_LIB_EXT) res/cards/libcard_od.$(CARD_LIB_EXT) res/cards/libcard_blackbird.$(CARD_LIB_EXT) res/cards/libcard_backyard_rain.$(CARD_LIB_EXT) res/cards/libcard_castle_process.$(CARD_LIB_EXT) res/cards/libcard_birds.$(CARD_LIB_EXT) res/cards/libcard_two_tracks.$(CARD_LIB_EXT) res/cards/libcard_flux.$(CARD_LIB_EXT) res/cards/libcard_grains.$(CARD_LIB_EXT) res/cards/libcard_lens.$(CARD_LIB_EXT) res/cards/libcard_glitter.$(CARD_LIB_EXT) res/cards/libcard_tapegrade.$(CARD_LIB_EXT) res/cards/libcard_fifths.$(CARD_LIB_EXT) res/cards/libcard_glitch.$(CARD_LIB_EXT) res/cards/libcard_lochovibes.$(CARD_LIB_EXT) res/cards/libcard_bitphase.$(CARD_LIB_EXT) res/cards/libcard_markov.$(CARD_LIB_EXT) res/cards/libcard_voices_of_sid.$(CARD_LIB_EXT) res/cards/libcard_stretchcore.$(CARD_LIB_EXT) res/cards/libcard_fragments.$(CARD_LIB_EXT) res/cards/libcard_degenerator.$(CARD_LIB_EXT) res/cards/libcard_motorik.$(CARD_LIB_EXT) res/cards/libcard_wild_pebble.$(CARD_LIB_EXT) res/cards/libcard_turing_clouds.$(CARD_LIB_EXT) res/cards/libcard_hot_fuzz.$(CARD_LIB_EXT) res/cards/libcard_talker.$(CARD_LIB_EXT) res/cards/libcard_computer_grids.$(CARD_LIB_EXT) res/cards/libcard_cosmik_c1zzl3.$(CARD_LIB_EXT) res/cards/libcard_tesserae.$(CARD_LIB_EXT) res/cards/libcard_fr330hfr33.$(CARD_LIB_EXT) res/cards/libcard_pantograph.$(CARD_LIB_EXT) res/cards/libcard_chorgan.$(CARD_LIB_EXT) res/cards/libcard_turing_matrix.$(CARD_LIB_EXT) res/cards/libcard_offair2.$(CARD_LIB_EXT) res/cards/libcard_alloy.$(CARD_LIB_EXT) res/cards/libcard_acid.$(CARD_LIB_EXT) res/cards/libcard_sense_of_space.$(CARD_LIB_EXT)
 
 res/cards/libcard_simple_midi.$(CARD_LIB_EXT): src/cards/Card_simple_midi.cpp | res/cards
-	$(CXX) $(CXXFLAGS) $(FLAGS) "-Isrc/cards/wrappers/simple_midi" "-Ideps/Workshop_Computer/releases/00_Simple_MIDI" "-Ideps/Workshop_Computer/releases/00_Simple_MIDI/Documentation" "-Ideps/Workshop_Computer/releases/00_Simple_MIDI/Arduino Code" "-Ideps/Workshop_Computer/releases/00_Simple_MIDI/Old versions" "-Ideps/Workshop_Computer/releases/00_Simple_MIDI/uf2 Installer" "-Ideps/Workshop_Computer/releases/00_Simple_MIDI/Arduino Code/Simple_Midi_0_6_6" "-Ideps/Workshop_Computer/releases/00_Simple_MIDI/Old versions/Simple_Midi_0_5_0" "-Ideps/Workshop_Computer/releases/00_Simple_MIDI/Old versions/Simple_Midi_0_6_0" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_simple_midi.cpp
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Isrc/cards/wrappers/simple_midi" "-Ideps/Workshop_Computer/releases/00_Simple_MIDI" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_simple_midi.cpp
 
 res/cards/libcard_turing_machine.$(CARD_LIB_EXT): src/cards/Card_turing_machine.cpp | res/cards
 	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/03_Turing_Machine/Rev_1_5_Code" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_turing_machine.cpp
 
 res/cards/libcard_byo_benjolin.$(CARD_LIB_EXT): src/cards/Card_byo_benjolin.cpp | res/cards
-	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/04_BYO_Benjolin" "-Ideps/Workshop_Computer/releases/04_BYO_Benjolin/Docs" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_byo_benjolin.cpp
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/04_BYO_Benjolin" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_byo_benjolin.cpp
 
 res/cards/libcard_usb_audio_bridge.$(CARD_LIB_EXT): src/cards/Card_usb_audio_bridge.cpp | res/cards
 	$(CXX) $(CXXFLAGS) $(FLAGS)  $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_usb_audio_bridge.cpp
@@ -33,7 +33,7 @@ res/cards/libcard_bumpers.$(CARD_LIB_EXT): src/cards/Card_bumpers.cpp | res/card
 	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/07_bumpers" "-Ideps/Workshop_Computer/releases/07_bumpers/src" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_bumpers.cpp
 
 res/cards/libcard_goldfish.$(CARD_LIB_EXT): src/cards/Card_goldfish.cpp | res/cards
-	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/11_goldfish" "-Ideps/Workshop_Computer/releases/11_goldfish/Documentation" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_goldfish.cpp
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/11_goldfish" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_goldfish.cpp
 
 res/cards/libcard_noisebox.$(CARD_LIB_EXT): src/cards/Card_noisebox.cpp | res/cards
 	$(CXX) $(CXXFLAGS) $(FLAGS) "-Isrc/cards/wrappers/noisebox" "-Isrc/cards/wrappers/noisebox/dsp" "-Ideps/Workshop_Computer/releases/13_noisebox" "-Ideps/Workshop_Computer/releases/13_noisebox/algos" "-Ideps/Workshop_Computer/releases/13_noisebox/dsp" "-Ideps/Workshop_Computer/releases/13_noisebox/dsp" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_noisebox.cpp
@@ -54,7 +54,7 @@ res/cards/libcard_resonator.$(CARD_LIB_EXT): src/cards/Card_resonator.cpp | res/
 	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/21_resonator" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_resonator.cpp
 
 res/cards/libcard_sheep.$(CARD_LIB_EXT): src/cards/Card_sheep.cpp | res/cards
-	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/22_sheep" "-Ideps/Workshop_Computer/releases/22_sheep/Docs" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_sheep.cpp
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/22_sheep" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_sheep.cpp
 
 res/cards/libcard_crafted_volts.$(CARD_LIB_EXT): src/cards/Card_crafted_volts.cpp | res/cards
 	$(CXX) $(CXXFLAGS) $(FLAGS) "-Isrc/cards/wrappers/crafted_volts" "-Ideps/Workshop_Computer/releases/24_crafted_volts" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_crafted_volts.cpp
@@ -117,7 +117,7 @@ res/cards/libcard_tapegrade.$(CARD_LIB_EXT): src/cards/Card_tapegrade.cpp | res/
 	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/54_Tapegrade" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_tapegrade.cpp
 
 res/cards/libcard_fifths.$(CARD_LIB_EXT): src/cards/Card_fifths.cpp | res/cards
-	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/55_fifths" "-Ideps/Workshop_Computer/releases/55_fifths/Docs" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_fifths.cpp
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/55_fifths" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_fifths.cpp
 
 res/cards/libcard_glitch.$(CARD_LIB_EXT): src/cards/Card_glitch.cpp | res/cards
 	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/57_glitch" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_glitch.cpp
@@ -156,7 +156,7 @@ res/cards/libcard_hot_fuzz.$(CARD_LIB_EXT): src/cards/Card_hot_fuzz.cpp | res/ca
 	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/external/76_hot_fuzz" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_hot_fuzz.cpp
 
 res/cards/libcard_talker.$(CARD_LIB_EXT): src/cards/Card_talker.cpp | res/cards
-	$(CXX) $(CXXFLAGS) $(FLAGS) "-Isrc/cards/wrappers/talker" "-Isrc/cards/wrappers/talker/src" "-Ideps/Workshop_Computer/releases/78_Talker" "-Ideps/Workshop_Computer/releases/78_Talker/uf2 Installer" "-Ideps/Workshop_Computer/releases/78_Talker/src" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_talker.cpp
+	$(CXX) $(CXXFLAGS) $(FLAGS) "-Isrc/cards/wrappers/talker" "-Isrc/cards/wrappers/talker/src" "-Ideps/Workshop_Computer/releases/78_Talker" "-Ideps/Workshop_Computer/releases/78_Talker/src" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_talker.cpp
 
 res/cards/libcard_computer_grids.$(CARD_LIB_EXT): src/cards/Card_computer_grids.cpp | res/cards
 	$(CXX) $(CXXFLAGS) $(FLAGS) "-Ideps/Workshop_Computer/releases/82_Computer_Grids" $(CARD_LDFLAGS_SHARED) -o $@ src/cards/Card_computer_grids.cpp

@@ -12,14 +12,11 @@ SOURCES += src/WorkshopComputer.cpp
 DISTRIBUTABLES += res
 DISTRIBUTABLES += plugin.json
 
-# Include arch.mk explicitly to get target OS/CPU variables before Makefile.cards
-include $(RACK_DIR)/arch.mk
-
-# Include card sources and include paths
-include Makefile.cards
-
 # Include the VCV Rack plugin Makefile helper
 include $(RACK_DIR)/plugin.mk
+
+# Include card sources and include paths AFTER plugin.mk has defined architecture and flags
+include Makefile.cards
 
 # Override standard to C++17 to support modern card features (std::clamp, generic lambdas)
 # -Wno-deprecated-declarations: suppress sprintf deprecation warnings in third-party Lua sources

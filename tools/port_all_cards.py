@@ -439,7 +439,7 @@ def main():
         if os.path.exists(card_dir_abs):
             for root, dirs, files in os.walk(card_dir_abs):
                 for d in list(dirs):
-                    if d in ("build", ".git", "test", "web", "docs", "tools", "__pycache__", "UF2", "assets_tmp"):
+                    if " " in d or d in ("build", ".git", "test", "web", "docs", "tools", "__pycache__", "UF2", "assets_tmp", "Documentation", "Docs"):
                         dirs.remove(d)
                     else:
                         card_include_flags.append(f"-I{os.path.join(root, d)}")
