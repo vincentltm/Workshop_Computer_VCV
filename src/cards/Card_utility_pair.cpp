@@ -2767,6 +2767,7 @@ public:
 	  	retval -= (dphase2 - last_dphase_osc2)>>16; // -1073741824 to 1073741824 = ±2^30
 		
 		if (invc == 0) invc = 1;
+		if (invc == 0) invc = 1;
 		return (retval/invc)>>5; 
 	}
 
@@ -2821,6 +2822,7 @@ public:
 		// Now calculate difference between previous and current offsets
 		int32_t retval = dphase2 - last_dphase;
 		last_dphase = dphase2;
+		if (invc == 0) invc = 1;
 		if (invc == 0) invc = 1;
 		retval = retval/invc;
 		return (retval>>4)+(retval>>5);
