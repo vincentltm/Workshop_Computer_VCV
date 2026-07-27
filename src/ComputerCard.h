@@ -174,8 +174,8 @@ public:
     void CVOut2Precise(int32_t val) { CVOutPrecise(1, val); }
 
     void CVOutMIDINote(int i, uint8_t noteNum) {
-        // Standard 1V/Oct CV output: C4 (MIDI 60) = 0V
-        g_cv_out[i] = (float)(noteNum - 60) / 12.f;
+        // Standard 1V/Oct CV output: C4 (MIDI 60) = 0V, 1 Octave (12 semitones) = 0.2 units (1 Volt)
+        g_cv_out[i] = (float)(noteNum - 60) / 60.f;
     }
 
     void CVOut1MIDINote(uint8_t noteNum) { CVOutMIDINote(0, noteNum); }

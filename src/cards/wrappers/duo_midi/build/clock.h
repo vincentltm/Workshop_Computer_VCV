@@ -1,6 +1,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+extern "C" {
+extern const unsigned char crow_lua_clock_data[];
+extern const unsigned int crow_lua_clock_data_len;
+}
 #pragma once
 
 // Generated from clock.lua

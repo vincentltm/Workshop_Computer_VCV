@@ -41,9 +41,7 @@ namespace Card_Lens {
  * runtime_find_kernel() / runtime_is_hw_leaf().
  */
 
-extern "C" {
 #include "runtime.h"
-}
 #include "kernel_ids.h"
 #include "midi.h"
 #include "pitch_table.h"

@@ -1845,15 +1845,7 @@ struct WorkshopComputerWidget : ModuleWidget {
                     snprintf(url, sizeof(url), "http://127.0.0.1:%d/%s/%s?instance=%p",
                              g_web_server_port, module->card_globals.active_card_id_str.c_str(), manager_file.c_str(), module);
                     
-                    #if defined(_WIN32)
-                        std::string cmd = "start " + std::string(url);
-                    #elif defined(__APPLE__)
-                        std::string cmd = "open \"" + std::string(url) + "\"";
-                    #else
-                        std::string cmd = "xdg-open \"" + std::string(url) + "\"";
-                    #endif
-                    int ret = std::system(cmd.c_str());
-                    (void)ret;
+                    rack::system::openBrowser(url);
                 }
             };
 

@@ -37,6 +37,14 @@ void register_all_cards() {
         true
     });
     g_card_registry.push_back({
+        "bumpers",
+        "Bumpers",
+        "07",
+        "Bouncing ball' style delay and trigger generators",
+        "Chris Johnson",
+        true
+    });
+    g_card_registry.push_back({
         "goldfish",
         "Goldfish",
         "11",
@@ -74,6 +82,14 @@ void register_all_cards() {
         "19",
         "16-cell gate and quantized CV melody generator inspired by NLC Cellular Automata, using CA rules 90 & 150 on a 4x4 grid",
         "Ainews",
+        true
+    });
+    g_card_registry.push_back({
+        "reverb",
+        "Reverb+",
+        "20",
+        "Reverb effect, plus pulse/CV generators and MIDI-to-CV, configurable using web interface.",
+        "Chris Johnson",
         true
     });
     g_card_registry.push_back({
@@ -130,6 +146,14 @@ void register_all_cards() {
         "28",
         "Bass-oriented complete monosynth voice consisting of five detuned saw wave oscillators with mixable white noise and adjustable resonant filter.",
         "Tod Kurt (@todbot)",
+        true
+    });
+    g_card_registry.push_back({
+        "xht",
+        "XHT Card",
+        "29",
+        "A playable deep-note-inspired stereo chord swarm with manual scrubbing, one-shot movement, delay, reverb, CV, pulse, and optional MIDI control.",
+        "Adrian Vos",
         true
     });
     g_card_registry.push_back({
@@ -194,6 +218,14 @@ void register_all_cards() {
         "44",
         "Two birds sing to each other controlled by a Turing-style shift register sequencer with clock in and CV/pulse out.",
         "Tom Whitwell",
+        true
+    });
+    g_card_registry.push_back({
+        "two_tracks",
+        "Two Tracks",
+        "48",
+        "Dual-read-head phase looper — record a mono loop, play it through two independent heads with separate positions and loop lengths for evolving phase patterns.",
+        "Joep Vermaat",
         true
     });
     g_card_registry.push_back({
@@ -269,6 +301,22 @@ void register_all_cards() {
         true
     });
     g_card_registry.push_back({
+        "markov",
+        "Markov",
+        "60",
+        "Dual generative Markov chain module — evolving melody (MarkoV) left side, rhythmic percussion patterns (MarkovPerc) right side, with internal synth voice",
+        "Andy Jenkinson (uglifruit)",
+        true
+    });
+    g_card_registry.push_back({
+        "voices_of_sid",
+        "Voices Of Sid",
+        "64",
+        "Dual MOS 6581 SID emulation (reSID engine) with CV/gate control, stereo output, waveform selection, and randomize",
+        "Joep Vermaat",
+        true
+    });
+    g_card_registry.push_back({
         "stretchcore",
         "Stretchcore",
         "66",
@@ -317,6 +365,14 @@ void register_all_cards() {
         true
     });
     g_card_registry.push_back({
+        "hot_fuzz",
+        "Hot Fuzz",
+        "76",
+        "A stereo fuzz/distortion + resonant wah effects processor with manual and auto-wah modes, built on fixed-point DSP.",
+        "Johan Vermaat",
+        true
+    });
+    g_card_registry.push_back({
         "talker",
         "Talker",
         "78",
@@ -341,6 +397,14 @@ void register_all_cards() {
         true
     });
     g_card_registry.push_back({
+        "tesserae",
+        "Tesserae",
+        "86",
+        "Tesserae — Variable-voice (2-8) arpeggiated chord generator with 5 patterns, 10 scales, tap tempo, CV/audio transpose inputs, and dual CV + audio pitch outputs. Inspired by Laurie Spiegel's Music Mouse and Patchwork.",
+        "MTM Community",
+        true
+    });
+    g_card_registry.push_back({
         "fr330hfr33",
         "Fr330hfr33",
         "87",
@@ -354,6 +418,22 @@ void register_all_cards() {
         "90",
         "Trace and record CV — record knob movements, loop them at bipolar speed",
         "Kenny Shen",
+        true
+    });
+    g_card_registry.push_back({
+        "chorgan",
+        "Chorgan",
+        "91",
+        "Chorgan — 6-voice chord synthesizer with morphing timbre, chord extension presets, and built-in chord sequencer. Two modes: normal (detune/chorus) and slew (portamento chord changes). Inspired by the Music Thing Modular Chord Organ.",
+        "Andy Jenkinson (uglifruit)",
+        true
+    });
+    g_card_registry.push_back({
+        "turing_matrix",
+        "Turing Matrix",
+        "93",
+        "Turing Machine sequencer with a switchable mixer layer inspired by the Music Thing Modular Turing Machine and Vactrol Mix combination",
+        "Adrian Vos from initial code by Tom Whitwell / Music Thing Modular / Chris Johnson",
         true
     });
     g_card_registry.push_back({
@@ -373,11 +453,11 @@ void register_all_cards() {
         true
     });
     g_card_registry.push_back({
-        "duo_midi",
-        "Duo MIDI",
-        "98",
-        "A duophonic midi device/host interface",
-        "Dune Desormeaux",
+        "acid",
+        "Acid",
+        "303",
+        "A 303-style step sequencer",
+        "Samuel Smith",
         true
     });
     g_card_registry.push_back({

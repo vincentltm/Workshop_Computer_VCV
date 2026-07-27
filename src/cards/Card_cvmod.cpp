@@ -55,7 +55,7 @@ thread_local CardGlobals* t_instance = nullptr;
 thread_local bool is_core1_thread = false;
 thread_local ComputerCard* ComputerCard::thisptr = nullptr;
 
-namespace Card_CVMod {
+namespace Card_Cvmod {
 
     int main();
 
@@ -411,7 +411,7 @@ int main()
 }
 
 
-} // namespace Card_CVMod
+} // namespace Card_Cvmod
 
 extern "C" {
     __attribute__((weak)) void tuh_midi_mount_cb(uint8_t, uint8_t, uint8_t, uint8_t, uint16_t) {}
@@ -432,7 +432,7 @@ extern "C" {
     void run_card() {
         is_core1_thread = false;
         try {
-            Card_CVMod::main();
+            Card_Cvmod::main();
         } catch (const ThreadExitException& e) {
             // Thread terminated safely
         }

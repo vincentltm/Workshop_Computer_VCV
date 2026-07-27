@@ -55,7 +55,7 @@ thread_local CardGlobals* t_instance = nullptr;
 thread_local bool is_core1_thread = false;
 thread_local ComputerCard* ComputerCard::thisptr = nullptr;
 
-namespace Card_Fr330hfr33 {
+namespace Card_Fr330hFr33 {
 
     int main();
 
@@ -2211,7 +2211,7 @@ const int16_t Fr330hfr33SawLut[65] = {
 };
 
 
-} // namespace Card_Fr330hfr33
+} // namespace Card_Fr330hFr33
 
 extern "C" {
     void set_thread_globals(CardGlobals* inst) {
@@ -2229,7 +2229,7 @@ extern "C" {
     void run_card() {
         is_core1_thread = false;
         try {
-            Card_Fr330hfr33::main();
+            Card_Fr330hFr33::main();
         } catch (const ThreadExitException& e) {
             // Thread terminated safely
         }

@@ -25,4 +25,5 @@ tmp_monome_rack/
 *.pyc
 test_card_behavior
 test_card_functional
+test_report.json
 

@@ -55,7 +55,7 @@ thread_local CardGlobals* t_instance = nullptr;
 thread_local bool is_core1_thread = false;
 thread_local ComputerCard* ComputerCard::thisptr = nullptr;
 
-namespace Card_DrumDrum {
+namespace Card_Drumdrum {
 
     int main();
 
@@ -2167,7 +2167,7 @@ extern "C" usbh_class_driver_t const* usbh_app_driver_get_cb(uint8_t* driver_cou
 }
 
 
-} // namespace Card_DrumDrum
+} // namespace Card_Drumdrum
 
 extern "C" {
     __attribute__((weak)) void tuh_midi_mount_cb(uint8_t, uint8_t, uint8_t, uint8_t, uint16_t) {}
@@ -2188,7 +2188,7 @@ extern "C" {
     void run_card() {
         is_core1_thread = false;
         try {
-            Card_DrumDrum::main();
+            Card_Drumdrum::main();
         } catch (const ThreadExitException& e) {
             // Thread terminated safely
         }

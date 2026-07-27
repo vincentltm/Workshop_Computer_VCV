@@ -14,608 +14,55 @@ CARDS_SRC_DIR = os.path.join(VCV_PROJECT_DIR, "src", "cards")
 # Add tools directory to sys.path so we can import porting modules
 sys.path.append(os.path.dirname(__file__))
 
-# Whitelist of cards to port
-CARD_WHITELIST = [
-    {
-        "id": "simple_midi",
-        "dir": "releases/00_Simple_MIDI",
-        "ns": "Card_SimpleMidi",
-        "num": "00",
-        "sources": ["simple_midi.cpp"]
-    },
-    {
-        "id": "bitphase",
-        "dir": "releases/59_BitPhase",
-        "ns": "Card_BitPhase",
-        "num": "59",
-        "sources": ["BitPhase.cpp"]
-    },
-    {
-        "id": "voices_of_sid",
-        "dir": os.path.join(VCV_PROJECT_DIR, "deps", "external", "voices-of-sid"),
-        "ns": "Card_VoicesOfSid",
-        "num": "64",
-        "sources": [
-            "main.cpp",
-            "reSID/envelope.cc",
-            "reSID/extfilt.cc",
-            "reSID/filter.cc",
-            "reSID/pot.cc",
-            "reSID/sid.cc",
-            "reSID/voice.cc",
-            "reSID/wave.cc"
-        ]
-    },
+# Whitelist & Allowlist loaded dynamically from cards_registry.json
+# Load master card registry from cards_registry.json
+REGISTRY_FILE = os.path.join(VCV_PROJECT_DIR, "cards_registry.json")
 
-    {
-        "id": "usb_audio_bridge",
-        "dir": "releases/06_usb_audio",
-        "ns": "Card_UsbAudioBridge",
-        "num": "06",
-        "sources": ["Card_usb_audio_bridge.cpp"]
-    },
-    {
-        "id": "crafted_volts",
-        "dir": "releases/24_crafted_volts",
-        "ns": "Card_CraftedVolts",
-        "num": "24",
-        "sources": ["crafted_volts.cpp"]
-    },
-    {
-        "id": "eighties_bass",
-        "dir": "releases/28_eighties_bass",
-        "ns": "Card_EightiesBass",
-        "num": "28",
-        "sources": ["eighties_bass.cpp"]
-    },
-    {
-        "id": "cirpy_wavetable",
-        "dir": "releases/30_cirpy_wavetable",
-        "ns": "Card_CirpyWavetable",
-        "num": "30",
-        "sources": ["cirpy_wavetable.cpp"]
-    },
-    {
-        "id": "freq_shift",
-        "dir": "releases/35_FreqShift",
-        "ns": "Card_FreqShift",
-        "num": "35",
-        "sources": ["main.cpp"]
-    },
-    {
-        "id": "od",
-        "dir": "releases/38_od",
-        "ns": "Card_Od",
-        "num": "38",
-        "sources": ["od.cpp"]
-    },
-    {
-        "id": "backyard_rain",
-        "dir": "releases/42_backyard_rain",
-        "ns": "Card_BackyardRain",
-        "num": "42",
-        "sources": ["backyard_rain.cpp"]
-    },
-    {
-        "id": "utility_pair",
-        "dir": os.path.join(VCV_PROJECT_DIR, "deps", "external", "utility_pair_singlecard"),
-        "ns": "Card_UtilityPair",
-        "num": "25",
-        "sources": ["src/main.cpp"]
-    },
-    {
-        "id": "turing_machine",
-        "dir": "releases/03_Turing_Machine/Rev_1_5_Code",
-        "ns": "Card_TuringMachine",
-        "num": "03",
-        "sources": ["Clock.cpp", "Config.cpp", "MainApp.cpp", "Turing.cpp", "UI.cpp", "main.cpp"]
-    },
-    {
-        "id": "vink",
-        "dir": "releases/32_vink",
-        "ns": "Card_Vink",
-        "num": "32",
-        "sources": ["main.cpp"]
-    },
-    {
-        "id": "siren",
-        "dir": "releases/27_Siren",
-        "ns": "Card_Siren",
-        "num": "27",
-        "sources": ["main.cpp"]
-    },
-    {
-        "id": "grains",
-        "dir": "releases/51_grains",
-        "ns": "Card_Grains",
-        "num": "51",
-        "sources": ["grains.cpp"]
-    },
-    {
-        "id": "reverb",
-        "dir": "releases/20_reverb",
-        "ns": "Card_Reverb",
-        "num": "20",
-        "sources": ["reverb.c", "reverb_dsp.c"]
-    },
-    {
-        "id": "flux",
-        "dir": os.path.join(VCV_PROJECT_DIR, "deps", "external", "multifx", "50_flux"),
-        "ns": "Card_Flux",
-        "num": "50",
-        "sources": [
-            "src/main.cpp",
-            "src/SynthCore.cpp",
-            "src/MathTables.cpp",
-            "src/synths/synth_noise.cpp",
-            "src/synths/synth_wavetable.cpp",
-            "src/synths/synth_vabass.cpp",
-            "src/synths/synth_strings.cpp",
-            "src/synths/synth_modal.cpp",
-            "src/synths/synth_granular.cpp",
-            "src/synths/synth_piano.cpp",
-            "src/synths/synth_sampler_oneshot.cpp",
-            "src/synths/synth_sampler_loop.cpp",
-            "src/synths/synth_sampler_player.cpp",
-            "src/synths/synth_drums.cpp",
-            "src/synths/synth_fm.cpp",
-            "src/synths/synth_drumsynth.cpp"
-        ]
-    },
-    {
-        "id": "chord_organ",
-        "dir": "releases/18_chord_organ",
-        "ns": "Card_ChordOrgan",
-        "num": "18",
-        "sources": ["main.cpp"]
-    },
-    {
-        "id": "resonator",
-        "dir": "releases/21_resonator",
-        "ns": "Card_Resonator",
-        "num": "21",
-        "sources": ["main.cpp"]
-    },
-    {
-        "id": "fifths",
-        "dir": "releases/55_fifths",
-        "ns": "Card_Fifths",
-        "num": "55",
-        "sources": ["main.cpp"]
-    },
-    {
-        "id": "computer_grids",
-        "dir": "releases/82_Computer_Grids",
-        "ns": "Card_ComputerGrids",
-        "num": "82",
-        "sources": ["main.cpp", "GridsCard.cpp", "ConfigStore.cpp", "GridsEngine.cpp", "GridsResources.cpp"]
-    },
-    {
-        "id": "byo_benjolin",
-        "dir": "releases/04_BYO_Benjolin",
-        "ns": "Card_BYOBenjolin",
-        "num": "04",
-        "sources": ["main.cpp"]
-    },
-    {
-        "id": "goldfish",
-        "dir": "releases/11_goldfish",
-        "ns": "Card_Goldfish",
-        "num": "11",
-        "sources": ["main.cpp", "goldfish_stream.c"]
-    },
-    {
-        "id": "bumpers",
-        "dir": "releases/07_bumpers/src",
-        "ns": "Card_Bumpers",
-        "num": "07",
-        "sources": ["bumpers.cpp"]
-    },
-    {
-        "id": "sheep",
-        "dir": "releases/22_sheep",
-        "ns": "Card_Sheep",
-        "num": "22",
-        "sources": ["main.cpp"]
-    },
-    {
-        "id": "knots",
-        "dir": "releases/39_knots/src/knots/src",
-        "ns": "Card_Knots",
-        "num": "39",
-        "sources": [
-            "main.cpp",
-            "core/control_router.cpp",
-            "core/midi_worker.cpp",
-            "engines/bender_engine.cpp",
-            "engines/cumulus_engine.cpp",
-            "engines/din_sum_engine.cpp",
-            "engines/engine_registry.cpp",
-            "engines/floatable_engine.cpp",
-            "engines/losenge_engine.cpp",
-            "engines/sawsome_engine.cpp"
-        ]
-    },
-    {
-        "id": "chord_blimey",
-        "dir": "releases/05_chord_blimey/src",
-        "ns": "Card_ChordBlimey",
-        "num": "05",
-        "sources": ["main.cpp", "computer.cpp", "ui.cpp"]
-    },
-    {
-        "id": "noisebox",
-        "dir": "releases/13_noisebox",
-        "ns": "Card_Noisebox",
-        "num": "13",
-        "sources": ["main.cpp"]
-    },
-    {
-        "id": "cvmod",
-        "dir": "releases/14_cvmod",
-        "ns": "Card_CVMod",
-        "num": "14",
-        "sources": ["cvmod.cpp"]
-    },
-    {
-        "id": "esp",
-        "dir": "releases/31_esp",
-        "ns": "Card_ESP",
-        "num": "31",
-        "sources": ["main.cpp"]
-    },
-    {
-        "id": "trace",
-        "dir": "releases/69_trace",
-        "ns": "Card_Trace",
-        "num": "69",
-        "sources": ["src/main.cpp"]
-    },
-    {
-        "id": "talker",
-        "dir": "releases/78_Talker",
-        "ns": "Card_Talker",
-        "num": "78",
-        "sources": ["src/main.cpp"]
-    },
-    {
-        "id": "bytebeat",
-        "dir": "releases/08_bytebeat/Arduino Code/08_bytebeat",
-        "ns": "Card_Bytebeat",
-        "num": "08",
-        "sources": ["formulas.cpp", "bytebeat_card.cpp", "tinyexpr_bitw.c"]
-    },
+def load_cards_registry():
+    whitelist = []
+    allowlist = []
+    if os.path.exists(REGISTRY_FILE):
+        with open(REGISTRY_FILE, "r") as f:
+            registry = json.load(f)
+        for card in registry:
+            cid = card["id"]
+            ns = card.get("ns")
+            if not ns:
+                # Special cases or standard capitalization
+                if cid == "usb_audio_bridge": ns = "Card_USBAudio"
+                elif cid == "ca_sequencer": ns = "Card_CASequencer"
+                elif cid == "cosmik_c1zzl3": ns = "Card_CosmikC1zzl3"
+                elif cid == "fr330hfr33": ns = "Card_Fr330hFr33"
+                elif cid == "duo_midi": ns = "Card_DuoMidi"
+                elif cid == "simple_midi": ns = "Card_SimpleMidi"
+                elif cid == "bitphase": ns = "Card_BitPhase"
+                elif cid == "eighties_bass": ns = "Card_EightiesBass"
+                elif cid == "cirpy_wavetable": ns = "Card_CirpyWavetable"
+                elif cid == "backyard_rain": ns = "Card_BackyardRain"
+                elif cid == "utility_pair": ns = "Card_UtilityPair"
+                elif cid == "turing_machine": ns = "Card_TuringMachine"
+                elif cid == "resonator": ns = "Card_Resonator"
+                elif cid == "byo_benjolin": ns = "Card_ByoBenjolin"
+                elif cid == "computer_grids": ns = "Card_ComputerGrids"
+                elif cid == "dual_quant": ns = "Card_DualQuant"
+                elif cid == "tapegrade": ns = "Card_Tapegrade"
+                elif cid == "wild_pebble": ns = "Card_WildPebble"
+                elif cid == "castle_process": ns = "Card_CastleProcess"
+                elif cid == "west_coast_lpg": ns = "Card_WestCoastLPG"
+                elif cid == "turing_clouds": ns = "Card_TuringClouds"
+                elif cid == "sense_of_space": ns = "Card_SenseOfSpace"
+                else:
+                    ns = "Card_" + "".join(x.capitalize() for x in cid.split("_"))
+            
+            item = dict(card)
+            item["ns"] = ns
+            if item.get("enabled", False):
+                whitelist.append(item)
+            else:
+                allowlist.append(item)
+    return whitelist, allowlist
 
-    {
-        "id": "dual_quant",
-        "dir": "releases/34_dual_quant",
-        "ns": "Card_DualQuant",
-        "num": "34",
-        "sources": ["dual_quant_pitch.cpp"]
-    },
-    {
-        "id": "birds",
-        "dir": "releases/44_Birds",
-        "ns": "Card_Birds",
-        "num": "44",
-        "sources": ["main.cpp"]
-    },
-    {
-        "id": "tapegrade",
-        "dir": "releases/54_Tapegrade",
-        "ns": "Card_Tapegrade",
-        "num": "54",
-        "sources": ["Tapegrade.cpp"]
-    },
-    {
-        "id": "glitch",
-        "dir": "releases/57_glitch",
-        "ns": "Card_Glitch",
-        "num": "57",
-        "sources": ["main.cpp"]
-    },
-    {
-        "id": "lochovibes",
-        "dir": "releases/58_LoChoVibes",
-        "ns": "Card_LoChoVibes",
-        "num": "58",
-        "sources": ["LoChoVibes.cpp"]
-    },
-    {
-        "id": "markov",
-        "dir": "releases/60_markov",
-        "ns": "Card_Markov",
-        "num": "60",
-        "sources": ["main.cpp"]
-    },
-    {
-        "id": "stretchcore",
-        "dir": "releases/66_stretchcore",
-        "ns": "Card_Stretchcore",
-        "num": "66",
-        "sources": ["src/main.cpp", "src/BreakyAudioBank.cpp", "src/BreakySampleManager.cpp"]
-    },
-    {
-        "id": "wild_pebble",
-        "dir": "releases/74_Wild_Pebble",
-        "ns": "Card_WildPebble",
-        "num": "74",
-        "sources": ["WildPebble.cpp"]
-    },
-    {
-        "id": "divcom",
-        "dir": os.path.join(VCV_PROJECT_DIR, "deps", "external", "divcom"),
-        "ns": "Card_DivCom",
-        "num": "09",
-        "sources": ["divcom.cpp"]
-    },
-    {
-        "id": "am_coupler",
-        "dir": "releases/12_am_coupler",
-        "ns": "Card_AMCoupler",
-        "num": "12",
-        "sources": ["main.cpp"]
-    },
-    {
-        "id": "slowmod",
-        "dir": os.path.join(VCV_PROJECT_DIR, "deps", "external", "slowmod"),
-        "ns": "Card_SlowMod",
-        "num": "23",
-        "sources": ["main.cpp"]
-    },
-    {
-        "id": "nzt",
-        "dir": os.path.join(VCV_PROJECT_DIR, "deps", "external", "ws"),
-        "ns": "Card_NZT",
-        "num": "47",
-        "sources": ["nzt/main.cpp"]
-    },
-    {
-        "id": "glitter",
-        "dir": os.path.join(VCV_PROJECT_DIR, "deps", "external", "mtws", "53_glitter"),
-        "ns": "Card_Glitter",
-        "num": "53",
-        "sources": ["main.cpp", "src/Glitter.cpp", "src/Utils.cpp"]
-    },
-    {
-        "id": "degenerator",
-        "dir": os.path.join(VCV_PROJECT_DIR, "deps", "external", "Degenerator"),
-        "ns": "Card_Degenerator",
-        "num": "71",
-        "sources": ["main.cpp"]
-    },
-    {
-        "id": "motorik",
-        "dir": os.path.join(VCV_PROJECT_DIR, "deps", "external", "motorik"),
-        "ns": "Card_Motorik",
-        "num": "72",
-        "sources": ["main.cpp"]
-    },
-    {
-        "id": "tesserae",
-        "dir": os.path.join(VCV_PROJECT_DIR, "deps", "external", "Tesserae"),
-        "ns": "Card_Tesserae",
-        "num": "86",
-        "sources": ["main.cpp"]
-    },
-    {
-        "id": "toolbox",
-        "dir": os.path.join(VCV_PROJECT_DIR, "deps", "external", "toolbox"),
-        "ns": "Card_Toolbox",
-        "num": "99",
-        "sources": ["toolbox.cpp"]
-    },
-    {
-        "id": "mlrws",
-        "dir": "releases/15_MLRws",
-        "ns": "Card_MLRws",
-        "num": "15",
-        "sources": ["main.cpp", "monome_ws.c", "mlr.c", "device_mode.c"]
-    },
-    {
-        "id": "drumdrum",
-        "dir": "releases/33_drumdrum",
-        "ns": "Card_DrumDrum",
-        "num": "33",
-        "sources": ["main.cpp", "usb_core1.cpp", "midi_sysex.cpp", "monome_mext.c", "grid_ui.cpp", "midi_host.cpp"]
-    },
-    {
-        "id": "blackbird",
-        "dir": "releases/41_blackbird",
-        "ns": "Card_Blackbird",
-        "num": "41",
-        "sources": [
-            "main.cpp",
-            "lib/casl.c",
-            "lib/slopes.c",
-            "lib/ashapes.c",
-            "lib/detect.c",
-            "lib/caw.c",
-            "lib/ii.c",
-            "lib/metro.c",
-            "lib/clock.c",
-            "lib/clock_ll.c",
-            "lib/events_lockfree.c",
-            "lib/usb_lockfree.c",
-            "lib/l_bootstrap.c",
-            "lib/l_crowlib.c",
-            "lib/l_ii_mod.c",
-            "lib/ll_timers.c",
-            "lib/random.c",
-            "lib/wrblocks.c",
-            "lib/mailbox.c",
-            "lib/fastmath.c",
-            "lib/fastmath_lut.c",
-            "lib/flash_storage.cpp",
-            "lua/src/lapi.c",
-            "lua/src/lauxlib.c",
-            "lua/src/lbaselib.c",
-            "lua/src/lcode.c",
-            "lua/src/lcorolib.c",
-            "lua/src/lctype.c",
-            "lua/src/ldebug.c",
-            "lua/src/ldo.c",
-            "lua/src/ldump.c",
-            "lua/src/lfunc.c",
-            "lua/src/lgc.c",
-            "lua/src/linit_crow.c",
-            "lua/src/llex.c",
-            "lua/src/lmathlib.c",
-            "lua/src/lmem.c",
-            "lua/src/loadlib.c",
-            "lua/src/lobject.c",
-            "lua/src/lopcodes.c",
-            "lua/src/lparser.c",
-            "lua/src/lstate.c",
-            "lua/src/lstring.c",
-            "lua/src/lstrlib.c",
-            "lua/src/ltable.c",
-            "lua/src/ltablib.c",
-            "lua/src/ltm.c",
-            "lua/src/lundump.c",
-            "lua/src/lvm.c",
-            "lua/src/lzio.c"
-        ]
-    },
-    {
-        "id": "clockwork",
-        "dir": "releases/26_clockwork",
-        "ns": "Card_Clockwork",
-        "num": "26",
-        "sources": ["main.cpp"]
-    },
-    {
-        "id": "castle_process",
-        "dir": "releases/43_Castle_Process",
-        "ns": "Card_CastleProcess",
-        "num": "43",
-        "sources": ["CastleProcess.cpp"]
-    },
-    {
-        "id": "west_coast_lpg",
-        "dir": "releases/81_West_Coast_LPG/src",
-        "ns": "Card_WestCoastLPG",
-        "num": "81",
-        "sources": ["vactrol.cpp"]
-    },
-    {
-        "id": "origami",
-        "dir": "releases/83_Origami/src",
-        "ns": "Card_Origami",
-        "num": "83",
-        "sources": ["origami.cpp"]
-    },
-    {
-        "id": "cosmik_c1zzl3",
-        "dir": "releases/84_CosmikC1zzl3",
-        "ns": "Card_CosmikC1zzl3",
-        "num": "84",
-        "sources": ["C1ZZL3.cpp", "C1ZZL3_LUT.cpp"]
-    },
-    {
-        "id": "fr330hfr33",
-        "dir": "releases/87_fr330hfr33",
-        "ns": "Card_Fr330hfr33",
-        "num": "87",
-        "sources": ["Fr330hfr33.cpp", "Fr330hfr33_LUT.cpp"]
-    },
-    {
-        "id": "pantograph",
-        "dir": "releases/90_Pantograph",
-        "ns": "Card_Pantograph",
-        "num": "90",
-        "sources": ["pantograph.cpp"]
-    },
-    {
-        "id": "chorgan",
-        "dir": "releases/91_chorgan",
-        "ns": "Card_Chorgan",
-        "num": "91",
-        "sources": ["main.cpp"]
-    },
-    {
-        "id": "turing_matrix",
-        "dir": "releases/93_Turing_Matrix",
-        "ns": "Card_TuringMatrix",
-        "num": "93",
-        "sources": ["Turing.cpp", "Clock.cpp", "Config.cpp", "MainApp.cpp", "UI.cpp", "main.cpp"]
-    },
-    {
-        "id": "offair2",
-        "dir": "releases/95_offair2",
-        "ns": "Card_OffAir2",
-        "num": "95",
-        "sources": ["main.cpp"]
-    },
-    {
-        "id": "lens",
-        "dir": os.path.join(VCV_PROJECT_DIR, "deps", "external", "52_lens"),
-        "ns": "Card_Lens",
-        "num": "52",
-        "sources": [
-            "runtime/main.cpp",
-            "runtime/sysex.cpp",
-            "runtime/runtime.c",
-            "runtime/midi.c",
-            "runtime/snapshot_apply.c"
-        ]
-    },
-    {
-        "id": "ca_sequencer",
-        "dir": "releases/19_CA_Sequencer",
-        "ns": "Card_CASequencer",
-        "num": "19",
-        "sources": ["main.cpp"]
-    },
-    {
-        "id": "fragments",
-        "dir": "releases/67_Fragments",
-        "ns": "Card_Fragments",
-        "num": "67",
-        "sources": ["src/fragments.cpp"]
-    },
-    {
-        "id": "turing_clouds",
-        "dir": "releases/75_Turing_Clouds",
-        "ns": "Card_TuringClouds",
-        "num": "75",
-        "sources": ["main.cpp"]
-    },
-    {
-        "id": "alloy",
-        "dir": "releases/97_alloy",
-        "ns": "Card_Alloy",
-        "num": "97",
-        "sources": ["main.cpp"]
-    },
-    {
-        "id": "sense_of_space",
-        "dir": "releases/433_sense_of_space",
-        "ns": "Card_SenseOfSpace",
-        "num": "433",
-        "sources": ["main.cpp", "reverb_dsp.c", "src/cards/wrappers/sense_of_space_samples.cpp"],
-        "flags": ["-DFOUR33_SAMPLE_RATE=10000"]
-    }
-]
-
-# Add krell and duo_midi dynamically using blackbird's sources
-blackbird_entry = next(c for c in CARD_WHITELIST if c["id"] == "blackbird")
-CARD_WHITELIST.append({
-    "id": "krell",
-    "dir": "releases/41_blackbird",
-    "info_dir": "releases/56_Krell",
-    "ns": "Card_Krell",
-    "num": "56",
-    "sources": list(blackbird_entry["sources"])
-})
-CARD_WHITELIST.append({
-    "id": "duo_midi",
-    "dir": "releases/41_blackbird",
-    "info_dir": "releases/98_duo_midi",
-    "ns": "Card_DuoMidi",
-    "num": "98",
-    "sources": list(blackbird_entry["sources"])
-})
+CARD_WHITELIST, CARD_ALLOWLIST = load_cards_registry()
 
 
 
@@ -800,6 +247,28 @@ def main():
                     shutil.copy(fh, os.path.join(web_dest, os.path.basename(fh)))
                 print(f"Copied root HTML manager files for {card['id']}")
             
+        if os.path.exists(web_dest):
+            bridge_src = os.path.join(VCV_PROJECT_DIR, "res", "web", "vcv_web_bridge.js")
+            if os.path.exists(bridge_src):
+                shutil.copy(bridge_src, os.path.join(web_dest, "vcv_web_bridge.js"))
+                for root, _, files in os.walk(web_dest):
+                    for f_name in files:
+                        if f_name.endswith(".html") or f_name.endswith(".htm"):
+                            h_path = os.path.join(root, f_name)
+                            try:
+                                with open(h_path, "r", encoding="utf-8") as hf:
+                                    h_content = hf.read()
+                                if "vcv_web_bridge.js" not in h_content:
+                                    if "<head>" in h_content:
+                                        h_content = h_content.replace("<head>", "<head>\n    <script src=\"vcv_web_bridge.js\"></script>")
+                                    elif "<html>" in h_content:
+                                        h_content = h_content.replace("<html>", "<html>\n<head><script src=\"vcv_web_bridge.js\"></script></head>")
+                                    else:
+                                        h_content = "<script src=\"vcv_web_bridge.js\"></script>\n" + h_content
+                                    with open(h_path, "w", encoding="utf-8") as hf:
+                                        hf.write(h_content)
+                            except Exception as e:
+                                print(f"Error injecting web bridge into {h_path}: {e}")
         # Dynamically scan and append pipicofx sources for flux (only those compiled in CMakeLists.txt)
         if card["id"] == "flux":
             cm_path = os.path.join(card_dir_abs, "CMakeLists.txt")
@@ -1098,8 +567,13 @@ def main():
                 out_f.write(headers_code + "\n")
             
             # Now dump and process each unity source file
+            has_sources = True
             for src_rel in unity_sources:
                 src_path_abs = get_source_path(src_rel)
+                if not os.path.exists(src_path_abs):
+                    print(f"Notice: Source file not found locally for {card['id']}: {src_path_abs}, skipping wrapper generation.")
+                    has_sources = False
+                    break
                 
                 out_f.write(f"// ──────────────────────────────────────────────────────────────────────────────\n")
                 out_f.write(f"// Source: {src_rel}\n")
@@ -1377,10 +851,10 @@ def main():
                 for src in cxx_srcs:
                     obj = src.replace("/", "_").replace(".", "_") + f"_{cid}.o"
                     obj_path = f"res/cards/{obj}"
-                    f.write(f"\t$(CXX) $(CXXFLAGS) $(FLAGS) {flags_str} -c -o {obj_path} {src}\n")
+                    f.write(f"\t$(CXX) $(CXXFLAGS) $(FLAGS) -DVCV_PORT=1 {flags_str} -c -o {obj_path} {src}\n")
                     all_objs.append(obj_path)
                 objs_str = " ".join(all_objs)
-                f.write(f"\t$(CXX) $(CXXFLAGS) $(FLAGS) {flags_str} $(CARD_LDFLAGS_SHARED) -o $@ {objs_str}\n")
+                f.write(f"\t$(CXX) $(CXXFLAGS) $(FLAGS) -DVCV_PORT=1 {flags_str} $(CARD_LDFLAGS_SHARED) -o $@ {objs_str}\n")
                 f.write(f"\t@rm -f {objs_str}\n\n")
             else:
                 # Pure C++ card: compile all at once with CXX
@@ -1439,8 +913,12 @@ def main():
                     hc = hc.replace('extern "C" const unsigned int crow_lua_clock_data_len', 'const unsigned int crow_lua_clock_data_len')
                     if '#ifdef __cplusplus' not in hc:
                         hc = "#ifdef __cplusplus\nextern \"C\" {\n#endif\n" + hc + "\n#ifdef __cplusplus\n}\n#endif\n"
-                    with open(fp, "w") as hf:
-                        hf.write(hc)
+        # Regenerate CARDS.md from cards_registry.json
+        try:
+            from generate_cards_markdown import generate_markdown
+            generate_markdown()
+        except Exception as e:
+            print("Notice: Could not auto-generate CARDS.md:", e)
 
         print("Done! Ported all whitelisted cards successfully.")
 

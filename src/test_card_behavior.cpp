@@ -5,8 +5,18 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <fstream>
+#include <mach/mach.h>
+#include <unistd.h>
 #include "pico_mocks.h"
 #include "ComputerCard.h"
+
+static int g_ipc_fd = STDOUT_FILENO;
+
+static void ipc_send(const std::string& msg) {
+    std::string s = msg + "\n";
+    write(g_ipc_fd, s.c_str(), s.size());
+}
 
 // Undefine the mock macros so we can access member variables of the globals block directly
 #undef g_knobs
@@ -97,6 +107,10 @@ void test_multicore_launch_core1(void (*entry)()) {
 }
 
 int main(int argc, char* argv[]) {
+    // Save real stdout for IPC protocol, then redirect STDOUT_FILENO to STDERR_FILENO so card prints don't desync IPC
+    g_ipc_fd = dup(STDOUT_FILENO);
+    dup2(STDERR_FILENO, STDOUT_FILENO);
+
     // Disable stdout and stderr buffering completely so piped output is received immediately
     setvbuf(stdout, NULL, _IONBF, 0);
     setvbuf(stderr, NULL, _IONBF, 0);
@@ -167,7 +181,7 @@ int main(int argc, char* argv[]) {
         std::cerr << "Warning: card_ptr is still null after startup. Standard commands might not execute." << std::endl;
     }
 
-    std::cout << "READY" << std::endl;
+    ipc_send("READY");
 
     std::string line;
     while (std::getline(std::cin, line)) {
@@ -193,9 +207,9 @@ int main(int argc, char* argv[]) {
                 for (int i = 0; i < 6; ++i) {
                     globals.g_input_connected[i] = true;
                 }
-                std::cout << "OK" << std::endl;
+                ipc_send("OK");
             } else {
-                std::cout << "ERR_BAD_ARGS" << std::endl;
+                ipc_send("ERR_BAD_ARGS");
             }
         } else if (cmd == "SET_KNOBS") {
             float k0, k1, k2;
@@ -203,26 +217,26 @@ int main(int argc, char* argv[]) {
                 globals.g_knobs[0] = k0;
                 globals.g_knobs[1] = k1;
                 globals.g_knobs[2] = k2;
-                std::cout << "OK" << std::endl;
+                ipc_send("OK");
             } else {
-                std::cout << "ERR_BAD_ARGS" << std::endl;
+                ipc_send("ERR_BAD_ARGS");
             }
         } else if (cmd == "SET_SWITCH") {
             int z_val;
             if (ss >> z_val) {
                 globals.g_switch = z_val;
-                std::cout << "OK" << std::endl;
+                ipc_send("OK");
             } else {
-                std::cout << "ERR_BAD_ARGS" << std::endl;
+                ipc_send("ERR_BAD_ARGS");
             }
         } else if (cmd == "SEND_MIDI") {
             int b0, b1, b2, b3;
             if (ss >> b0 >> b1 >> b2 >> b3) {
                 uint8_t packet[4] = { (uint8_t)b0, (uint8_t)b1, (uint8_t)b2, (uint8_t)b3 };
                 globals.g_midi_rx_packet_queue.push(packet);
-                std::cout << "OK" << std::endl;
+                ipc_send("OK");
             } else {
-                std::cout << "ERR_BAD_ARGS" << std::endl;
+                ipc_send("ERR_BAD_ARGS");
             }
         } else if (cmd == "RUN_SAMPLES") {
             int num_samples;
@@ -233,26 +247,84 @@ int main(int argc, char* argv[]) {
                         globals.card_ptr->ProcessSample();
                     }
                 }
-                std::cout << "OK" << std::endl;
+                ipc_send("OK");
             } else {
-                std::cout << "ERR_BAD_ARGS" << std::endl;
+                ipc_send("ERR_BAD_ARGS");
             }
         } else if (cmd == "GET_STATE") {
-            std::cout << "STATE "
-                      << globals.g_audio_out[0] << " "
-                      << globals.g_audio_out[1] << " "
-                      << globals.g_cv_out[0] << " "
-                      << globals.g_cv_out[1] << " "
-                      << (globals.g_pulse_out[0] ? 1 : 0) << " "
-                      << (globals.g_pulse_out[1] ? 1 : 0) << " "
-                      << globals.g_led_brightness[0] << " "
-                      << globals.g_led_brightness[1] << " "
-                      << globals.g_led_brightness[2] << " "
-                      << globals.g_led_brightness[3] << " "
-                      << globals.g_led_brightness[4] << " "
-                      << globals.g_led_brightness[5] << std::endl;
+            std::stringstream st;
+            st << "STATE "
+               << globals.g_audio_out[0] << " "
+               << globals.g_audio_out[1] << " "
+               << globals.g_cv_out[0] << " "
+               << globals.g_cv_out[1] << " "
+               << (globals.g_pulse_out[0] ? 1 : 0) << " "
+               << (globals.g_pulse_out[1] ? 1 : 0) << " "
+               << globals.g_led_brightness[0] << " "
+               << globals.g_led_brightness[1] << " "
+               << globals.g_led_brightness[2] << " "
+               << globals.g_led_brightness[3] << " "
+               << globals.g_led_brightness[4] << " "
+               << globals.g_led_brightness[5];
+            ipc_send(st.str());
+        } else if (cmd == "DISCONNECT_INPUT") {
+            int idx, connected;
+            if (ss >> idx >> connected && idx >= 0 && idx < 6) {
+                globals.g_input_connected[idx] = (connected != 0);
+                ipc_send("OK");
+            } else {
+                ipc_send("ERR_BAD_ARGS");
+            }
+        } else if (cmd == "LOAD_FLASH") {
+            std::string path;
+            if (ss >> path) {
+                std::ifstream f(path, std::ios::binary);
+                if (f.good()) {
+                    f.read(reinterpret_cast<char*>(globals.g_flash_memory_val), PICO_FLASH_SIZE_BYTES);
+                    auto bytes_read = f.gcount();
+                    ipc_send("FLASH_LOADED " + std::to_string(bytes_read));
+                } else {
+                    ipc_send("ERR_FILE_NOT_FOUND");
+                }
+            } else {
+                ipc_send("ERR_BAD_ARGS");
+            }
+        } else if (cmd == "GET_MEMORY") {
+            struct mach_task_basic_info info;
+            mach_msg_type_number_t count = MACH_TASK_BASIC_INFO_COUNT;
+            kern_return_t kr = task_info(mach_task_self(), MACH_TASK_BASIC_INFO,
+                                        (task_info_t)&info, &count);
+            if (kr == KERN_SUCCESS) {
+                ipc_send("MEMORY " + std::to_string(info.resident_size / 1024));
+            } else {
+                ipc_send("MEMORY -1");
+            }
+        } else if (cmd == "RUN_CAPTURE") {
+            int num_samples, interval;
+            if (ss >> num_samples >> interval && interval > 0) {
+                if (globals.card_ptr) {
+                    for (int i = 0; i < num_samples; ++i) {
+                        globals.card_ptr->update_inputs();
+                        globals.card_ptr->ProcessSample();
+                        if ((i + 1) % interval == 0) {
+                            std::stringstream cap;
+                            cap << "CAPTURE "
+                                << globals.g_audio_out[0] << " "
+                                << globals.g_audio_out[1] << " "
+                                << globals.g_cv_out[0] << " "
+                                << globals.g_cv_out[1] << " "
+                                << (globals.g_pulse_out[0] ? 1 : 0) << " "
+                                << (globals.g_pulse_out[1] ? 1 : 0);
+                            ipc_send(cap.str());
+                        }
+                    }
+                }
+                ipc_send("OK");
+            } else {
+                ipc_send("ERR_BAD_ARGS");
+            }
         } else {
-            std::cout << "ERR_UNKNOWN_CMD" << std::endl;
+            ipc_send("ERR_UNKNOWN_CMD");
         }
     }
 

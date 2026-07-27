@@ -1,6 +1,6 @@
 {
   "description": "Card visibility configuration for Workshop Computer in VCV Rack. Cards listed in excluded_cards will be hidden from the program selection menu.",
-  "enabled": true,
+  "enabled": false,
   "allowed_cards": [],
   "excluded_cards": [
     "02_comingsoon",

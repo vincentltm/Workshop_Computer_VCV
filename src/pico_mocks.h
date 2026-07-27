@@ -71,6 +71,13 @@ public:
     }
 };
 
+class Core1YieldException : public std::exception {
+public:
+    const char* what() const noexcept override {
+        return "Core1 yielded execution";
+    }
+};
+
 // ──────────────────────────────────────────────────────────────────────────────
 // Flash Memory Emulation (sizes defined before CardGlobals)
 // ──────────────────────────────────────────────────────────────────────────────
@@ -430,51 +437,33 @@ inline bool CustomCancellationAtomic::load(std::memory_order order) const {
 inline void SpinFIFO::push(uintptr_t val) {
     size_t t = tail.load(std::memory_order_relaxed);
     size_t next_t = (t + 1) % 256;
-    int spins = 0;
-    while (next_t == head.load(std::memory_order_acquire)) {
-        if (g_cancellation_requested.load(std::memory_order_relaxed)) throw ThreadExitException();
-        if (!is_core1_thread && g_wasm_core1_tick && !g_core1_tick_active) {
-            g_core1_tick_active = true;
-            is_core1_thread = true;
-            g_wasm_core1_tick();
-            is_core1_thread = false;
-            g_core1_tick_active = false;
-            continue;
-        }
-        if (++spins > 50000) std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        else {
-            PICO_YIELD();
-        }
+    size_t h = head.load(std::memory_order_relaxed);
+    if (next_t == h) {
+        head.store((h + 1) % 256, std::memory_order_release);
     }
     buffer[t].store(val, std::memory_order_relaxed);
     tail.store(next_t, std::memory_order_release);
 }
 
 inline uintptr_t SpinFIFO::pop() {
-    size_t h = head.load(std::memory_order_relaxed);
-    int spins = 0;
-    while (h == tail.load(std::memory_order_acquire)) {
-        if (g_cancellation_requested.load(std::memory_order_relaxed)) throw ThreadExitException();
+    if (g_cancellation_requested.load(std::memory_order_relaxed)) throw ThreadExitException();
+
+    if (head.load(std::memory_order_relaxed) == tail.load(std::memory_order_acquire)) {
         if (!is_core1_thread && g_wasm_core1_tick && !g_core1_tick_active) {
             g_core1_tick_active = true;
             is_core1_thread = true;
-            g_wasm_core1_tick();
+            try {
+                g_wasm_core1_tick();
+            } catch (const Core1YieldException&) {}
             is_core1_thread = false;
             g_core1_tick_active = false;
-            h = head.load(std::memory_order_relaxed);
-            continue;
+        } else if (is_core1_thread) {
+            throw Core1YieldException();
         }
-        if (is_core1_thread && g_wasm_background_tick && !g_background_tick_active) {
-            g_background_tick_active = true;
-            is_core1_thread = false;
-            g_wasm_background_tick();
-            is_core1_thread = true;
-            g_background_tick_active = false;
-            h = head.load(std::memory_order_relaxed);
-            continue;
-        }
-        // Under single-threaded Emscripten, if we are still empty, we must not spin.
-        // Return 0 immediately to prevent browser freeze.
+    }
+
+    size_t h = head.load(std::memory_order_relaxed);
+    if (h == tail.load(std::memory_order_acquire)) {
         return 0;
     }
     uintptr_t val = buffer[h].load(std::memory_order_relaxed);
@@ -570,7 +559,10 @@ inline bool time_reached(absolute_time_t t) { return get_absolute_time() >= t; }
 
 inline void sleep_us(uint64_t us) {
     if (g_cancellation_requested.load(std::memory_order_relaxed)) throw ThreadExitException();
-#ifndef __EMSCRIPTEN__
+#if defined(VCV_PORT)
+    (void)us;
+    return;
+#endif
     if (us == 0) return;
     if (us >= 1000) {
         uint64_t ms = us / 1000;
@@ -585,7 +577,6 @@ inline void sleep_us(uint64_t us) {
     } else {
         std::this_thread::sleep_for(std::chrono::microseconds(us));
     }
-#endif
 }
 
 inline void sleep_until(absolute_time_t target) {
@@ -678,15 +669,10 @@ inline bool multicore_lockout_victim_is_initialized(unsigned int) { return true;
 inline void multicore_launch_core1(void (*entry)()) {
     if (t_instance) {
         t_instance->g_core1_cancellation_requested_val = false;
+        t_instance->g_wasm_core1_tick = entry;
     }
     if (t_instance && t_instance->multicore_launch_core1_fn) {
         t_instance->multicore_launch_core1_fn(entry);
-    } else {
-#ifdef __EMSCRIPTEN__
-        is_core1_thread = true;
-        entry();
-        is_core1_thread = false;
-#endif
     }
 }
 
@@ -951,7 +937,8 @@ inline void pico_get_unique_board_id(pico_unique_board_id_t* id_out) {
 #ifndef rom_table_code
 #define rom_table_code(c1, c2) ((uint16_t)(c1) | ((uint16_t)(c2) << 8))
 #endif
-inline void* rom_func_lookup(uint32_t) { return nullptr; }
+inline void dummy_rom_noop() {}
+inline void* rom_func_lookup(uint32_t) { return (void*)&dummy_rom_noop; }
 
 #ifndef IO_QSPI_GPIO_QSPI_SS_CTRL_OUTOVER_VALUE_HIGH
 #define IO_QSPI_GPIO_QSPI_SS_CTRL_OUTOVER_VALUE_HIGH 0
@@ -965,7 +952,7 @@ inline void* rom_func_lookup(uint32_t) { return nullptr; }
 #define SSI_SR_RFNE_BITS 1
 #endif
 
-struct ssi_hw_t { uint32_t sr = 0; uint32_t dr0 = 0; };
+struct ssi_hw_t { uint32_t sr = 0xFFFFFFFF; uint32_t dr0 = 0; };
 static ssi_hw_t mock_ssi_hw_inst;
 #ifndef ssi_hw
 #define ssi_hw (&mock_ssi_hw_inst)
@@ -992,10 +979,14 @@ typedef uint16_t u_int16_t;
 #ifndef _U_INT32_T
 typedef uint32_t u_int32_t;
 #endif
+#ifndef PICO_OK
+#define PICO_OK 0
+#endif
+
 inline void irq_set_priority(unsigned int, unsigned int) {}
 inline void flash_safe_execute_core_init() {}
-template<typename F, typename... Args>
-inline void flash_safe_execute(F&& f, Args&&... args) { f(std::forward<Args>(args)...); }
+template<typename F, typename Param, typename... Extra>
+inline int flash_safe_execute(F&& f, Param&& param, Extra&&...) { f(std::forward<Param>(param)); return PICO_OK; }
 inline void __mem_fence_release() { std::atomic_thread_fence(std::memory_order_release); }
 inline void __mem_fence_acquire() { std::atomic_thread_fence(std::memory_order_acquire); }
 

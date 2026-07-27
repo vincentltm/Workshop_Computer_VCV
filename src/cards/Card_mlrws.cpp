@@ -55,7 +55,7 @@ thread_local CardGlobals* t_instance = nullptr;
 thread_local bool is_core1_thread = false;
 thread_local ComputerCard* ComputerCard::thisptr = nullptr;
 
-namespace Card_MLRws {
+namespace Card_Mlrws {
 
     int main();
 
@@ -8924,7 +8924,7 @@ device_detect_result_t device_mode_detect_protocol(uint32_t timeout_ms)
 }
 
 
-} // namespace Card_MLRws
+} // namespace Card_Mlrws
 
 extern "C" {
     __attribute__((weak)) void tuh_midi_mount_cb(uint8_t, uint8_t, uint8_t, uint8_t, uint16_t) {}
@@ -8945,7 +8945,7 @@ extern "C" {
     void run_card() {
         is_core1_thread = false;
         try {
-            Card_MLRws::main();
+            Card_Mlrws::main();
         } catch (const ThreadExitException& e) {
             // Thread terminated safely
         }

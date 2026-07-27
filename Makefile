@@ -39,6 +39,8 @@ ifdef ARCH_WIN
     LDFLAGS += -lws2_32
 endif
 
+cards: $(CARD_LIBS)
+
 $(TARGET): | $(CARD_LIBS)
 
 # Custom clean target for card libraries

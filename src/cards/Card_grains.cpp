@@ -713,6 +713,7 @@ public:
     }
   }
   void ProcessSample() override {
+    ComputerCard::thisptr = this;
     static uint32_t uiBlinkTimer = 0;
     uiBlinkTimer++;
     static int32_t gL48 = 0, gR48 = 0;

@@ -27,9 +27,7 @@
 #include "ComputerCard.h"
 
 namespace Card_Lens {
-extern "C" {
 #include "runtime.h"
-}
 #include "kernel_ids.h"
 #include "midi.h"
 #include "snapshot_format.h"

@@ -265,6 +265,7 @@ struct ProgramCardWidget : Widget {
     struct CardGroupSubmenuItem : MenuItem {
         IComputerModule* computerModule;
         int min_num, max_num;
+        bool is_other = false;
 
         Menu* createChildMenu() override {
             Menu* menu = new Menu();
@@ -278,9 +279,20 @@ struct ProgramCardWidget : Widget {
             for (size_t i = 0; i < g_card_registry.size(); i++) {
                 if (!g_card_registry[i].visible) continue;
                 int num = -1;
-                try { num = std::stoi(g_card_registry[i].number); }
-                catch (...) { continue; }
-                if (num >= min_num && num <= max_num) {
+                bool parsed = false;
+                try {
+                    num = std::stoi(g_card_registry[i].number);
+                    parsed = true;
+                } catch (...) {}
+
+                bool match = false;
+                if (is_other) {
+                    match = !parsed || num < 0;
+                } else if (parsed) {
+                    match = (num >= min_num && num <= max_num);
+                }
+
+                if (match) {
                     auto* item = new CardItem();
                     item->text = "[#" + g_card_registry[i].number + "] " + g_card_registry[i].name;
                     item->computerModule = computerModule;
@@ -317,39 +329,51 @@ struct ProgramCardWidget : Widget {
         menu->addChild(unloadItem);
         menu->addChild(new MenuSeparator());
 
-        auto is_active_in_range = [&](int min_n, int max_n) -> bool {
+        auto is_active_in_range = [&](int min_n, int max_n, bool is_oth = false) -> bool {
             int idx = computerModule->get_active_card_idx();
             if (idx < 0 || idx >= (int)g_card_registry.size()) return false;
-            try { int num = std::stoi(g_card_registry[idx].number); return num >= min_n && num <= max_n; }
-            catch (...) { return false; }
+            try {
+                int num = std::stoi(g_card_registry[idx].number);
+                if (is_oth) return num < 0;
+                return num >= min_n && num <= max_n;
+            } catch (...) {
+                return is_oth;
+            }
         };
 
-        auto has_visible_cards_in_range = [&](int min_n, int max_n) -> bool {
+        auto has_visible_cards_in_range = [&](int min_n, int max_n, bool is_oth = false) -> bool {
             for (size_t i = 0; i < g_card_registry.size(); i++) {
                 if (!g_card_registry[i].visible) continue;
                 try {
                     int num = std::stoi(g_card_registry[i].number);
-                    if (num >= min_n && num <= max_n) return true;
-                } catch (...) {}
+                    if (is_oth && num < 0) return true;
+                    if (!is_oth && num >= min_n && num <= max_n) return true;
+                } catch (...) {
+                    if (is_oth) return true;
+                }
             }
             return false;
         };
 
-        auto make_group = [&](const char* label, int lo, int hi) {
-            if (!has_visible_cards_in_range(lo, hi)) return;
+        auto make_group = [&](const char* label, int lo, int hi, bool is_oth = false) {
+            if (!has_visible_cards_in_range(lo, hi, is_oth)) return;
             auto* g = new CardGroupSubmenuItem();
             g->text = label;
             g->computerModule = computerModule;
             g->min_num = lo;
             g->max_num = hi;
-            g->rightText = is_active_in_range(lo, hi) ? "✔ ➔" : "➔";
+            g->is_other = is_oth;
+            g->rightText = is_active_in_range(lo, hi, is_oth) ? "✔ ➔" : "➔";
             menu->addChild(g);
         };
 
-        make_group("Cards #00 - #19",  0, 19);
-        make_group("Cards #20 - #39", 20, 39);
-        make_group("Cards #40 - #59", 40, 59);
-        make_group("Cards #60 - #99", 60, 99);
+        make_group("Cards #00 - #19",   0, 19);
+        make_group("Cards #20 - #39",  20, 39);
+        make_group("Cards #40 - #59",  40, 59);
+        make_group("Cards #60 - #79",  60, 79);
+        make_group("Cards #80 - #99",  80, 99);
+        make_group("Cards #100+",     100, 99999);
+        make_group("Other Cards",      -1, -1, true);
 
         int active_idx = computerModule->get_active_card_idx();
         if (active_idx >= 0 && active_idx < (int)g_card_registry.size() && g_card_registry[active_idx].id == "utility_pair") {
