@@ -826,10 +826,13 @@ public:
 
       if (++gPh >= 2) {
         gPh = 0;
-        multicore_fifo_push_blocking(0x80000000); // Special bit for Tape Mode
-        int32_t sL = (int32_t)multicore_fifo_pop_blocking();
-        int32_t sR = (int32_t)multicore_fifo_pop_blocking();
-        int32_t speedCV = ((int32_t)multicore_fifo_pop_blocking()) / 2;
+        g_fifo_0_to_1.push(0x80000000); // Special bit for Tape Mode
+        int32_t sL = 0, sR = 0, speedCV = 0;
+        if (g_fifo_1_to_0.size() >= 3) {
+          sL = (int32_t)g_fifo_1_to_0.pop();
+          sR = (int32_t)g_fifo_1_to_0.pop();
+          speedCV = ((int32_t)g_fifo_1_to_0.pop()) / 2;
+        }
 
         // Tape Saturation (Refined Soft Clipping)
         auto saturate = [](int32_t x) {
@@ -1025,7 +1028,7 @@ public:
         trig |= 2;
         trigger1Buffered = false;
       }
-      multicore_fifo_push_blocking(trig);
+      g_fifo_0_to_1.push(trig);
       int32_t wetDry = synthMode ? 32767 : params[2].pMain;
       int32_t oL = ((aiL * (32768 - wetDry)) >> 15) + ((gL48 * wetDry) >> 15),
               oR = ((aiR * (32768 - wetDry)) >> 15) + ((gR48 * wetDry) >> 15);
@@ -1044,9 +1047,12 @@ public:
       AudioOut1(fL);
       AudioOut2(fR);
       CVOut2(nextCV2);
-      int32_t sL = (int32_t)multicore_fifo_pop_blocking(),
-              sR = (int32_t)multicore_fifo_pop_blocking(),
-              eS = (int32_t)multicore_fifo_pop_blocking();
+      int32_t sL = 0, sR = 0, eS = 0;
+      if (g_fifo_1_to_0.size() >= 3) {
+        sL = (int32_t)g_fifo_1_to_0.pop();
+        sR = (int32_t)g_fifo_1_to_0.pop();
+        eS = (int32_t)g_fifo_1_to_0.pop();
+      }
       int32_t fA = params[2].pX, smL = fDL.process(sL), smR = fDR.process(sR);
       if (freezeMode || synthMode) {
         // Freeze: Knob X is ONLY Diffusion (Smear). NO buffer writing.
