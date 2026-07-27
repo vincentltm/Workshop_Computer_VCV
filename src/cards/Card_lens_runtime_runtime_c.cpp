@@ -41,7 +41,9 @@ namespace Card_Lens {
  * runtime_find_kernel() / runtime_is_hw_leaf().
  */
 
+extern "C" {
 #include "runtime.h"
+}
 #include "kernel_ids.h"
 #include "midi.h"
 #include "pitch_table.h"
@@ -3833,13 +3835,13 @@ void recordhead_sweep(struct LensRuntime* rt) {
 
 /* Per-core sweeps: each core commits only its own recordheads, so the two cores
  * never race on a tape write and Core 0 need not wait for Core 1. */
-extern "C" void __not_in_flash_func(recordhead_sweep_core0)(struct LensRuntime* rt) {
+void __not_in_flash_func(recordhead_sweep_core0)(struct LensRuntime* rt) {
     if (!rt->has_recordhead) return;
     for (uint16_t i = 0; i < rt->core0_count; i++)
         if (is_recordhead_kid(rt->core0_slots[i]->kernel_id))
             recordhead_commit_pending(rt->core0_slots[i]);
 }
-extern "C" void __not_in_flash_func(recordhead_sweep_core1)(struct LensRuntime* rt) {
+void __not_in_flash_func(recordhead_sweep_core1)(struct LensRuntime* rt) {
     if (!rt->has_recordhead) return;
     for (uint16_t i = 0; i < rt->core1_count; i++)
         if (is_recordhead_kid(rt->core1_slots[i]->kernel_id))
@@ -3850,7 +3852,7 @@ extern "C" void __not_in_flash_func(recordhead_sweep_core1)(struct LensRuntime* 
 
 static int32_t hw_scratch[10];
 
-extern "C" void __not_in_flash_func(runtime_update_hw_scratch)(const struct HardwareInputs* hw) {
+void __not_in_flash_func(runtime_update_hw_scratch)(const struct HardwareInputs* hw) {
     hw_connected = hw->connected;
     hw_scratch[0] = hw->audio_in_1;
     hw_scratch[1] = hw->audio_in_2;
@@ -3909,7 +3911,7 @@ void runtime_step_reference(struct LensRuntime* rt,
     rt->sample_counter++;
 }
 
-extern "C" void __not_in_flash_func(runtime_drive_terminals)(struct LensRuntime* rt,
+void __not_in_flash_func(runtime_drive_terminals)(struct LensRuntime* rt,
                                                    struct HardwareOutputs* hw_out) {
     hw_out->cv_out_1_is_pitch = 0;
     hw_out->cv_out_2_is_pitch = 0;
@@ -3948,24 +3950,24 @@ void __not_in_flash_func(runtime_publish_shadows)(struct LensRuntime* rt) {
 
 /* Per-core publish: each core publishes only the shadows IT produces, after its own
  * walk, so the value is stable when copied (no torn cross-core read, no waiting). */
-extern "C" void __not_in_flash_func(runtime_publish_shadows_core0)(struct LensRuntime* rt) {
+void __not_in_flash_func(runtime_publish_shadows_core0)(struct LensRuntime* rt) {
     for (uint16_t i = 0; i < rt->xcore_count; i++)
         if (rt->xcore_core[i] == 0) lens_shadow_pool[i] = *rt->xcore_src[i];
 }
-extern "C" void __not_in_flash_func(runtime_publish_shadows_core1)(struct LensRuntime* rt) {
+void __not_in_flash_func(runtime_publish_shadows_core1)(struct LensRuntime* rt) {
     for (uint16_t i = 0; i < rt->xcore_count; i++)
         if (rt->xcore_core[i] == 1) lens_shadow_pool[i] = *rt->xcore_src[i];
 }
 
-extern "C" void runtime_destroy(struct LensRuntime* rt) { (void)rt; }
+void runtime_destroy(struct LensRuntime* rt) { (void)rt; }
 
-extern "C" void __not_in_flash_func(runtime_walk_core0)(struct LensRuntime* rt, uint32_t seq) {
+void __not_in_flash_func(runtime_walk_core0)(struct LensRuntime* rt, uint32_t seq) {
     (void)seq;
     struct Slot** const end = rt->core0_slots + rt->core0_count;
     for (struct Slot** p = rt->core0_slots; p < end; p++) step_slot(*p);
 }
 
-extern "C" void __not_in_flash_func(runtime_walk_core1)(struct LensRuntime* rt, uint32_t seq) {
+void __not_in_flash_func(runtime_walk_core1)(struct LensRuntime* rt, uint32_t seq) {
     (void)seq;
     struct Slot** const end = rt->core1_slots + rt->core1_count;
     for (struct Slot** p = rt->core1_slots; p < end; p++) step_slot(*p);

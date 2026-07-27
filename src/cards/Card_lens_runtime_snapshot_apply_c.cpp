@@ -27,7 +27,9 @@
 #include "ComputerCard.h"
 
 namespace Card_Lens {
+extern "C" {
 #include "runtime.h"
+}
 #include "kernel_ids.h"
 #include "midi.h"
 #include "snapshot_format.h"
@@ -78,7 +80,6 @@ static uint8_t  g_have_last_nodestate = 0;
 /* ---- Static pools ---- */
 /* Sizes come from runtime.h. Audio pool is 128 KB: 12-bit cells pack 2 per
    3 bytes, so 128 KB / 1.5 = 87381 cells = 1.82 s @ 48 kHz. */
-extern "C" {
 uint8_t  lens_audio_pool[LENS_AUDIO_BUFFER_BYTES] __attribute__((aligned(4)));
 uint8_t  lens_control_pool[LENS_CONTROL_BUFFER_BYTES];
 uint8_t  lens_nodestate_pool[LENS_NODESTATE_BYTES];
@@ -87,7 +88,6 @@ struct Buffer lens_buffer_pool[LENS_MAX_BUFFERS];
 struct RuntimeTerminal lens_terminal_pool[LENS_MAX_TERMINALS];
 int32_t  lens_const_pool[LENS_CONST_POOL_WORDS];
 int32_t  lens_shadow_pool[LENS_MAX_SLOTS];
-}
 
 /* Intern a constant: reuse an existing pool word with the same value, else add one.
    So N uses of the same literal cost one word, not N. Returns the pool index, or
@@ -142,8 +142,8 @@ static uint16_t const_bump;
    deterministic function of the snapshot, so the same snapshot re-bumps to the same
    sizes and per-slot offsets; saving these bytes and copying them back after an apply
    restores live state without interpreting any per-kernel struct. */
-extern "C" size_t lens_nodestate_used(void) { return nodestate_bump; }
-extern "C" size_t lens_control_used(void)   { return control_bump; }
+size_t lens_nodestate_used(void) { return nodestate_bump; }
+size_t lens_control_used(void)   { return control_bump; }
 
 static void* alloc_audio(size_t n) {
     /* Word-align every allocation: a kernel may address its ring as int16
@@ -194,7 +194,7 @@ static uint32_t u32(Cur* c) { uint32_t v=c->p[0]|(c->p[1]<<8)|(c->p[2]<<16)|((ui
 static int32_t  i32(Cur* c) { return (int32_t)u32(c); }
 
 /* ---- snapshot_apply ---- */
-extern "C" int snapshot_apply(struct LensRuntime** out_rt, const uint8_t* bytes, size_t len) {
+int snapshot_apply(struct LensRuntime** out_rt, const uint8_t* bytes, size_t len) {
     if (!bytes || len < 23) return -1;   /* 19-byte header + 4-byte CRC */
 
     /* CRC: last 4 bytes; covers everything before. */

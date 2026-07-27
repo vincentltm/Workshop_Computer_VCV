@@ -24,26 +24,6 @@ def post_process(src_content, src_rel):
             "bytes = alloc_control(nbytes);",
             "bytes = (uint8_t*)alloc_control(nbytes);"
         )
-        src_content = src_content.replace(
-            "uint8_t  lens_audio_pool[LENS_AUDIO_BUFFER_BYTES]",
-            'extern "C" {\nuint8_t  lens_audio_pool[LENS_AUDIO_BUFFER_BYTES]'
-        )
-        src_content = src_content.replace(
-            "int32_t  lens_shadow_pool[LENS_MAX_SLOTS];",
-            'int32_t  lens_shadow_pool[LENS_MAX_SLOTS];\n}'
-        )
-        src_content = src_content.replace(
-            "size_t lens_nodestate_used(void)",
-            'extern "C" size_t lens_nodestate_used(void)'
-        )
-        src_content = src_content.replace(
-            "size_t lens_control_used(void)",
-            'extern "C" size_t lens_control_used(void)'
-        )
-        src_content = src_content.replace(
-            "int snapshot_apply(struct LensRuntime** out_rt,",
-            'extern "C" int snapshot_apply(struct LensRuntime** out_rt,'
-        )
 
     if src_rel.endswith("main.cpp"):
         # Mock SysTick registers to avoid out-of-bounds memory dereferences in WASM/VCV
@@ -79,42 +59,6 @@ def post_process(src_content, src_rel):
         src_content = src_content.replace(
             "uint32_t runtime_kernel_state_bytes(uint8_t kid) {",
             "uint32_t runtime_kernel_state_bytes(uint8_t kid) {\n    init_kstate_bytes();"
-        )
-        src_content = src_content.replace(
-            "void __not_in_flash_func(recordhead_sweep_core0)(struct LensRuntime* rt)",
-            'extern "C" void __not_in_flash_func(recordhead_sweep_core0)(struct LensRuntime* rt)'
-        )
-        src_content = src_content.replace(
-            "void __not_in_flash_func(recordhead_sweep_core1)(struct LensRuntime* rt)",
-            'extern "C" void __not_in_flash_func(recordhead_sweep_core1)(struct LensRuntime* rt)'
-        )
-        src_content = src_content.replace(
-            "void __not_in_flash_func(runtime_update_hw_scratch)(const struct HardwareInputs* hw)",
-            'extern "C" void __not_in_flash_func(runtime_update_hw_scratch)(const struct HardwareInputs* hw)'
-        )
-        src_content = src_content.replace(
-            "void __not_in_flash_func(runtime_walk_core0)(struct LensRuntime* rt, uint32_t seq)",
-            'extern "C" void __not_in_flash_func(runtime_walk_core0)(struct LensRuntime* rt, uint32_t seq)'
-        )
-        src_content = src_content.replace(
-            "void __not_in_flash_func(runtime_walk_core1)(struct LensRuntime* rt, uint32_t seq)",
-            'extern "C" void __not_in_flash_func(runtime_walk_core1)(struct LensRuntime* rt, uint32_t seq)'
-        )
-        src_content = src_content.replace(
-            "void __not_in_flash_func(runtime_drive_terminals)(struct LensRuntime* rt,",
-            'extern "C" void __not_in_flash_func(runtime_drive_terminals)(struct LensRuntime* rt,'
-        )
-        src_content = src_content.replace(
-            "void __not_in_flash_func(runtime_publish_shadows_core0)(struct LensRuntime* rt)",
-            'extern "C" void __not_in_flash_func(runtime_publish_shadows_core0)(struct LensRuntime* rt)'
-        )
-        src_content = src_content.replace(
-            "void __not_in_flash_func(runtime_publish_shadows_core1)(struct LensRuntime* rt)",
-            'extern "C" void __not_in_flash_func(runtime_publish_shadows_core1)(struct LensRuntime* rt)'
-        )
-        src_content = src_content.replace(
-            "void runtime_destroy(struct LensRuntime* rt)",
-            'extern "C" void runtime_destroy(struct LensRuntime* rt)'
         )
 
     return src_content
