@@ -27,6 +27,7 @@ public:
 		freq = f;
 		phase_incr = freq; // freq is roughly 89478 per Hz at sr=48kHz
 		invc = phase_incr>>15;
+		if (invc == 0) invc = 1; // Guard: prevent divide by zero in Tick()
 	}
 
 	int32_t Tick()
