@@ -1,0 +1,32 @@
+# Build
+build/
+Build/
+
+# Compiled binaries
+*.elf
+*.elf.map
+*.hex
+*.bin
+*.dis
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+CMakeScripts/
+*.cmake
+!pico_sdk_import.cmake
+ctestTestfile.cmake
+install_manifest.txt
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db

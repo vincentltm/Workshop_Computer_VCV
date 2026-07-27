@@ -1,0 +1,5 @@
+Description: Dual MOS 6581 SID emulation (reSID engine) with CV/gate control, stereo output, waveform selection, and randomize
+Language: C++
+Creator: Joep Vermaat
+Version: 1.0
+Status: Released
