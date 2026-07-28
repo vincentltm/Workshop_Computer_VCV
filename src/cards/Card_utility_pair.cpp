@@ -172,6 +172,7 @@ int32_t exp4000_vals[170] = { 2048, 2056, 2064, 2073, 2081, 2090, 2098, 2107, 21
 // from 256 to a bit over 10^6
 int32_t Exp4000(int32_t in)
 {
+	if (in < 0) in = 0;
 	int32_t oct = in / 170; // 0 to 12 inclusive
 	int32_t suboct = in % 170;
 	if (oct - 3 > 0)
@@ -189,6 +190,7 @@ int32_t voct_vals[341] = { 314964268, 315605144, 316247323, 316890810, 317535606
 // Starts with  314964268 because this  314964268/2^32 * 48kHz = (3512Hz) 3 octaves above A440 
 int32_t ExpVoct(int32_t in)
 {
+	if (in < 0) in = 0;
 	if (in > 4091) in = 4091; // limit to 12 oct;
 	int32_t oct = in / 341;
 	int32_t suboct = in % 341;
@@ -1055,7 +1057,7 @@ public:
 		int32_t diff = cv - audio;
 		int32_t func_diff;
 		if (diff != last_diff)
-			func_diff = (intfn(diff) - intfn(last_diff)) / (diff - last_diff);
+			func_diff = (intfn(diff) - intfn(last_diff)) / ((diff - last_diff != 0) ? (diff - last_diff) : 1);
 		else
 			func_diff = fn(diff);
 
@@ -2837,6 +2839,7 @@ public:
 			dphase2 <<=11;
 			int32_t div1 = 524288 + p;
 			if (div1 == 0) div1 = 1;
+			if (div1 == 0) div1 = 1;
 			dphase2 /= div1;
 		}
 		else
@@ -2844,6 +2847,7 @@ public:
 			dphase2 = ((524288-dphase2)*(dphase2-p));
 			dphase2 <<=11;
 			int32_t div2 = 524288 - p;
+			if (div2 == 0) div2 = 1;
 			if (div2 == 0) div2 = 1;
 			dphase2 /= div2;
 		}
@@ -2860,6 +2864,7 @@ public:
 			dphase2 <<=11;
 			int32_t div3 = 524288 + p;
 			if (div3 == 0) div3 = 1;
+			if (div3 == 0) div3 = 1;
 			dphase2 /= div3;
 		}
 		else
@@ -2867,6 +2872,7 @@ public:
 			dphase2 = ((524288-dphase2)*(dphase2-p));
 			dphase2 <<=11;
 			int32_t div4 = 524288 - p;
+			if (div4 == 0) div4 = 1;
 			if (div4 == 0) div4 = 1;
 			dphase2 /= div4;
 		}

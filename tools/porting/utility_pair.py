@@ -13,13 +13,22 @@ def post_process(src_content, src_rel):
             saw_h_code = f.read()
         src_content = src_content.replace('#include "Saw.h"', saw_h_code)
 
+    # ExpVoct & Exp4000 bounds guards (prevent negative array indexing and 0 frequency return)
+    src_content = src_content.replace(
+        'int32_t ExpVoct(int32_t in)\n{',
+        'int32_t ExpVoct(int32_t in)\n{\n\tif (in < 0) in = 0;'
+    )
+    src_content = src_content.replace(
+        'int32_t Exp4000(int32_t in)\n{',
+        'int32_t Exp4000(int32_t in)\n{\n\tif (in < 0) in = 0;'
+    )
+
     # Zero-division guards for Saw, Square, and SawTri oscillators
     src_content = re.sub(r'invc\s*=\s*phase_incr>>15;', 'invc = phase_incr>>15;\n\t\tif (invc == 0) invc = 1;', src_content)
     src_content = re.sub(r'return\s+retval/invc;', 'if (invc == 0) invc = 1;\n\t\treturn retval/invc;', src_content)
     src_content = re.sub(r'return\s+\(retval/invc\)>>5;', 'if (invc == 0) invc = 1;\n\t\treturn (retval/invc)>>5;', src_content)
     src_content = re.sub(r'retval\s*=\s*retval/invc;', 'if (invc == 0) invc = 1;\n\t\tretval = retval/invc;', src_content)
-    src_content = re.sub(r'dphase2\s*/=\s*\(524288\+p\);', 'int32_t _div_a = 524288+p; if (_div_a == 0) _div_a = 1;\n\t\t\tdphase2 /= _div_a;', src_content)
-    src_content = re.sub(r'dphase2\s*/=\s*\(524288-p\);', 'int32_t _div_b = 524288-p; if (_div_b == 0) _div_b = 1;\n\t\t\tdphase2 /= _div_b;', src_content)
+    src_content = re.sub(r'dphase2\s*/=\s*div(\d);', r'if (div\1 == 0) div\1 = 1;\n\t\t\tdphase2 /= div\1;', src_content)
 
     # Selector divisor guard
     src_content = src_content.replace(
@@ -36,6 +45,7 @@ def post_process(src_content, src_rel):
     )
 
     # Math/utility division guards
+    src_content = re.sub(r'/\s*\(diff\s*-\s*last_diff\)', '/ ((diff - last_diff != 0) ? (diff - last_diff) : 1)', src_content)
     src_content = re.sub(r'\(x-lastx\)', '((x-lastx != 0) ? (x-lastx) : 1)', src_content)
     src_content = re.sub(r'divisors\[kex\]', '(divisors[kex] != 0 ? divisors[kex] : 1)', src_content)
     src_content = re.sub(r'/\s*sizes\[beatIndex\]', '/ (sizes[beatIndex] != 0 ? sizes[beatIndex] : 1)', src_content)
@@ -46,5 +56,6 @@ def post_process(src_content, src_rel):
     src_content = re.sub(r'/\s*nSteps', '/ (nSteps != 0 ? nSteps : 1)', src_content)
 
     return src_content
+
 
 
