@@ -45,17 +45,21 @@ def post_process(src_content, src_rel):
     )
 
     # Math/utility division guards
+    src_content = src_content.replace('octaveOffs=0; last_baseNote=0;', 'octaveOffs=0; last_baseNote=0; chordtype=0; lasts=Switch::Middle;')
+    src_content = src_content.replace('notes[chordtype]', 'notes[chordtype & 7]')
+    src_content = re.sub(r'nChords\[chordtype\]', 'nChords[chordtype & 7]', src_content)
     src_content = re.sub(r'/\s*\(diff\s*-\s*last_diff\)', '/ ((diff - last_diff != 0) ? (diff - last_diff) : 1)', src_content)
     src_content = re.sub(r'\(x-lastx\)', '((x-lastx != 0) ? (x-lastx) : 1)', src_content)
     src_content = re.sub(r'divisors\[kex\]', '(divisors[kex] != 0 ? divisors[kex] : 1)', src_content)
     src_content = re.sub(r'/\s*sizes\[beatIndex\]', '/ (sizes[beatIndex] != 0 ? sizes[beatIndex] : 1)', src_content)
     src_content = re.sub(r'%\s*sizes\[beatIndex\]', '% (sizes[beatIndex] != 0 ? sizes[beatIndex] : 1)', src_content)
-    src_content = re.sub(r'/\s*nChords\[chordtype\]', '/ (nChords[chordtype] != 0 ? nChords[chordtype] : 1)', src_content)
-    src_content = re.sub(r'%\s*nChords\[chordtype\]', '% (nChords[chordtype] != 0 ? nChords[chordtype] : 1)', src_content)
+    src_content = re.sub(r'/\s*nChords\[chordtype\s*&\s*7\]', '/ (nChords[chordtype & 7] != 0 ? nChords[chordtype & 7] : 1)', src_content)
+    src_content = re.sub(r'%\s*nChords\[chordtype\s*&\s*7\]', '% (nChords[chordtype & 7] != 0 ? nChords[chordtype & 7] : 1)', src_content)
     src_content = re.sub(r'/\s*xfadeLen', '/ (xfadeLen != 0 ? xfadeLen : 1)', src_content)
     src_content = re.sub(r'/\s*nSteps', '/ (nSteps != 0 ? nSteps : 1)', src_content)
 
     return src_content
+
 
 
 

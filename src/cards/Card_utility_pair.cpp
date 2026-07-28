@@ -1334,7 +1334,7 @@ public:
 	chords()
 	{
 		cvInput = 0;
-		octaveOffs=0; last_baseNote=0;
+		octaveOffs=0; last_baseNote=0; chordtype=0; lasts=Switch::Middle;
 		p=0;
 		for (int i = 0; i < nSaws; i++)
 		{
@@ -1390,8 +1390,8 @@ public:
 
 		 
 		int32_t baseNote = 30 + (k / 70); // Freq = ExpVoct(k+offs+(((count%(nSaws/2))*455)))<<1;
-		int32_t baseNoteOffs = (baseNote/ (nChords[chordtype] != 0 ? nChords[chordtype] : 1))*(12-nChords[chordtype]);
-		int32_t chordNote = notes[chordtype][(baseNote % (nChords[chordtype] != 0 ? nChords[chordtype] : 1))][sawind];
+		int32_t baseNoteOffs = (baseNote/ (nChords[chordtype & 7] != 0 ? nChords[chordtype & 7] : 1))*(12-nChords[chordtype & 7]);
+		int32_t chordNote = notes[chordtype & 7][(baseNote % (nChords[chordtype & 7] != 0 ? nChords[chordtype & 7] : 1))][sawind];
 
 		active[sawind] = (chordNote != -255);
 		if (active[sawind]) saws[count].SetFreq(10 * ExpNote(baseNote + baseNoteOffs + chordNote));
@@ -1399,7 +1399,7 @@ public:
 		int minnote = 1000;
 		for (int i = 0; i < 4; i++)
 		{
-			if (notes[chordtype][(baseNote % (nChords[chordtype] != 0 ? nChords[chordtype] : 1))][i] < minnote) minnote = notes[chordtype][(baseNote % (nChords[chordtype] != 0 ? nChords[chordtype] : 1))][i];
+			if (notes[chordtype & 7][(baseNote % (nChords[chordtype & 7] != 0 ? nChords[chordtype & 7] : 1))][i] < minnote) minnote = notes[chordtype & 7][(baseNote % (nChords[chordtype & 7] != 0 ? nChords[chordtype & 7] : 1))][i];
 		}
 		CVOutMIDINote(I, baseNote + baseNoteOffs + minnote);
 
