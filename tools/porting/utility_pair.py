@@ -1,3 +1,4 @@
+import os
 import re
 
 def post_process(src_content, src_rel):
@@ -5,7 +6,15 @@ def post_process(src_content, src_rel):
     # Update mock flash immediately in ProcessSample of Selector so the host can sync in real-time
     src_content = src_content.replace('utilityIndex[i] = ind[i];', 'utilityIndex[i] = ind[i]; g_flash_memory[2093056 + i] = ind[i];')
     
+    # Inline Saw.h dynamically if included so transformation applies to Saw class without altering source deps
+    saw_h_path = os.path.join(os.path.dirname(__file__), '../../deps/external/utility_pair_singlecard/src/Saw.h')
+    if os.path.exists(saw_h_path):
+        with open(saw_h_path, 'r') as f:
+            saw_h_code = f.read()
+        src_content = src_content.replace('#include "Saw.h"', saw_h_code)
+
     # Zero-division guards for Saw, Square, and SawTri oscillators
+    src_content = re.sub(r'invc\s*=\s*phase_incr>>15;', 'invc = phase_incr>>15;\n\t\tif (invc == 0) invc = 1;', src_content)
     src_content = re.sub(r'return\s+retval/invc;', 'if (invc == 0) invc = 1;\n\t\treturn retval/invc;', src_content)
     src_content = re.sub(r'return\s+\(retval/invc\)>>5;', 'if (invc == 0) invc = 1;\n\t\treturn (retval/invc)>>5;', src_content)
     src_content = re.sub(r'retval\s*=\s*retval/invc;', 'if (invc == 0) invc = 1;\n\t\tretval = retval/invc;', src_content)
@@ -37,4 +46,5 @@ def post_process(src_content, src_rel):
     src_content = re.sub(r'/\s*nSteps', '/ (nSteps != 0 ? nSteps : 1)', src_content)
 
     return src_content
+
 
