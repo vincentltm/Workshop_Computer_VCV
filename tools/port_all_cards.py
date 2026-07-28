@@ -414,7 +414,8 @@ def main():
             if (card["id"] == "flux" and s.startswith("lib/pipicofx/src/")) or \
                (card["id"] == "twists" and s != "braids/twists.cc") or \
                (card["id"] == "voices_of_sid" and s.startswith("reSID/")) or \
-               (card["id"] in ("blackbird", "krell", "duo_midi") and s != "main.cpp"):
+               (card["id"] in ("blackbird", "krell", "duo_midi") and s != "main.cpp") or \
+               (card["id"] == "lens" and not s.endswith("main.cpp")):
                 separate_sources.append(s)
             else:
                 unity_sources.append(s)

@@ -26,18 +26,17 @@
 
 #include "ComputerCard.h"
 
+namespace Card_Lens {
 #include "runtime.h"
 #include "kernel_ids.h"
 #include "midi.h"
 #include "snapshot_format.h"
 #include <string.h>
 #include <stdio.h>
-extern "C" {
-
 
 /* pack12: 12-bit cells packed 2-per-3-bytes. */
 __attribute__((always_inline))
-static inline void pack12_write(uint8_t* buf, uint32_t idx, int32_t val) {
+static inline void pack12_write_snapshot(uint8_t* buf, uint32_t idx, int32_t val) {
     uint32_t v    = (uint32_t)val & 0xFFFu;
     uint32_t pair = idx >> 1;
     uint32_t base = (pair << 1) + pair;
@@ -576,7 +575,7 @@ int snapshot_apply(struct LensRuntime** out_rt, const uint8_t* bytes, size_t len
             for (uint32_t j = 0; j < blen; j++) {
                 if (!ok(&c, 2)) return -1;
                 uint16_t v = (uint16_t)u16(&c);
-                if (apply_seed) pack12_write(bytes, j, (int32_t)v);
+                if (apply_seed) pack12_write_snapshot(bytes, j, (int32_t)v);
             }
         }
     }
@@ -633,4 +632,4 @@ int snapshot_apply(struct LensRuntime** out_rt, const uint8_t* bytes, size_t len
     return 0;
 }
 
-}
+} // namespace Card_Lens
